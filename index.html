@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restolution POS System</title>
+    <style>
+        :root {
+            --restolution-teal: #009688;
+            --restolution-blue-bg: #1e3d59;
+            --product-blue: #1769aa;
+            --numpad-blue: #4ba3e3;
+            --action-orange: #ff9800;
+            --action-red: #e53935;
+            --action-yellow: #ffeb3b;
+            --action-coral: #ff5722;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            user-select: none;
+        }
+
+        body, html {
+            height: 100%;
+            background-color: #000;
+        }
+
+        /* --- 1. KIRJAUTUMISNÄKYMÄ (Kuva 2) --- */
+        #loginScreen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            background-color: var(--restolution-teal);
+            color: white;
+        }
+
+        .login-logo {
+            font-size: 42px;
+            font-style: italic;
+            font-weight: 300;
+            margin-bottom: 5px;
+        }
+        .login-sub {
+            font-size: 14px;
+            margin-bottom: 25px;
+            letter-spacing: 2px;
+        }
+
+        .pin-input-container {
+            display: flex;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+
+        .pin-display {
+            width: 220px;
+            height: 45px;
+            background: white;
+            border-radius: 4px;
+            color: #333;
+            font-size: 24px;
+            text-align: center;
+            line-height: 45px;
+            letter-spacing: 5px;
+            font-weight: bold;
+        }
+
+        .login-numpad {
+            display: grid;
+            grid-template-columns: repeat(3, 75px);
+            grid-auto-rows: 65px;
+            gap: 10px;
+        }
+
+        .login-btn {
+            background-color: var(--action-orange);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 22px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+        }
+        .login-btn:active { background-color: #e65100; }
+        .login-btn.clear { background-color: var(--action-red); }
+        .login-btn.ok { background-color: #4caf50; }
+
+
+        /* --- 2. KASSANÄKYMÄ (Kuva 1) --- */
+        #mainScreen {
+            display: none; /* Piilotettu kunnes kirjaudutaan */
+            flex-direction: column;
+            height: 100%;
+            background-color: #111;
+        }
+
+        /* Yläpalkki */
+        .top-bar {
+            background-color: #222;
+            color: #aaa;
+            padding: 5px 15px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            border-bottom: 1px solid #333;
+        }
+
+        .workspace {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* VASEN PUOLI: Kuitti, Numpad ja Toiminnot */
+        .left-panel {
+            width: 420px;
+            background-color: #fff;
+            display: flex;
+            flex-direction: column;
+            border-right: 2px solid #000;
+        }
+
+        .receipt-area {
+            flex: 1;
+            background-color: white;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .receipt-logo-header {
+            font-size: 28px;
+            color: #2b6cb0;
+            font-style: italic;
+            font-weight: bold;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+
+        .receipt-rows {
+            flex: 1;
+            font-family: monospace;
+            font-size: 14px;
+        }
+
+        .receipt-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            cursor: pointer;
+            border-bottom: 1px solid #f5f5f5;
+        }
+        .receipt-row.selected { background-color: #cce5ff; }
+
+        .receipt-summary-box {
+            background: #f8f9fa;
+            padding: 10px;
+            border-top: 2px solid #ccc;
+            font-size: 14px;
+        }
+        .receipt-summary-box .grand-total-row {
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+            color: #000;
+        }
+
+        /* Alaosio: Ohjaimet (Numpad + Toiminnot kuitin alla) */
+        .lower-controls {
+            background-color: #333;
+            padding: 5px;
+            display: flex;
+            gap: 5px;
+            height: 240px;
+        }
+
+        .pos-numpad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px;
+            width: 180px;
+        }
+
+        .pos-num-btn {
+            background-color: var(--numpad-blue);
+            color: white;
+            border: none;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 2px;
+            cursor: pointer;
+        }
+        .pos-num-btn:active { opacity: 0.8; }
+
+        .pos-actions-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 4px;
+        }
+
+        .pos-act-btn {
+            color: white;
+            border: none;
+            font-size: 12px;
+            font-weight: bold;
+            border-radius: 2px;
+            cursor: pointer;
+            padding: 5px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-transform: uppercase;
+        }
+
+        .bg-orange { background-color: var(--action-orange); color: white; }
+        .bg-red { background-color: var(--action-red); color: white; }
+        .bg-yellow { background-color: var(--action-yellow); color: black; }
+        .bg-coral { background-color: var(--action-coral); color: white; }
+        .bg-darkblue { background-color: #1a237e; color: white; }
+
+        /* OIKEA PUOLI: Tuotematriisi */
+        .right-panel {
+            flex: 1;
+            background-color: #0d2033;
+            display: flex;
+            flex-direction: column;
+            padding: 8px;
+            gap: 8px;
+        }
+
+        /* Tuoteryhmät alhaalla / sivuilla */
+        .product-categories {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+        }
+
+        .cat-tab {
+            background-color: #0f4c81;
+            color: white;
+            border: 1px solid #1e3d59;
+            padding: 12px;
+            font-weight: bold;
+            font-size: 13px;
+            text-align: center;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .cat-tab.active {
+            background-color: #1b82db;
+            border: 1px solid white;
+        }
+
+        /* Itse tuoteruudukko */
+        .items-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-auto-rows: 80px;
+            gap: 6px;
+            overflow-y: auto;
+        }
+
+        .item-btn {
+            background-color: var(--product-blue);
+            color: white;
+            border: 1px solid #0d47a1;
+            border-radius: 4px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .item-btn:active { background-color: #1976d2; }
+        .item-btn .item-price {
+            text-align: right;
+            font-size: 12px;
+            color: #bbdefb;
+        }
+
+        /* Pop-up Modaalit */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .receipt-pop {
+            background: #fffdf5;
+            padding: 20px;
+            width: 320px;
+            font-family: monospace;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loginScreen">
+        <div class="login-logo">Restolution</div>
+        <div class="login-sub">EASY POS SYSTEM</div>
+        
+        <div class="pin-input-container">
+            <div class="pin-display" id="pinDisplay"></div>
+        </div>
+
+        <div class="login-numpad">
+            <button class="login-btn" onclick="pressLoginNum('7')">7</button>
+            <button class="login-btn" onclick="pressLoginNum('8')">8</button>
+            <button class="login-btn" onclick="pressLoginNum('9')">9</button>
+            <button class="login-btn" onclick="pressLoginNum('4')">4</button>
+            <button class="login-btn" onclick="pressLoginNum('5')">5</button>
+            <button class="login-btn" onclick="pressLoginNum('6')">6</button>
+            <button class="login-btn" onclick="pressLoginNum('1')">1</button>
+            <button class="login-btn" onclick="pressLoginNum('2')">2</button>
+            <button class="login-btn" onclick="pressLoginNum('3')">3</button>
+            <button class="login-btn clear" onclick="clearLoginNum()">C</button>
+            <button class="login-btn" onclick="pressLoginNum('0')">0</button>
+            <button class="login-btn ok" onclick="submitLogin()">OK</button>
+        </div>
+    </div>
+
+
+    <div id="mainScreen">
+        <div class="top-bar">
+            <div>TARJOILIJA: Maître d' | PÖYTÄ: Vapaa myynti</div>
+            <div id="liveClock">00.00.0000 00:00:00</div>
+        </div>
+
+        <div class="workspace">
+            
+            <div class="left-panel">
+                <div class="receipt-area">
+                    <div class="receipt-logo-header">Restolution <span style="font-size:12px;font-style:normal;">EASY</span></div>
+                    <div class="receipt-rows" id="receiptRows">
+                        </div>
+                    
+                    <div class="receipt-summary-box">
+                        <div style="display:flex; justify-content:space-between; font-size:12px; color:#555;">
+                            <span>Pyöristys (Käteinen):</span><span id="roundDisp">0,00 €</span>
+                        </div>
+                        <div class="grand-total-row">
+                            <span>Yhteensä:</span>
+                            <span id="totalDisp">0,00 €</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lower-controls">
+                    <div class="pos-numpad">
+                        <button class="pos-num-btn" onclick="pressPosNum('7')">7</button>
+                        <button class="pos-num-btn" onclick="pressPosNum('8')">8</button>
+                        <button class="pos-num-btn" onclick="pressPosNum('9')">9</button>
+                        <button class="pos-num-btn" onclick="pressPosNum('4')">4</button>
+                        <button class="pos-num-btn" onclick="pressPosNum('5')">5</button>
+                        <button class="pos-num-btn" onclick="pressPosNum('6')">6</button>
+                        <button class="pos-num-btn" onclick="pressPosNum('1')">1</button>
+                        <button class="pos-num-btn" onclick="pressPosNum('2')">2</button>
+                        <button class="pos-num-btn" onclick="pressPosNum('3')">3</button>
+                        <button class="pos-num-btn" onclick="pressPosNum('0')">0</button>
+                        <button class="pos-num-btn" onclick="pressPosNum('00')">00</button>
+                        <button class="pos-num-btn" style="background-color:#555;" onclick="clearPosNum()">C</button>
+                    </div>
+
+                    <div class="pos-actions-grid">
+                        <button class="pos-act-btn bg-yellow" onclick="voidSelected()">Korjaa<br>Rivi</button>
+                        <button class="pos-act-btn bg-yellow" onclick="clearAll()">Tyhjennä<br>Kori</button>
+                        <button class="pos-act-btn bg-orange" onclick="payCash()">Käteinen</button>
+                        <button class="pos-act-btn bg-coral" onclick="payCard()">Maksupääte</button>
+                        <button class="pos-act-btn bg-darkblue" style="grid-column: span 2;" onclick="logoutPOS()">← LOPETA / LOGOUT</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <div class="items-grid" id="itemsGrid"></div>
+
+                <div class="product-categories" id="categoryGrid"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="cardModal">
+        <div style="background:white; padding:30px; text-align:center; border-radius:5px; width:280px;">
+            <h3>Restolution POS</h3>
+            <p style="margin:15px 0; font-size:14px;">Lähetetään summaa päätteelle...</p>
+            <div style="font-size:24px; font-weight:bold; color:var(--product-blue); margin-bottom:15px;" id="cardSum">0,00 €</div>
+            <div style="color:green; font-weight:bold;" id="cardStatus">Odotetaan korttia...</div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="receiptModal" onclick="closeReceipt()">
+        <div class="receipt-pop" id="receiptContent"></div>
+    </div>
+
+    <script>
+        // --- RESTOLUTION REKISTERI ---
+        const menuData = {
+            "ALKURUUAT": [
+                { id: 1, name: "Valkosipulileivät", price: 5.20, vat: 14 },
+                { id: 2, name: "Etanapannu", price: 13.90, vat: 14 },
+                { id: 3, name: "Talon salaatti", price: 8.50, vat: 14 }
+            ],
+            "PÄÄRUUAT": [
+                { id: 10, name: "Lehtipihvi", price: 24.80, vat: 14 },
+                { id: 11, name: "Pariloitu Lohi", price: 27.00, vat: 14 },
+                { id: 12, name: "Pekoniburgeri", price: 19.50, vat: 14 },
+                { id: 13, name: "Sienirisotto", price: 18.00, vat: 14 }
+            ],
+            "JUOMAT": [
+                { id: 20, name: "Hanaolut 0.5L", price: 8.80, vat: 25.5 },
+                { id: 21, name: "Lonkero 0.33L", price: 7.90, vat: 25.5 },
+                { id: 22, name: "Viini 16cl", price: 12.00, vat: 25.5 },
+                { id: 23, name: "Virvoitusjuoma", price: 4.50, vat: 25.5 }
+            ],
+            "JÄLKIRUUAT": [
+                { id: 30, name: "Uuniomenapiiras", price: 8.90, vat: 14 },
+                { id: 31, name: "Jäädyke", price: 7.50, vat: 14 }
+            ]
+        };
+
+        let currentCart = [];
+        let selectedRowIndex = null;
+        let activeCategory = "PÄÄRUUAT";
+        let loginPin = "";
+        let posInputString = ""; // Numpadin syöte senteissä
+
+        // --- KIRJAUTUMISEN LOGIIKKA (Kuva 2) ---
+        function pressLoginNum(num) {
+            if (loginPin.length < 4) {
+                loginPin += num;
+                document.getElementById('pinDisplay').innerText = "*".repeat(loginPin.length);
+            }
+        }
+        function clearLoginNum() {
+            loginPin = "";
+            document.getElementById('pinDisplay').innerText = "";
+        }
+        function submitLogin() {
+            // Hyväksytään mikä tahansa 4-numeroinen PIN testausta varten
+            if (loginPin.length >= 4) {
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('mainScreen').style.display = 'flex';
+                initPOS();
+            } else {
+                alert("Syötä vähintään 4-numeroinen PIN-koodi!");
+                clearLoginNum();
+            }
+        }
+        function logoutPOS() {
+            clearLoginNum();
+            document.getElementById('mainScreen').style.display = 'none';
+            document.getElementById('loginScreen').style.display = 'flex';
+        }
+
+        // --- KASSAN ALUSTUS ---
+        function initPOS() {
+            renderCategories();
+            renderProducts();
+            updateTotals();
+            startClock();
+        }
+
+        function startClock() {
+            setInterval(() => {
+                const now = new Date();
+                document.getElementById('liveClock').innerText = now.toLocaleDateString('fi-FI') + " " + now.toLocaleTimeString('fi-FI');
+            }, 1000);
+        }
+
+        function renderCategories() {
+            const grid = document.getElementById('categoryGrid');
+            grid.innerHTML = '';
+            Object.keys(menuData).forEach(cat => {
+                const div = document.createElement('div');
+                div.className = `cat-tab ${cat === activeCategory ? 'active' : ''}`;
+                div.innerText = cat;
+                div.onclick = () => {
+                    activeCategory = cat;
+                    renderCategories();
+                    renderProducts();
+                };
+                grid.appendChild(div);
+            });
+        }
+
+        function renderProducts() {
+            const grid = document.getElementById('itemsGrid');
+            grid.innerHTML = '';
+            menuData[activeCategory].forEach(item => {
+                const btn = document.createElement('button');
+                btn.className = 'item-btn';
+                btn.onclick = () => addToCart(item);
+                btn.innerHTML = `
+                    <span>${item.name}</span>
+                    <span class="item-price">${item.price.toFixed(2).replace('.', ',')} €</span>
+                `;
+                grid.appendChild(btn);
+            });
+        }
+
+        // --- OSTOSKORIN HALLINTA ---
+        function addToCart(product) {
+            const existing = currentCart.find(i => i.id === product.id);
+            if (existing) {
+                existing.qty++;
+            } else {
+                currentCart.push({ ...product, qty: 1 });
+            }
+            updateTotals();
+        }
+
+        function selectRow(index) {
+            selectedRowIndex = selectedRowIndex === index ? null : index;
+            updateTotals();
+        }
+
+        function voidSelected() {
+            if (selectedRowIndex !== null) {
+                currentCart.splice(selectedRowIndex, 1);
+                selectedRowIndex = null;
+                updateTotals();
+            } else {
+                alert("Valitse ensin korjattava rivi koskettamalla sitä kuitti-ikkunasta.");
+            }
+        }
+
+        function clearAll() {
+            if (currentCart.length > 0 && confirm("Tyhjennetäänkö koko nykyinen myyntitapahtuma?")) {
+                currentCart = [];
+                selectedRowIndex = null;
+                clearPosNum();
+                updateTotals();
+            }
+        }
+
+        // --- 5 SENTIN PYÖRISTYS (SUOMEN LAKI) ---
+        function finnishRounding(amount) {
+            return Math.round(amount * 20) / 20;
+        }
+
+        function updateTotals() {
+            const rowsContainer = document.getElementById('receiptRows');
+            rowsContainer.innerHTML = '';
+            let total = 0;
+
+            currentCart.forEach((item, index) => {
+                const lineTotal = item.price * item.qty;
+                total += lineTotal;
+
+                const div = document.createElement('div');
+                div.className = `receipt-row ${selectedRowIndex === index ? 'selected' : ''}`;
+                div.onclick = () => selectRow(index);
+                div.innerHTML = `
+                    <span>${item.qty} x ${item.name}</span>
+                    <span>${lineTotal.toFixed(2).replace('.', ',')} €</span>
+                `;
+                rowsContainer.appendChild(div);
+            });
+
+            document.getElementById('totalDisp').innerText = total.toFixed(2).replace('.', ',') + " €";
+            document.getElementById('roundDisp').innerText = "0,00 €";
+        }
+
+        // --- KASSAN NUMPAD-LOGIIKKA (Tuplanolla mukana) ---
+        function pressPosNum(val) {
+            posInputString += val;
+            // Näytetään syötetty summa kuitin loppusummassa, jos halutaan simuloida annettua rahaa
+            let parsed = parseFloat(posInputString) / 100;
+            document.getElementById('totalDisp').innerText = parsed.toFixed(2).replace('.', ',') + " €";
+        }
+
+        function clearPosNum() {
+            posInputString = "";
+            updateTotals();
+        }
+
+        function getPosInputValue() {
+            if (!posInputString) return 0;
+            return parseFloat(posInputString) / 100;
+        }
+
+        // --- MAKSUJEN KÄSITTELY ---
+        function payCash() {
+            if (currentCart.length === 0) return;
+
+            const exactTotal = currentCart.reduce((s, i) => s + (i.price * i.qty), 0);
+            const roundedTotal = finnishRounding(exactTotal);
+            const roundingDiff = roundedTotal - exactTotal;
+
+            const inputCash = getPosInputValue();
+            if (inputCash > 0 && inputCash < roundedTotal) {
+                alert("Syötetty summa ei riitä laskun maksuun!");
+                return;
+            }
+
+            const paidCash = inputCash === 0 ? roundedTotal : inputCash;
+            const changeDue = paidCash - roundedTotal;
+
+            generateReceipt("KÄTEINEN", exactTotal, roundedTotal, roundingDiff, paidCash, changeDue);
+        }
+
+        function payCard() {
+            if (currentCart.length === 0) return;
+            const exactTotal = currentCart.reduce((s, i) => s + (i.price * i.qty), 0);
+
+            document.getElementById('cardSum').innerText = exactTotal.toFixed(2).replace('.', ',') + " €";
+            document.getElementById('cardStatus').innerText = "Odotetaan lähimaksua / sirukorttia...";
+            document.getElementById('cardModal').style.display = 'flex';
+
+            // Integraatiosimulaatio (Nets/Verifone)
+            setTimeout(() => {
+                document.getElementById('cardStatus').innerText = "Käsitellään... Hyväksytty!";
+                setTimeout(() => {
+                    document.getElementById('cardModal').style.display = 'none';
+                    generateReceipt("KORTTIMAKSU", exactTotal, exactTotal, 0, exactTotal, 0);
+                }, 1000);
+            }, 2000);
+        }
+
+        // --- KUITIN GENEROPINTA ---
+        function generateReceipt(method, exact, rounded, roundDiff, paid, change) {
+            const now = new Date();
+            let vat14Net = 0, vat14Vat = 0, vat25Net = 0, vat25Vat = 0;
+
+            currentCart.forEach(item => {
+                const total = item.price * item.qty;
+                const net = total / (1 + (item.vat / 100));
+                const vAmount = total - net;
+
+                if (item.vat === 14) { vat14Net += net; vat14Vat += vAmount; }
+                else { vat25Net += net; vat25Vat += vAmount; }
+            });
+
+            let html = `
+                <div style="text-align:center; font-weight:bold; margin-bottom:10px;">
+                    RESTOLUTION EASY POS<br>
+                    Y-Tunnus: 1234567-8<br>
+                    --------------------------------
+                </div>
+                <div>Pvm: ${now.toLocaleDateString('fi-FI')} Klo: ${now.toLocaleTimeString('fi-FI')}</div>
+                <div>Maksutapa: ${method}</div>
+                <div>--------------------------------</div>
+            `;
+
+            currentCart.forEach(item => {
+                html += `<div style="display:flex; justify-content:space-between;">
+                    <span>${item.qty}x ${item.name}</span>
+                    <span>${(item.price * item.qty).toFixed(2)} €</span>
+                </div>`;
+            });
+
+            html += `
+                --------------------------------<br>
+                <div style="display:flex; justify-content:space-between;"><span>Välisumma:</span><span>${exact.toFixed(2)} €</span></div>
+                <div style="display:flex; justify-content:space-between;"><span>Pyöristys:</span><span>${roundDiff.toFixed(2)} €</span></div>
+                <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:15px; margin:5px 0;">
+                    <span>YHTEENSÄ:</span><span>${rounded.toFixed(2)} €</span>
+                </div>
+                <div style="display:flex; justify-content:space-between;"><span>Maksettu:</span><span>${paid.toFixed(2)} €</span></div>
+                <div style="display:flex; justify-content:space-between; font-weight:bold; color:#009688;">
+                    <span>VAIHTORAHA:</span><span>${change.toFixed(2)} €</span>
+                </div>
+                --------------------------------<br>
+                <div style="font-size:11px;">
+                    <strong>ALV ERITTELY:</strong><br>
+                    ${vat14Vat > 0 ? `14% &nbsp; Veroton: ${vat14Net.toFixed(2)} &nbsp; ALV: ${vat14Vat.toFixed(2)}<br>` : ''}
+                    ${vat25Vat > 0 ? `25,5% Veroton: ${vat25Net.toFixed(2)} &nbsp; ALV: ${vat25Vat.toFixed(2)}<br>` : ''}
+                </div>
+                <br>
+                <div style="text-align:center;">Kiitos käynnistä!</div>
+            `;
+
+            document.getElementById('receiptContent').innerHTML = html;
+            document.getElementById('receiptModal').style.display = 'flex';
+        }
+
+        function closeReceipt() {
+            document.getElementById('receiptModal').style.display = 'none';
+            currentCart = [];
+            selectedRowIndex = null;
+            clearPosNum();
+        }
+    </script>
+</body>
+</html>
