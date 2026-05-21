@@ -3,337 +3,714 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Perinteinen Kassakone Simulaattori</title>
+    <title>SAM4S SPS-2000 Comprehensive Simulator</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; user-select: none; }
-        body { background-color: #222; display: flex; justify-content: center; align-items: center; height: 100vh; color: #333; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', Courier, monospace; user-select: none; }
+        body { background-color: #121214; display: flex; justify-content: center; align-items: center; height: 100vh; color: #fff; }
 
-        /* KASSIKONEEN RUNKO */
-        .cash-register {
-            background-color: #e2e8f0; /* Klassinen tietokoneen harmaa */
-            border: 4px solid #cbd5e1;
-            border-radius: 8px;
-            width: 680px;
-            padding: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.6), inset 0 2px 5px #fff;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        /* YLÄOSA: NÄYTTÖ JA KUITTI */
-        .top-section {
-            display: flex;
-            gap: 15px;
-            height: 220px;
-        }
-
-        /* PERINTEINEN PAPERIKUITTI */
-        .paper-roll {
-            width: 240px;
-            background-color: #fffdf0; /* Kellertävä kuittipaperi */
-            border: 1px solid #ccc;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.1);
-            padding: 10px;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 12px;
-            overflow-y: auto;
+        /* LAITTEEN RUNKO */
+        .sps2000-case {
+            background-color: #334155;
+            border: 12px solid #1e293b;
+            border-radius: 16px;
+            width: 1024px;
+            height: 740px;
+            padding: 8px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8);
             display: flex;
             flex-direction: column;
         }
-        .receipt-line { display: flex; justify-content: space-between; margin-bottom: 2px; }
 
-        /* DIGITAALINEN VFD-NÄYTTÖ (Klassinen vihreä/oranssi loisteputkinäyttö) */
-        .vfd-display {
-            flex: 1;
-            background-color: #051b11; /* Syvä tummanvihreä */
-            border: 5px solid #475569;
-            border-radius: 4px;
-            padding: 15px;
+        .brand {
+            font-size: 13px;
+            color: #cbd5e1;
+            padding: 2px 10px;
             display: flex;
-            flex-direction: column;
             justify-content: space-between;
-            box-shadow: inset 0 5px 15px rgba(0,0,0,0.8);
-        }
-        .vfd-text {
-            color: #22c55e; /* Kirkas loisteputken vihreä */
-            font-family: 'Courier New', monospace;
             font-weight: bold;
-            text-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
-            text-transform: uppercase;
-        }
-        .vfd-main { font-size: 32px; text-align: right; letter-spacing: 2px; }
-        .vfd-sub { font-size: 14px; text-align: left; opacity: 0.8; }
-
-        /* NÄPPÄIMISTÖALUE */
-        .keyboard {
-            background-color: #cbd5e1;
-            border: 2px solid #94a3b8;
-            border-radius: 6px;
-            padding: 15px;
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 8px;
         }
 
-        /* PERINTEISET KOHONÄPPÄIMET */
-        .key {
-            background-color: #f1f5f9;
-            border: 1px solid #94a3b8;
-            border-bottom: 4px solid #64748b; /* Syvyysvaikutelma */
-            border-radius: 4px;
+        /* LCD NÄYTTÖ */
+        .lcd-display {
+            flex: 1;
+            background-color: #2b5c8f; /* Alkuperäinen sinertävä pohja */
+            border: 4px solid #000;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* TILA-AVAIMEN VÄLILEHDET (MODE KEY LOCK) */
+        .mode-selector {
+            display: flex;
+            background-color: #0f172a;
+            border-bottom: 2px solid #000;
+        }
+        .mode-tab {
+            padding: 10px 20px;
             font-weight: bold;
             font-size: 14px;
-            height: 55px;
+            color: #94a3b8;
+            border-right: 2px solid #000;
+            cursor: pointer;
+            background-color: #1e293b;
+        }
+        .mode-tab.active {
+            background-color: #ef4444; /* Punainen korostus aktiiviselle tilalle */
+            color: white;
+        }
+        .system-status-bar {
+            flex: 1;
             display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 15px;
+            font-size: 12px;
+            color: #34d399;
+        }
+
+        /* PÄÄNÄKYMÄT */
+        .workspace {
+            flex: 1;
+            display: flex;
+            padding: 4px;
+            gap: 4px;
+        }
+
+        /* VASEN PUOLI: KUITTI & INFOT */
+        .left-screen {
+            width: 340px;
+            background-color: #f8fafc;
+            border: 2px solid #000;
+            display: flex;
+            flex-direction: column;
+            color: #000;
+        }
+        .receipt-title {
+            background-color: #1e3a8a;
+            color: white;
+            font-size: 12px;
+            padding: 6px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .receipt-body {
+            flex: 1;
+            padding: 8px;
+            font-size: 13px;
+            overflow-y: auto;
+            background-color: #ffffff;
+            line-height: 1.3;
+        }
+        .r-line { display: flex; justify-content: space-between; }
+        
+        .vfd-message-line {
+            background-color: #000;
+            color: #f43f5e;
+            padding: 6px;
+            font-weight: bold;
+            font-size: 12px;
+            border-top: 2px solid #000;
+            min-height: 28px;
+        }
+        .vfd-total-line {
+            background-color: #020617;
+            color: #22c55e;
+            padding: 8px;
+            font-size: 22px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* OIKEA PUOLI: DYNAAMINEN MATRIISI JA KIINTEÄT APUNÄPPÄIMET */
+        .right-screen {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        /* KOSKETUSNÄPPÄINMATRIISI (KEYLINKS) */
+        .keylink-matrix {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(5, 1fr);
+            gap: 4px;
+        }
+
+        /* KIINTEÄ ALALOHKO (FIXED KEYS & NUMPAD) */
+        .fixed-hardware-keys {
+            height: 250px;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 4px;
+            border-top: 2px solid #000;
+            padding-top: 4px;
+        }
+
+        /* PAINIKKEIDEN TYYLITTELY */
+        .sps-btn {
+            border: 1px solid #000;
+            border-bottom: 3px solid #000;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 12px;
+            color: #000;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             text-align: center;
-            cursor: pointer;
-            text-shadow: 0 1px 0 #fff;
+            padding: 4px;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.4);
         }
-        .key:active {
+        .sps-btn:active {
             border-bottom-width: 1px;
-            transform: translateY(3px);
+            transform: translateY(2px);
         }
 
-        /* NÄPPÄINTEN VÄRIKOODIT (Kuten aidoissa kassoissa) */
-        .key-num { background-color: #ffffff; color: #000; font-size: 18px; } /* Numerot valkoisia */
-        .key-dept { background-color: #60a5fa; color: white; text-shadow: none; font-size: 12px; } /* Osastot sinisiä */
-        .key-fn { background-color: #94a3b8; color: #1e293b; font-size: 11px; } /* Toiminnot harmaita */
-        .key-clear { background-color: #ef4444; color: white; text-shadow: none; } /* C-nappi punainen */
-        .key-total { background-color: #22c55e; color: white; text-shadow: none; grid-row: span 2; height: 118px; font-size: 16px; } /* Käteismaksu suuri ja vihreä */
+        /* SAM4S VÄRIPALETTI */
+        .c-blue { background-color: #60a5fa; color: #fff; }
+        .c-green { background-color: #34d399; color: #000; }
+        .c-amber { background-color: #fbbf24; color: #000; }
+        .c-purple { background-color: #c084fc; color: #fff; }
+        .c-red { background-color: #f87171; color: #fff; }
+        .c-numpad { background-color: #f1f5f9; color: #000; font-size: 22px; }
+        .c-hardware { background-color: #94a3b8; color: #000; font-size: 11px; }
+        .c-cash { background-color: #059669; color: #fff; font-size: 16px; grid-row: span 2; }
+        .c-inactive { background-color: #3b6fa6; border-color: #2b5c8f; cursor: default; }
 
-        .section-title {
-            font-size: 11px;
-            color: #64748b;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: -5px;
-            grid-column: span 7;
+        /* BACKOFFICE / OHJELMOINTI- JA RAPORTOINTINÄKYMÄT (PRG, REP, S) */
+        .backoffice-panel {
+            flex: 1;
+            background-color: #1e293b;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
         }
+        .bo-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .bo-table th, .bo-table td { border: 1px solid #475569; padding: 6px 10px; text-align: left; font-size: 12px; }
+        .bo-table th { background-color: #0f172a; color: #38bdf8; }
+        .bo-input { padding: 4px 8px; background: #0f172a; border: 1px solid #475569; color: #fff; border-radius: 4px; font-size: 12px; }
+        .bo-btn { padding: 6px 12px; background: #3b82f6; border: none; color: white; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 11px; }
+        .bo-btn-danger { background: #ef4444; }
     </style>
 </head>
 <body>
 
-    <div class="cash-register">
-        <div class="top-section">
-            <div class="paper-roll" id="receiptPaper">
-                <div style="text-align: center; font-weight: bold; margin-bottom: 10px;">*** KUITTI ***</div>
-                <div id="receiptLines">
-                    </div>
-            </div>
-
-            <div class="vfd-display">
-                <div class="vfd-text vfd-sub" id="vfdSubDisplay">VALMIS - SYÖTÄ HINTA</div>
-                <div class="vfd-text vfd-main" id="vfdMainDisplay">0.00</div>
-            </div>
+    <div class="sps2000-case">
+        <div class="brand">
+            <span>SAM4S SPS-2000 MULTI-MODE SYSTEM</span>
+            <span id="hardwareClock">00/00/0000 00:00:00</span>
         </div>
 
-        <div class="keyboard">
-            
-            <button class="key key-clear" onclick="pressClear()">C</button>
-            <button class="key key-fn" onclick="pressVoid()">KORJAUS<br>VOID</button>
-            <button class="key key-fn" onclick="pressMultiplier()">X<br>MÄÄRÄ</button>
-            <button class="key key-fn" onclick="pressOpenDrawer()">AVAA<br>LAATIKKO</button>
-            <div style="grid-column: span 1;"></div>
-            <button class="key key-dept" onclick="pressDept(1, 'RUOKA 14%')">OSASTO 1<br>RUOKA 14%</button>
-            <button class="key key-dept" onclick="pressDept(2, 'MIEDOT 25.5%')">OSASTO 2<br>MIEDOT</button>
+        <div class="lcd-display">
+            <div class="mode-selector">
+                <div class="mode-tab active" id="mode-REG" onclick="changeMode('REG')">REG (Myynti)</div>
+                <div class="mode-tab" id="mode-REP" onclick="changeMode('REP')">REP (Raportit)</div>
+                <div class="mode-tab" id="mode-PRG" onclick="changeMode('PRG')">PRG (Tuoteohjelmointi)</div>
+                <div class="mode-tab" id="mode-S" onclick="changeMode('S')">S (Käyttäjänhallinta)</div>
+                <div class="system-status-bar" id="statusBar">OPR: - | MODE: REG | COMPULSORY SIGN-ON</div>
+            </div>
 
-            <button class="key key-num" onclick="pressNum('7')">7</button>
-            <button class="key key-num" onclick="pressNum('8')">8</button>
-            <button class="key key-num" onclick="pressNum('9')">9</button>
-            <button class="key key-fn" onclick="alert('Z-Raportti ajettu! Päivä nollattu paperirullalle.')">Z<br>RAPORTTI</button>
-            <div style="grid-column: span 1;"></div>
-            <button class="key key-dept" onclick="pressDept(3, 'VÄKEVÄT 25.5%')">OSASTO 3<br>VÄKEVÄT</button>
-            <button class="key key-dept" onclick="pressDept(4, 'ALKOHOLITON')">OSASTO 4<br>ALKOHOLITON</button>
+            <div class="workspace" id="panel-REG">
+                <div class="left-screen">
+                    <div class="receipt-title">CURRENT TRANSACTION RECORD</div>
+                    <div class="receipt-body" id="receiptLines">
+                        </div>
+                    <div class="vfd-message-line" id="vfdMsg">SIGN ON REQUIRED</div>
+                    <div class="vfd-total-line">
+                        <span>SALDO:</span>
+                        <span id="totalDisp">0.00 €</span>
+                    </div>
+                </div>
 
-            <button class="key key-num" onclick="pressNum('4')">4</button>
-            <button class="key key-num" onclick="pressNum('5')">5</button>
-            <button class="key key-num" onclick="pressNum('6')">6</button>
-            <button class="key key-fn" onclick="pressSubTotal()">VÄLISUMMA<br>SUB-TTL</button>
-            <div style="grid-column: span 1;"></div>
-            <button class="key key-dept" onclick="pressDept(5, 'POPPARI/SIPS')">OSASTO 5<br>SNAX</button>
-            <button class="key key-total" onclick="pressCashFinal()">KÄTEINEN<br>CASH<br>TL</button>
+                <div class="right-screen">
+                    <div class="keylink-matrix" id="matrixGrid"></div>
 
-            <button class="key key-num" onclick="pressNum('1')">1</button>
-            <button class="key key-num" onclick="pressNum('2')">2</button>
-            <button class="key key-num" onclick="pressNum('3')">3</button>
-            <button class="key key-fn" onclick="alert('Korttipääte aktivoitu summan mukaan!')">KORTTI<br>CHG</button>
-            <div style="grid-column: span 1;"></div>
-            <button class="key key-dept" onclick="pressDept(6, 'MUUT TUOTTEET')">OSASTO 6<br>MUUT</button>
-            <button class="key key-num" onclick="pressNum('0')">0</button>
-            <button class="key key-num" onclick="pressNum('00')">00</button>
-            <div style="grid-column: span 5;"></div>
+                    <div class="fixed-hardware-keys">
+                        <button class="sps-btn c-numpad" onclick="numPress('7')">7</button>
+                        <button class="sps-btn c-numpad" onclick="numPress('8')">8</button>
+                        <button class="sps-btn c-numpad" onclick="numPress('9')">9</button>
+                        <button class="sps-btn c-hardware" onclick="fnPress('ERR_CORR')">ERR.CORR<br>(Rivin korjaus)</button>
+                        <button class="sps-btn c-hardware" onclick="switchKeylink('JUOMAT')">JUOMAT<br>MENU</button>
+
+                        <button class="sps-btn c-numpad" onclick="numPress('4')">4</button>
+                        <button class="sps-btn c-numpad" onclick="numPress('5')">5</button>
+                        <button class="sps-btn c-numpad" onclick="numPress('6')">6</button>
+                        <button class="sps-btn c-hardware" onclick="fnPress('VOID')">VOID ITEM<br>(Mitätöi)</button>
+                        <button class="sps-btn c-hardware" onclick="switchKeylink('RUOAT')">RUOAT<br>MENU</button>
+
+                        <button class="sps-btn c-numpad" onclick="numPress('1')">1</button>
+                        <button class="sps-btn c-numpad" onclick="numPress('2')">2</button>
+                        <button class="sps-btn c-numpad" onclick="numPress('3')">3</button>
+                        <button class="sps-btn c-hardware" onclick="fnPress('SUBTOTAL')">SUBTOTAL<br>(Välisumma)</button>
+                        <button class="sps-btn c-cash" onclick="fnPress('CASH')">KÄTEINEN<br>CASH<br>TL</button>
+
+                        <button class="sps-btn c-numpad" onclick="numPress('0')">0</button>
+                        <button class="sps-btn c-numpad" onclick="numPress('00')">00</button>
+                        <button class="sps-btn c-numpad" onclick="numPress('.')">.</button>
+                        <button class="sps-btn c-red" onclick="fnPress('CLEAR')">CLR</button>
+                        </div>
+                </div>
+            </div>
+
+            <div class="backoffice-panel style-prg" id="panel-PRG" style="display:none;">
+                <h2>PRG-MODE: Tuotteiden ja Tuoteryhmien Hallinta</h2>
+                
+                <div style="background:#0f172a; padding:12px; border-radius:6px;">
+                    <h3>1. Hallitse Tuoteryhmiä (Kategoriat)</h3>
+                    <div style="margin-top:8px; display:flex; gap:10px;">
+                        <input type="text" id="prgNewCat" class="bo-input" placeholder="Uusi tuoteryhmä (esim. SNACKS)">
+                        <button class="bo-btn" onclick="prgAddCategory()">Lisää ryhmä</button>
+                    </div>
+                    <div id="prgCatList" style="margin-top:8px; font-size:12px; color:#94a3b8;"></div>
+                </div>
+
+                <div style="background:#0f172a; padding:12px; border-radius:6px; margin-top:10px;">
+                    <h3>2. Lisää / Muokkaa Tuotetta (PLU)</h3>
+                    <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; margin-top:8px;">
+                        <select id="prgProdCat" class="bo-input"></select>
+                        <input type="text" id="prgProdName" class="bo-input" placeholder="Tuotteen nimi">
+                        <input type="number" step="0.01" id="prgProdPrice" class="bo-input" placeholder="Normaalihinta (€)">
+                        <input type="number" step="0.01" id="prgProdSpecPrice" class="bo-input" placeholder="Erikoishinta (€, valinnainen)">
+                    </div>
+                    <button class="bo-btn" style="margin-top:10px; background:#10b981;" onclick="prgSaveProduct()">Tallenna / Päivitä tuote</button>
+                </div>
+
+                <h3>Nykyiset PLU-tuotteet järjestelmässä</h3>
+                <table class="bo-table">
+                    <thead>
+                        <tr><th>Ryhmä</th><th>Tuotteen nimi</th><th>Normaalihinta</th><th>Erikoishinta</th><th>Toiminnot</th></tr>
+                    </thead>
+                    <tbody id="prgProductTable"></tbody>
+                </table>
+            </div>
+
+            <div class="backoffice-panel" id="panel-REP" style="display:none;">
+                <h2>REP-MODE: Myyntiraportit & Päätökset (X1 / Z1)</h2>
+                <p>Valitse ajettava raportti kuittirullalle tai järjestelmän historianäkymään.</p>
+                <div style="display:flex; gap:10px; margin:15px 0;">
+                    <button class="bo-btn" style="background:#fbbf24; color:#000;" onclick="runXReport()">AJA X1-RAPORTTI (Luku)</button>
+                    <button class="bo-btn bo-btn-danger" onclick="runZReport()">AJA Z1-RAPORTTI (Päivän nollaus)</button>
+                </div>
+                <h3>Raporttiarkisto / Esikatselu:</h3>
+                <pre id="repConsole" style="background:#000; padding:15px; color:#34d399; border-radius:4px; font-size:12px; min-height:250px;">Ei ajettuja raportteja tässä istunnossa.</pre>
+            </div>
+
+            <div class="backoffice-panel" id="panel-S" style="display:none;">
+                <h2>S-MODE: Järjestelmänhallinta & Myyjät (Clerks)</h2>
+                <div style="background:#0f172a; padding:12px; border-radius:6px;">
+                    <h3>Lisää uusi myyjä (Clerk) järjestelmään</h3>
+                    <div style="display:flex; gap:10px; margin-top:8px;">
+                        <input type="text" id="sNewUserName" class="bo-input" placeholder="Myyjän nimi">
+                        <input type="text" maxlength="4" id="sNewUserPin" class="bo-input" placeholder="4-numeroinen PIN">
+                        <button class="bo-btn" style="background:#10b981;" onclick="sAddClerk()">Tallenna myyjä</button>
+                    </div>
+                </div>
+                <h3 style="margin-top:15px;">Aktiiviset myyjät ja koodit</h3>
+                <table class="bo-table" style="width:500px;">
+                    <thead><tr><th>Myyjän nimi</th><th>PIN-koodi</th><th>Poisto</th></tr></thead>
+                    <tbody id="sClerkTable"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <script>
-        let inputString = "";       // Kerää näppäilyt senteinä (esim "850" = 8.50)
-        let activeMultiplier = 1;   // X-määräkerroin
-        let runningCart = [];       // Kuittirivit kesken olevassa ostoksessa
-        let isSubTotalState = false;// Onko painettu välisummaa
-        let isVoidMode = false;     // Onko VOID-painike päällä seuraavaa varten
+        // --- JÄRJESTELMÄN ALKUDATA (SPS-2000 MUISTIRAKENNE) ---
+        let categories = ["JUOMAT", "RUOAT"];
+        let products = [
+            { id: 1, category: "JUOMAT", name: "Hanaolut 0.5L", price: 8.50, specialPrice: null },
+            { id: 2, category: "JUOMAT", name: "Siideri 0.4L", price: 9.00, specialPrice: 7.00 },
+            { id: 3, category: "JUOMAT", name: "Lonkero", price: 8.80, specialPrice: null },
+            { id: 4, category: "RUOAT", name: "Pippuripihvi", price: 34.00, specialPrice: null },
+            { id: 5, category: "RUOAT", name: "Lohikeitto", price: 16.50, specialPrice: 13.00 }
+        ];
+        let clerks = [
+            { name: "Tarjoilija Pekka", pin: "1111" },
+            { name: "Päällikkö Tiina", pin: "2222" }
+        ];
 
-        const mainDisp = document.getElementById("vfdMainDisplay");
-        const subDisp = document.getElementById("vfdSubDisplay");
-        const receiptLines = document.getElementById("receiptLines");
-        const receiptPaper = document.getElementById("receiptPaper");
+        // --- TILASTOT & KUMULAATIOT (FINANCIAL TOTALS) ---
+        let financialTotals = { cash: 0, card: 0, totalSales: 0, receiptsCount: 0 };
 
-        // NUMERONÄPPÄILY
-        function pressNum(val) {
-            if(isSubTotalState) {
-                // Jos oltiin välisummassa, uusi numero tarkoittaa asiakkaan antamaa käteistä rahaa
-                inputString += val;
-                let cashAmount = parseFloat(inputString) / 100;
-                mainDisp.innerText = cashAmount.toFixed(2);
-                subDisp.innerText = "SAATU KÄTEINEN";
-            } else {
-                // Normaalisti syötetään hintaa tai määrää
-                inputString += val;
-                if(inputString.length > 8) inputString = inputString.substring(0,8);
-                renderInputValue();
+        // --- KASSAN REAALIAIKAINEN TILA ---
+        let currentMode = "REG";
+        let activeKeylink = "JUOMAT";
+        let currentClerk = null;
+        let numpadBuffer = "";
+        let currentCart = [];
+        let subtotalLocked = false;
+
+        // --- ALUSTUS ---
+        window.onload = function() {
+            startClock();
+            refreshAllViews();
+        };
+
+        function startClock() {
+            setInterval(() => {
+                const d = new Date();
+                document.getElementById('hardwareClock').innerText = d.toLocaleDateString('fi-FI') + " " + d.toLocaleTimeString('fi-FI');
+            }, 1000);
+        }
+
+        // --- TILANVAIHTAJA (MODE LOCK KEY) ---
+        function changeMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('mode-' + mode).classList.add('active');
+
+            // Piilotetaan kaikki paneelit ja näytetään valittu
+            document.getElementById('panel-REG').style.display = (mode === 'REG') ? 'flex' : 'none';
+            document.getElementById('panel-PRG').style.display = (mode === 'PRG') ? 'flex' : 'none';
+            document.getElementById('panel-REP').style.display = (mode === 'REP') ? 'flex' : 'none';
+            document.getElementById('panel-S').style.display = (mode === 'S') ? 'flex' : 'none';
+
+            updateStatusBar();
+            refreshAllViews();
+        }
+
+        function updateStatusBar() {
+            const bar = document.getElementById('statusBar');
+            let clerkText = currentClerk ? currentClerk.name : "-";
+            let msg = `OPR: ${clerkText} | MODE: ${currentMode}`;
+            if (!currentClerk && currentMode === 'REG') msg += " | COMPULSORY SIGN-ON";
+            bar.innerText = msg;
+        }
+
+        function refreshAllViews() {
+            if (currentMode === 'REG') {
+                renderMatrix();
+                updateCartDisplay();
+            } else if (currentMode === 'PRG') {
+                renderPrgViews();
+            } else if (currentMode === 'S') {
+                renderSViews();
             }
         }
 
-        function renderInputValue() {
-            if(inputString === "") {
-                mainDisp.innerText = "0.00";
+        // --- REG-MYYNTITILAN LOGIIKKA ---
+        function renderMatrix() {
+            const grid = document.getElementById('matrixGrid');
+            grid.innerHTML = '';
+
+            // Suodatetaan tuotteet valitun valikon mukaan
+            let filtered = products.filter(p => p.category === activeKeylink);
+
+            // Jos myyjää ei ole kirjattu, näytetään kirjautumisnäppäimet
+            if (!currentClerk) {
+                clerks.forEach(c => {
+                    const btn = document.createElement('button');
+                    btn.className = "sps-btn c-amber";
+                    btn.innerHTML = `KIRJAUDU:<br>${c.name}`;
+                    btn.onclick = () => {
+                        currentClerk = c;
+                        document.getElementById('vfdMsg').innerText = "CLERK SIGNED ON: " + c.name;
+                        updateStatusBar();
+                        refreshAllViews();
+                    };
+                    grid.appendChild(btn);
+                });
             } else {
-                let currentVal = parseFloat(inputString) / 100;
-                mainDisp.innerText = currentVal.toFixed(2);
+                // Piirretään tuotteet (PLU)
+                filtered.forEach(p => {
+                    const btn = document.createElement('button');
+                    btn.className = "sps-btn c-blue";
+                    let effectivePrice = p.specialPrice ? p.specialPrice : p.price;
+                    
+                    let priceTag = p.specialPrice 
+                        ? `<span style="color:#dc2626;font-weight:bold;">${p.specialPrice.toFixed(2)} €</span>` 
+                        : `${p.price.toFixed(2)} €`;
+
+                    btn.innerHTML = `<span>${p.name}</span><br><span>${priceTag}</span>`;
+                    btn.onclick = () => selectPLU(p);
+                    grid.appendChild(btn);
+                });
+
+                // Lisätään uloskirjaus-painike vapaaseen ruutuun
+                const logoutBtn = document.createElement('button');
+                logoutBtn.className = "sps-btn c-red";
+                logoutBtn.innerText = "SIGN OUT\n(Lopeta vuoro)";
+                logoutBtn.onclick = () => {
+                    currentClerk = null;
+                    currentCart = [];
+                    document.getElementById('vfdMsg').innerText = "SIGN ON REQUIRED";
+                    updateStatusBar();
+                    refreshAllViews();
+                };
+                grid.appendChild(logoutBtn);
+            }
+
+            // Täytetään loput 25 ruudun matriisista tyhjillä passeilla (SPS-2000 standardi)
+            let currentCount = grid.children.length;
+            for (let i = currentCount; i < 25; i++) {
+                const empty = document.createElement('button');
+                empty.className = "sps-btn c-inactive";
+                grid.appendChild(empty);
             }
         }
 
-        // CLEAR (C)
-        function pressClear() {
-            inputString = "";
-            isVoidMode = false;
-            renderInputValue();
-            subDisp.innerText = "VALMIS";
+        function switchKeylink(link) {
+            activeKeylink = link;
+            renderMatrix();
         }
 
-        // X/MÄÄRÄ-KERROIN
-        function pressMultiplier() {
-            let val = parseInt(inputString);
-            if(!isNaN(val) && val > 0) {
-                activeMultiplier = val;
-                subDisp.innerText = "MÄÄRÄ LUO: " + activeMultiplier + " X";
-                inputString = "";
-                mainDisp.innerText = "0.00";
-            } else {
-                subDisp.innerText = "VIRHE: SYÖTÄ MÄÄRÄ ENNSIN";
-            }
-        }
+        // Tuotteen valinta (PLU)
+        function selectPLU(product) {
+            if (!currentClerk) { beep(); return; }
 
-        // VOID / KORJAUS
-        function pressVoid() {
-            isVoidMode = true;
-            subDisp.innerText = "*** KORJAUSTILA (VOID) ***";
-        }
+            let price = product.specialPrice ? product.specialPrice : product.price;
 
-        // OSASTONÄPPÄIN (DEPT) -> Lyö tuotteen sisään hinnan ja kertoimen pohjalta
-        function pressDept(deptNumber, deptName) {
-            let price = parseFloat(inputString) / 100;
-            if(isNaN(price) || price <= 0) {
-                subDisp.innerText = "VIRHE: SYÖTÄ HINTA";
-                return;
-            }
-
-            if(isVoidMode) {
-                // Vähennetään kuitilta (Void)
-                runningCart.push({ name: "KORJ-" + deptName, price: -price, qty: activeMultiplier });
-                printToPaper(`-${activeMultiplier}X ${deptName}`, -(price * activeMultiplier));
-                subDisp.innerText = "RIVI KORJATTU";
-                isVoidMode = false;
-            } else {
-                // Normaalimyynti osastolle
-                runningCart.push({ name: deptName, price: price, qty: activeMultiplier });
-                if(activeMultiplier > 1) {
-                    printToPaper(`${activeMultiplier} X ${price.toFixed(2)}`, "");
+            // OHJEKIRJAN MUKAINEN PRICE OVERRIDE: 
+            // Jos numeronäppäimistölle oli syötetty jotain ennen tuotteen painamista, se ylikirjoittaa hinnan!
+            if (numpadBuffer !== "") {
+                let overrideVal = parseFloat(numpadBuffer);
+                if (!isNaN(overrideVal) && overrideVal > 0) {
+                    price = overrideVal;
+                    document.getElementById('vfdMsg').innerText = "PRICE OVERRIDE ACCEPTED";
                 }
-                printToPaper(`OSASTO ${deptNumber} ${deptName}`, price * activeMultiplier);
-                subDisp.innerText = "REKISTERÖITY OS " + deptNumber;
+                numpadBuffer = "";
             }
 
-            // Nollataan syötteet seuraavaa varten
-            inputString = "";
-            activeMultiplier = 1;
-            mainDisp.innerText = "0.00";
+            currentCart.push({ name: product.name, price: price });
+            subtotalLocked = false;
+            updateCartDisplay();
         }
 
-        // TULOSTUS PAPERIRULLALLE
-        function printToPaper(text, priceVal) {
-            const div = document.createElement("div");
-            div.className = "receipt-line";
-            
-            let priceStr = (typeof priceVal === "number" && priceVal !== 0) 
-                ? priceVal.toFixed(2) + " EUR" 
-                : (priceVal === 0 ? "0.00 EUR" : "");
+        // Numeronäppäimet
+        function numPress(val) {
+            if (val === '.' && numpadBuffer.includes('.')) return;
+            numpadBuffer += val;
+            document.getElementById('vfdMsg').innerText = "SYÖTE: " + numpadBuffer;
+        }
+
+        // Toimintonäppäimet (Fixed Hardware Keys)
+        function fnPress(action) {
+            if (action === 'CLEAR') {
+                numpadBuffer = "";
+                document.getElementById('vfdMsg').innerText = currentClerk ? "READY" : "SIGN ON REQUIRED";
+            }
+            else if (action === 'ERR_CORR') {
+                if (currentCart.length > 0) {
+                    let removed = currentCart.pop();
+                    document.getElementById('vfdMsg').innerText = "KORJATTU RIVI: " + removed.name;
+                    subtotalLocked = false;
+                    updateCartDisplay();
+                }
+            }
+            else if (action === 'VOID') {
+                if (currentCart.length > 0) {
+                    currentCart = [];
+                    subtotalLocked = false;
+                    document.getElementById('vfdMsg').innerText = "KOKO KUITTI MITÄTÖITY";
+                    updateCartDisplay();
+                }
+            }
+            else if (action === 'SUBTOTAL') {
+                if (currentCart.length === 0) return;
+                subtotalLocked = true;
+                document.getElementById('vfdMsg').innerText = "VÄLISUMMA LUKITTU. SYÖTÄ KÄTEINEN";
+            }
+            else if (action === 'CASH') {
+                if (currentCart.length === 0) return;
                 
-            div.innerHTML = `<span>${text}</span><span>${priceStr}</span>`;
-            receiptLines.appendChild(div);
-            receiptPaper.scrollTop = receiptPaper.scrollHeight;
-        }
-
-        // VÄLISUMMA (SUB-TOTAL)
-        function pressSubTotal() {
-            if(runningCart.length === 0) return;
-            
-            let total = runningCart.reduce((s, i) => s + (i.price * i.qty), 0);
-            mainDisp.innerText = total.toFixed(2);
-            subDisp.innerText = "VÄLISUMMA YHTEENSÄ";
-            
-            printToPaper("----------------------", "");
-            printToPaper("VÄLISUMMA YHTEENSÄ", total);
-            
-            isSubTotalState = true;
-            inputString = ""; // Valmistaudutaan vastaanottamaan käteistä rahaa näppäimistöltä
-        }
-
-        // KÄTEINEN (TL) - LOPETTAA KAUPAN JA LASKEE VAIHTORAHAN
-        function pressCashFinal() {
-            if(runningCart.length === 0) return;
-
-            let total = runningCart.reduce((s, i) => s + (i.price * i.qty), 0);
-            let paidAmount = total;
-
-            // Jos myyjä oli näppäillyt asiakkaan antaman summan senteissä
-            if(inputString !== "") {
-                paidAmount = parseFloat(inputString) / 100;
+                let total = currentCart.reduce((sum, item) => sum + item.price, 0);
+                
+                // Katsotaan onko syötetty annettua rahaa
+                if (numpadBuffer !== "") {
+                    let paid = parseFloat(numpadBuffer);
+                    if (paid >= total) {
+                        let change = paid - total;
+                        document.getElementById('vfdMsg').innerText = "TAKASIN: " + change.toFixed(2) + " €";
+                        
+                        // Kirjataan myynteihin
+                        financialTotals.cash += total;
+                        financialTotals.totalSales += total;
+                        financialTotals.receiptsCount++;
+                        
+                        finalizeTransaction();
+                    } else {
+                        document.getElementById('vfdMsg').innerText = "VIRHE: RAHA EI RIITÄ";
+                        beep();
+                    }
+                } else {
+                    // Tasaraha käteinen
+                    document.getElementById('vfdMsg').innerText = "MAKSETTU TASARAHALLA";
+                    financialTotals.cash += total;
+                    financialTotals.totalSales += total;
+                    financialTotals.receiptsCount++;
+                    finalizeTransaction();
+                }
             }
+        }
 
-            if(paidAmount < total) {
-                subDisp.innerText = "RAHA EI RIITÄ!";
+        function updateCartDisplay() {
+            const container = document.getElementById('receiptLines');
+            container.innerHTML = '';
+            let total = 0;
+
+            currentCart.forEach(item => {
+                const div = document.createElement('div');
+                div.className = "r-line";
+                div.innerHTML = `<span>${item.name}</span><span>${item.price.toFixed(2)} €</span>`;
+                container.appendChild(div);
+                total += item.price;
+            });
+
+            document.getElementById('totalDisp').innerText = total.toFixed(2) + " €";
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function finalizeTransaction() {
+            currentCart = [];
+            numpadBuffer = "";
+            subtotalLocked = false;
+            updateCartDisplay();
+        }
+
+        function beep() {
+            // Jäljittelee ohjekirjan virheääntä (Error Beep)
+            console.log("SPS2000_ERROR_BEEP");
+        }
+
+
+        // --- PRG-OHJELMOINTITILAN LOGIIKKA (BACKOFFICE) ---
+        function renderPrgViews() {
+            // Täytetään kategorioiden valintalistat
+            const catSelect = document.getElementById('prgProdCat');
+            catSelect.innerHTML = categories.map(c => `<option value="${c}">${c}</option>`).join('');
+
+            // Tulostetaan kategorialista tekstinä
+            document.getElementById('prgCatList').innerText = "Aktiiviset ryhmät: " + categories.join(', ');
+
+            // Rakennetaan tuotetaulukko
+            const tbody = document.getElementById('prgProductTable');
+            tbody.innerHTML = products.map((p, index) => `
+                <tr>
+                    <td>${p.category}</td>
+                    <td><strong>${p.name}</strong></td>
+                    <td>${p.price.toFixed(2)} €</td>
+                    <td>${p.specialPrice ? p.specialPrice.toFixed(2) + ' €' : '<span style="color:#64748b;">-</span>'}</td>
+                    <td>
+                        <button class="bo-btn bo-btn-danger" onclick="prgDeleteProduct(${index})">Poista PLU</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function prgAddCategory() {
+            const name = document.getElementById('prgNewCat').value.trim().toUpperCase();
+            if (name && !categories.includes(name)) {
+                categories.push(name);
+                document.getElementById('prgNewCat').value = "";
+                renderPrgViews();
+            }
+        }
+
+        function prgSaveProduct() {
+            const cat = document.getElementById('prgProdCat').value;
+            const name = document.getElementById('prgProdName').value.trim();
+            const price = parseFloat(document.getElementById('prgProdPrice').value);
+            const specPriceInput = document.getElementById('prgProdSpecPrice').value;
+            const specPrice = specPriceInput !== "" ? parseFloat(specPriceInput) : null;
+
+            if (!name || isNaN(price)) { alert("Nimi ja normaalihinta vaaditaan!"); return; }
+
+            products.push({
+                id: Date.now(),
+                category: cat,
+                name: name,
+                price: price,
+                specialPrice: specPrice
+            });
+
+            // Tyhjennetään kentät
+            document.getElementById('prgProdName').value = "";
+            document.getElementById('prgProdPrice').value = "";
+            document.getElementById('prgProdSpecPrice').value = "";
+            renderPrgViews();
+        }
+
+        function prgDeleteProduct(index) {
+            products.splice(index, 1);
+            renderPrgViews();
+        }
+
+
+        // --- REP-RAPORTOINTITILA (X1 & Z1 RAPORTIT) ---
+        function runXReport() {
+            const consoleBox = document.getElementById('repConsole');
+            let txt = `*** SAM4S SPS-2000 FINANCIAL REPORT (X1) ***\n`;
+            txt += `TYYPPI: LUKURAPORTTI (EI NOLLAUSTA)\n`;
+            txt += `PÄIVÄYS: ${new Date().toLocaleString('fi-FI')}\n`;
+            txt += `-------------------------------------------\n`;
+            txt += `REKISTERÖIDYT KUITIT:       ${financialTotals.receiptsCount} kpl\n`;
+            txt += `KÄTEISMYYNTI (CASH TOTAL):  ${financialTotals.cash.toFixed(2)} €\n`;
+            txt += `KORTTIMYYNTI (CARD CHG):    ${financialTotals.card.toFixed(2)} €\n`;
+            txt += `===========================================\n`;
+            txt += `BRUTTOMYYNTI YHTEENSÄ:      ${financialTotals.totalSales.toFixed(2)} €\n`;
+            consoleBox.innerText = txt;
+        }
+
+        function runZReport() {
+            if (!confirm("Haluatko varmasti ajaa Z1-päätösraportin?\nTämä tyhjentää ja nollaa kassan myyntilaskurit!")) return;
+
+            const consoleBox = document.getElementById('repConsole');
+            let txt = `*** SAM4S SPS-2000 DAILY RESET REPORT (Z1) ***\n`;
+            txt += `TYYPPI: PÄIVÄN PÄÄTÖSRAPORTTI (NOLLATTU)\n`;
+            txt += `PÄIVÄYS: ${new Date().toLocaleString('fi-FI')}\n`;
+            txt += `-------------------------------------------\n`;
+            txt += `KUITTEJA YHTEENSÄ:          ${financialTotals.receiptsCount} kpl\n`;
+            txt += `KÄTEISKERTYMÄ LOCKET:       ${financialTotals.cash.toFixed(2)} €\n`;
+            txt += `KORTTIKERTYMÄ LOCKET:       ${financialTotals.card.toFixed(2)} €\n`;
+            txt += `===========================================\n`;
+            txt += `NOLLATTU SUMMA YHTEENSÄ:    ${financialTotals.totalSales.toFixed(2)} €\n`;
+            txt += `\n>>> JÄRJESTELMÄN TALOUSTILIT NOLLATTU ONNISTUNEESTI <<<`;
+            consoleBox.innerText = txt;
+
+            // NOLLATAAN TIEDOT (OHJEKIRJAN MUKAINEN Z-AJO)
+            financialTotals = { cash: 0, card: 0, totalSales: 0, receiptsCount: 0 };
+        }
+
+
+        // --- S-TILAN LOGIIKKA (MYYJIEN HALLINTA) ---
+        function renderSViews() {
+            const tbody = document.getElementById('sClerkTable');
+            tbody.innerHTML = clerks.map((c, index) => `
+                <tr>
+                    <td>${c.name}</td>
+                    <td><code>${c.pin}</code></td>
+                    <td><button class="bo-btn bo-btn-danger" onclick="sDeleteClerk(${index})">Poista</button></td>
+                </tr>
+            `).join('');
+        }
+
+        function sAddClerk() {
+            const name = document.getElementById('sNewUserName').value.trim();
+            const pin = document.getElementById('sNewUserPin').value.trim();
+
+            if (!name || pin.length !== 4 || isNaN(parseInt(pin))) {
+                alert("Syötä nimi ja tasan 4-numeroinen PIN-koodi!");
                 return;
             }
 
-            let changeDue = paidAmount - total;
-
-            // Tulostetaan loppulaskenta paperille
-            printToPaper("KÄTEINEN / TL", paidAmount);
-            printToPaper("TAKASIN / VAIHTO", changeDue);
-            printToPaper("======================", "");
-            printToPaper("KIITOS KÄYNNISTÄ!", "");
-            printToPaper(" ", ""); // Tyhjä rivi väliin
-
-            // Päivitetään vihreä loisteputkinäyttö isolla
-            mainDisp.innerText = changeDue.toFixed(2);
-            subDisp.innerText = "TAKASINANNETTAVA VAIHTORAHA";
-
-            // Nollataan koneen sisäinen tila seuraavaa asiakasta varten
-            runningCart = [];
-            inputString = "";
-            activeMultiplier = 1;
-            isSubTotalState = false;
-            isVoidMode = false;
+            clerks.push({ name: name, pin: pin });
+            document.getElementById('sNewUserName').value = "";
+            document.getElementById('sNewUserPin').value = "";
+            renderSViews();
         }
 
-        // MEKAANINEN OPEN DRAWER -NÄPPÄIN
-        function pressOpenDrawer() {
-            subDisp.innerText = "LAATIKKO AUKI (KOLAHDUS)";
-            alert("Kassalipas kolahti mekaanisesti auki!");
+        function sDeleteClerk(index) {
+            if (clerks.length <= 1) { alert("Järjestelmässä on oltava vähintään yksi myyjä!"); return; }
+            clerks.splice(index, 1);
+            renderSViews();
         }
     </script>
 </body>
