@@ -16,8 +16,6 @@ const UI = {
             b.onclick = () => UI.processAction(i);
             kb.appendChild(b);
         }
-    },
-    // ... loput funktiot samat kuin aiemmin ...
 };
         console.log("UI: Näppäimistö piirretty.");
     },
