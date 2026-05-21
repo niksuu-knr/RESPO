@@ -1,49 +1,22 @@
 /**
- * SAM4s SPS-2000 CORE - VAIHE 1: TIETOKANTARUNKO
- * Tämä koodi simuloi kassan sisäistä prosessoria ja muistia.
+ * SAM4s SPS-2000 KERNEL - In-App Programming Version
  */
-
-const SPS2000_Kernel = {
-    // 1. PYSYVÄ MUISTI (Non-Volatile Settings)
-    Config: {
-        RegisterID: "01",
-        TaxRates: { 1: 0.14, 2: 0.24 }, // ALV 14% ja 24%
-        ReceiptHeader: ["KAHVILA TESTI", "TESTIKUJA 1", "02600 ESPOO"]
+const Kernel = {
+    // 1. Ladataan data selaimen muistista (localStorage)
+    db: JSON.parse(localStorage.getItem('sps2000_storage')) || {
+        PLU: { 101: { name: "KAHVI", price: 2.50 } },
+        Config: { tax: 0.14 }
     },
 
-    // 2. KIIHTYVÄ MUISTI (RAM - Myyntitapahtumat)
-    RAM: {
-        Mode: "REG", // REG, PRG, REP, S
-        CurrentClerk: null,
-        ActiveReceipt: {
-            Items: [], // Lista tuotteista
-            Subtotal: 0,
-            TaxTotal: 0
-        },
-        // Finanssirekisterit (ne, jotka nollautuvat Z-raportissa)
-        Financials: {
-            GrossSales: 0,
-            NetSales: 0,
-            TotalTax: 0,
-            VoidCount: 0
-        }
+    // 2. Tallennetaan data selaimen muistiin (Tämä tekee kassasta "elävän")
+    save: () => {
+        localStorage.setItem('sps2000_storage', JSON.stringify(Kernel.db));
+        console.log("SYSTEM: ASETUKSET TALLENNETTU");
     },
 
-    // 3. TUOTETIETOKANTA (PLU)
-    PLU_Database: {
-        // Esimerkki: PLU 101, Nimi, Hinta, Veroryhmä
-        101: { name: "KAHVI", price: 2.50, taxGroup: 1 },
-        102: { name: "PULLA", price: 3.00, taxGroup: 1 }
+    // 3. Lisätään uusi PLU-tuote sovelluksen sisältä
+    programPLU: (id, name, price) => {
+        Kernel.db.PLU[id] = { name: name, price: price };
+        Kernel.save();
     }
 };
-
-// Ytimen perusfunktio tilan vaihtoon (SIVU 18-24 logiikka alkaa tästä)
-function setSystemMode(mode) {
-    if (["REG", "PRG", "REP", "S"].includes(mode)) {
-        SPS2000_Kernel.RAM.Mode = mode;
-        console.log(`SYSTEM: MODE CHANGED TO ${mode}`);
-    }
-}
-
-// Alustetaan ydin
-console.log("SPS-2000 Kernel Initialized. Database Ready.");
