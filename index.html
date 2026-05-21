@@ -1,378 +1,228 @@
+/**
+ * SAM4s SPS-2000 CORE - VAIHE 1: TIETOKANTARUNKO
+ * Tämä koodi simuloi kassan sisäistä prosessoria ja muistia.
+ */
+
+const SPS2000_Kernel = {
+    // 1. PYSYVÄ MUISTI (Non-Volatile Settings)
+    Config: {
+        RegisterID: "01",
+        TaxRates: { 1: 0.14, 2: 0.24 }, // ALV 14% ja 24%
+        ReceiptHeader: ["KAHVILA TESTI", "TESTIKUJA 1", "02600 ESPOO"]
+    },
+
+    // 2. KIIHTYVÄ MUISTI (RAM - Myyntitapahtumat)
+    RAM: {
+        Mode: "REG", // REG, PRG, REP, S
+        CurrentClerk: null,
+        ActiveReceipt: {
+            Items: [], // Lista tuotteista
+            Subtotal: 0,
+            TaxTotal: 0
+        },
+        // Finanssirekisterit (ne, jotka nollautuvat Z-raportissa)
+        Financials: {
+            GrossSales: 0,
+            NetSales: 0,
+            TotalTax: 0,
+            VoidCount: 0
+        }
+    },
+
+    // 3. TUOTETIETOKANTA (PLU)
+    PLU_Database: {
+        // Esimerkki: PLU 101, Nimi, Hinta, Veroryhmä
+        101: { name: "KAHVI", price: 2.50, taxGroup: 1 },
+        102: { name: "PULLA", price: 3.00, taxGroup: 1 }
+    }
+};
+
+// Ytimen perusfunktio tilan vaihtoon (SIVU 18-24 logiikka alkaa tästä)
+function setSystemMode(mode) {
+    if (["REG", "PRG", "REP", "S"].includes(mode)) {
+        SPS2000_Kernel.RAM.Mode = mode;
+        console.log(`SYSTEM: MODE CHANGED TO ${mode}`);
+    }
+}
+
+// Alustetaan ydin
+console.log("SPS-2000 Kernel Initialized. Database Ready.");
+
+/**
+ * SAM4s SPS-2000 CORE - VAIHE 2: PARSER MOOTTORI
+ * Tämä moduuli prosessoi näppäinkomennot ja päivittää RAM-tietokantaa.
+ */
+
+const Parser = {
+    // Käsittelee PLU-myynnin: esim. (101, PLU)
+    processPLU: (pluID) => {
+        if (SPS2000_Kernel.RAM.Mode !== "REG") {
+            console.error("SYSTEM: MYYNTI VAIN REG-TILASSA");
+            return;
+        }
+
+        const item = SPS2000_Kernel.PLU_Database[pluID];
+        if (!item) {
+            console.error("SYSTEM: PLU EI LÖYDY");
+            return;
+        }
+
+        // Lasketaan vero (ohjekirjan mukainen logiikka)
+        const taxRate = SPS2000_Kernel.SystemOptions.TaxRates[item.taxGroup];
+        const taxAmount = item.price * taxRate;
+
+        // Päivitetään RAM-tapahtumapuskuri
+        const saleRecord = {
+            name: item.name,
+            price: item.price,
+            tax: taxAmount
+        };
+
+        SPS2000_Kernel.RAM.ActiveReceipt.Items.push(saleRecord);
+        SPS2000_Kernel.RAM.ActiveReceipt.Subtotal += item.price;
+        SPS2000_Kernel.RAM.ActiveReceipt.TaxTotal += taxAmount;
+
+        console.log(`PROCESSED: ${item.name} | Hinta: ${item.price} | Vero: ${taxAmount.toFixed(2)}`);
+    },
+
+    // Käsittelee kuitin finalisoinnin (Sivu 18: CASH)
+    finalizeSale: () => {
+        const receipt = SPS2000_Kernel.RAM.ActiveReceipt;
+        
+        // Siirretään RAM-tiedot pysyvään finanssirekisteriin
+        SPS2000_Kernel.RAM.Financials.GrossSales += receipt.Subtotal;
+        SPS2000_Kernel.RAM.Financials.TotalTax += receipt.TaxTotal;
+
+        // Tyhjennetään puskuri
+        SPS2000_Kernel.RAM.ActiveReceipt = { Items: [], Subtotal: 0, TaxTotal: 0 };
+        console.log("SYSTEM: KUITTI VALMIS. RAM NOLLATTU.");
+    }
+};
+/**
+ * SAM4s SPS-2000 CORE - VAIHE 3: INPUT CONTROLLER
+ * Tämä moduuli yhdistää näppäimistön logiikan parseriin.
+ */
+
+const InputController = {
+    // Käsittelee fyysisen näppäimen painalluksen
+    handleKeyPress: (keyID, value = null) => {
+        const mode = SPS2000_Kernel.RAM.Mode;
+
+        // Esimerkki: PLU-näppäin
+        if (keyID === 'PLU') {
+            Parser.processPLU(value);
+        }
+        
+        // Esimerkki: CASH-näppäin
+        else if (keyID === 'CASH') {
+            if (SPS2000_Kernel.RAM.ActiveReceipt.Items.length > 0) {
+                Parser.finalizeSale();
+            } else {
+                console.log("SYSTEM: KUITTI ON TYHJÄ");
+            }
+        }
+        
+        // Esimerkki: MODE-vaihto (Sivu 18-24 hallinta)
+        else if (keyID === 'MODE_SWITCH') {
+            const modes = ['REG', 'PRG', 'REP', 'S'];
+            let nextIndex = (modes.indexOf(mode) + 1) % modes.length;
+            setSystemMode(modes[nextIndex]);
+        }
+    }
+};
+
+// SIMULAATIO: Näin syvällinen kassa toimii:
+// 1. Käyttäjä painaa "101" + "PLU"
+// 2. Controller välittää tiedon parserille
+// 3. Parseri tarkistaa tilan ja päivittää RAM-muistin
+/**
+ * SAM4s SPS-2000 CORE - VAIHE 4: RAPORTOINTIMOOTTORI
+ * Tämä moduuli huolehtii Z-raportin generoinnista ja RAM-nollauksesta.
+ */
+
+const ReportingEngine = {
+    // Generoi raportin ja nollaa kassan (Z-Report)
+    runZReport: () => {
+        if (SPS2000_Kernel.RAM.Mode !== "REP") {
+            console.error("SYSTEM: RAPORTTI VAIN REP-TILASSA");
+            return;
+        }
+
+        const data = SPS2000_Kernel.RAM.Financials;
+        
+        // 1. Luodaan raportti "tulosteena"
+        const report = `
+        --- Z-RAPORTTI ---
+        KASSA: ${SPS2000_Kernel.Config.RegisterID}
+        BRUTTOMYYNTI: ${data.GrossSales.toFixed(2)} €
+        NETTOMYYNTI:  ${data.NetSales.toFixed(2)} €
+        VEROT YHT:    ${data.TotalTax.toFixed(2)} €
+        ------------------
+        `;
+
+        console.log(report);
+
+        // 2. RAM-muistin nollaus (Tämä simuloi NVRAM-nollausta)
+        SPS2000_Kernel.RAM.Financials = {
+            GrossSales: 0,
+            NetSales: 0,
+            TotalTax: 0,
+            VoidCount: 0
+        };
+
+        // 3. Päivitetään kassan tila
+        console.log("SYSTEM: Z-RAPORTTI VALMIS. KASSA NOLLATTU.");
+    },
+
+    // X-raportti (Vain lukee tiedot, ei nollaa)
+    runXReport: () => {
+        console.log("--- X-RAPORTTI (VAIN LUKU) ---");
+        console.log(SPS2000_Kernel.RAM.Financials);
+    }
+};
+
+// Logiikka visuaalisena mallina:
+//
 <!DOCTYPE html>
 <html lang="fi">
 <head>
     <meta charset="UTF-8">
-    <title>SAM4s SPS-2000 - Täysin itsenäisesti ohjelmoitava simulaattori</title>
+    <title>SAM4s SPS-2000 - Täysi Firmware Integraatio</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-        body { background-color: #1a1a1a; font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; }
-        .pos-terminal { width: 1024px; height: 768px; background-color: #2b2b2b; border: 15px solid #000; border-radius: 10px; box-shadow: 0 0 30px rgba(0,0,0,0.7); display: flex; flex-direction: column; overflow: hidden; position: relative; }
-        
-        /* Mode-palkki */
-        .mode-tabs { height: 45px; background-color: #3d3d3d; display: flex; border-bottom: 2px solid #000; }
-        .tab { width: 80px; display: flex; justify-content: center; align-items: center; color: #fff; font-weight: bold; font-size: 14px; border-right: 2px solid #000; cursor: pointer; background-color: #4a4a4a; }
-        .tab.active { background-color: #0056b3; }
-        .tab.prg-active { background-color: #8b0000; }
-        .tab.s-active { background-color: #4b0082; }
-        .status-msg { flex-grow: 1; background-color: #005f3e; color: #00ff00; display: flex; align-items: center; padding-left: 20px; font-weight: bold; font-size: 16px; letter-spacing: 1px; }
-
-        /* Päänäyttöalue */
-        .main-container { display: flex; flex-grow: 1; height: calc(100% - 100px); }
-        
-        /* Myyntitilan ruudukko */
-        .programmable-grid { width: 60%; display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(5, 1fr); gap: 3px; padding: 5px; background-color: #1e1e1e; }
-        .prog-key { background-color: #5c6b73; border: 1px solid #3a4750; border-radius: 4px; color: #fff; font-size: 12px; font-weight: bold; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; cursor: pointer; box-shadow: inset 0 1px 3px rgba(255,255,255,0.2); }
-        .prog-key .price { font-size: 10px; color: #ffeb3b; marginTop: 2px; }
-        .prog-key:active { background-color: #3a4750; }
-
-        /* Sisäiset ohjelmointivalikot (Peittävät myyntiruudukon kun tilat vaihtuvat) */
-        .internal-menu { width: 60%; background-color: #333; color: #fff; padding: 20px; display: none; flex-direction: column; gap: 15px; }
-        .menu-title { font-size: 20px; font-weight: bold; border-bottom: 2px solid #555; padding-bottom: 5px; color: #ffeb3b; }
-        .menu-btn { background-color: #444; border: 2px solid #555; padding: 12px; color: #fff; font-weight: bold; cursor: pointer; text-align: center; border-radius: 5px; }
-        .menu-btn:hover { background-color: #555; }
-        .pgm-input-group { display: flex; flex-direction: column; gap: 5px; margin-top: 10px; }
-        .pgm-input-group label { font-size: 14px; color: #ccc; }
-        .pgm-input { background-color: #000; border: 1px solid #666; color: #00ff00; padding: 10px; font-size: 16px; font-family: monospace; border-radius: 4px; }
-
-        /* Oikea reuna */
-        .right-panel { width: 40%; display: flex; flex-direction: column; background-color: #1e1e1e; border-left: 3px solid #000; padding: 5px; }
-        .transaction-detail { height: 50%; background-color: #b0c4de; border: 2px solid #000; border-radius: 4px; padding: 8px; font-family: 'Courier New', monospace; font-size: 14px; color: #000; overflow-y: auto; }
-        .receipt-line { display: flex; justify-content: space-between; margin-bottom: 3px; }
-        .receipt-empty-text { color: #555; text-align: center; margin-top: 50px; font-style: italic; }
-
-        /* Numeronäppäimistö */
-        .fixed-keyboard { height: 50%; margin-top: 5px; display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(4, 1fr); gap: 3px; }
-        .fixed-key { background-color: #004080; border: 1px solid #00264d; border-radius: 4px; color: #fff; font-size: 20px; font-weight: bold; display: flex; justify-content: center; align-items: center; cursor: pointer; box-shadow: inset 0 1px 3px rgba(255,255,255,0.3); }
-        .fixed-key:active { background-color: #00264d; }
-        .fixed-key.fn { background-color: #404040; border-color: #262626; font-size: 14px; }
-        .fixed-key.fn:active { background-color: #262626; }
-
-        /* Alapalkit */
-        .footer-panel { height: 55px; background-color: #2b2b2b; display: flex; flex-direction: column; border-top: 2px solid #000; }
-        .message-line { height: 27px; background-color: #000; color: #ff3333; font-family: monospace; font-size: 14px; display: flex; align-items: center; padding-left: 10px; font-weight: bold; }
-        .status-line { height: 28px; background-color: #333; color: #ccc; font-size: 12px; display: flex; justify-content: space-between; align-items: center; padding: 0 15px; border-top: 1px solid #444; }
+        body { background: #222; color: #fff; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; }
+        .grid { display: grid; grid-template-columns: repeat(8, 80px); gap: 5px; margin-top: 20px; }
+        .key { width: 80px; height: 60px; background: #444; border: 1px solid #000; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 10px; text-align: center; }
+        .key:active { background: #666; }
+        #display { width: 640px; height: 100px; background: #000; color: #0f0; margin-top: 20px; padding: 10px; font-family: monospace; overflow: hidden; }
     </style>
 </head>
 <body>
 
-<div class="pos-terminal">
-    
-    <div class="mode-tabs">
-        <div class="tab active" id="tab-reg" onclick="switchMode('REG')">REG</div>
-        <div class="tab" id="tab-rep" onclick="switchMode('REP')">REP</div>
-        <div class="tab" id="tab-prg" onclick="switchMode('PRG')">PRG</div>
-        <div class="tab" id="tab-s" onclick="switchMode('S')">S</div>
-        <div class="status-msg" id="mode-status-text">SIGN ON REQUIRED</div>
-    </div>
+    <div id="display">KASSA VALMIS. TILA: REG</div>
+    <div class="grid" id="keyboard"></div>
 
-    <div class="main-container">
-        
-        <div class="programmable-grid" id="reg-grid">
-            </div>
+    <script>
+        // Kytketään aiemmin luodut moottorit käyttöliittymään
+        const Keyboard = document.getElementById('keyboard');
+        const Display = document.getElementById('display');
 
-        <div class="internal-menu" id="prg-menu">
-            <div class="menu-title">PRG-MODE: TUOTTEIDEN OHJELMOINTI</div>
-            <div class="menu-btn" onclick="openPluProgramForm()">1. OHJELMOI PAINIKKEET (PLU)</div>
-            <div class="menu-btn" onclick="switchMode('REG')">X. POISTU / PALAA MYYNTIIN</div>
-            
-            <div id="plu-form" style="display:none; margin-top:15px; border-top:1px solid #555; padding-top:15px;">
-                <div class="pgm-input-group">
-                    <label>Valitse painikkeen numero (1 - 40):</label>
-                    <input type="number" id="pgm-key-num" class="pgm-input" min="1" max="40" placeholder="Esim. 1">
-                </div>
-                <div class="pgm-input-group">
-                    <label>Tuotteen nimi (Näppäinteksti):</label>
-                    <input type="text" id="pgm-key-name" class="pgm-input" placeholder="Esim. KAHVI">
-                </div>
-                <div class="pgm-input-group">
-                    <label>Tuotteen hinta (€):</label>
-                    <input type="number" id="pgm-key-price" class="pgm-input" step="0.01" placeholder="Esim. 2.50">
-                </div>
-                <button class="menu-btn" style="background-color:#005f3e; margin-top:15px; width:100%;" onclick="savePluFromScreen()">TALLENNA PAINIKE KASSAN MUISTIIN</button>
-            </div>
-        </div>
-
-        <div class="internal-menu" id="s-menu">
-            <div class="menu-title">S-MODE: JÄRJESTELMÄASETUKSET</div>
-            <div id="s-lock-screen">
-                <div class="pgm-input-group">
-                    <label>SYÖTÄ S-MODE SALASANA JA PAINA VÄLISUMMA (SUBTOTAL):</label>
-                    <input type="password" id="s-password-input" class="pgm-input" readonly placeholder="Käytä kassan numeropadia">
-                </div>
-            </div>
-            <div id="s-content-screen" style="display:none;">
-                <p style="color:#00ff00; margin-bottom:10px;">✓ SALASANA OKEIN. PÄÄSY MYÖNNETTY.</p>
-                <div class="menu-btn" onclick="clearRegisterMemory()">1. DEFAULT RAM INITIALISE (TÄYSI NOLLAUS)</div>
-                <div class="menu-btn" onclick="switchMode('REG')">X. POISTU S-TILASTA</div>
-            </div>
-        </div>
-
-        <div class="right-panel">
-            <div class="transaction-detail" id="receipt-area">
-                <div class="receipt-empty-text">[ Kuitti on tyhjä ]</div>
-            </div>
-
-            <div class="fixed-keyboard">
-                <div class="fixed-key" onclick="pressNum('7')">7</div>
-                <div class="fixed-key" onclick="pressNum('8')">8</div>
-                <div class="fixed-key" onclick="pressNum('9')">9</div>
-                <div class="fixed-key fn" onclick="pressFn('X')">X/TIME</div>
-                
-                <div class="fixed-key" onclick="pressNum('4')">4</div>
-                <div class="fixed-key" onclick="pressNum('5')">5</div>
-                <div class="fixed-key" onclick="pressNum('6')">6</div>
-                <div class="fixed-key fn" onclick="pressFn('CLR')">CLR</div>
-                
-                <div class="fixed-key" onclick="pressNum('1')">1</div>
-                <div class="fixed-key" onclick="pressNum('2')">2</div>
-                <div class="fixed-key" onclick="pressNum('3')">3</div>
-                <div class="fixed-key fn" style="grid-row: span 2; height: 100%;" onclick="pressFn('SUBTOTAL')">SUB<br>TOTAL</div>
-                
-                <div class="fixed-key" onclick="pressNum('0')">0</div>
-                <div class="fixed-key" onclick="pressNum('00')">00</div>
-                <div class="fixed-key" onclick="pressNum('.')">.</div>
-            </div>
-        </div>
-
-    </div>
-
-    <div class="footer-panel">
-        <div class="message-line" id="message-bar">SYSTEM: PLEASE LOG IN / SYÖTÄ TYÖNTEKIJÄKOODI (1) JA PAINA SUBTOTAL</div>
-        <div class="status-line">
-            <span>PRICE LEVEL: 1</span>
-            <span>RECEIPT: ON</span>
-            <span>REGISTER #: 01</span>
-        </div>
-    </div>
-
-</div>
-
-<script>
-    // Kassan sisäinen tietokanta/muisti tuotteille (40 paikkaa)
-    let kassaMuisti = {};
-    for(let i = 1; i <= 40; i++) {
-        kassaMuisti[i] = { name: "KEYLINK " + i, price: 0 };
-    }
-
-    let nykyinenTila = 'REG';
-    let signedIn = false;
-    let numpadSyote = "";
-    let kuittiTuotteet = [];
-    let kuittiYhteensa = 0;
-
-    // Alustetaan päänäytön painikkeet
-    function paivitaKassanPainikkeet() {
-        const grid = document.getElementById('reg-grid');
-        grid.innerHTML = "";
+        // Luodaan 40 painiketta
         for(let i = 1; i <= 40; i++) {
-            const nappi = document.createElement('div');
-            nappi.className = "prog-key";
+            let btn = document.createElement('div');
+            btn.className = 'key';
             
-            if(kassaMuisti[i].price > 0) {
-                nappi.innerHTML = `<div>${kassaMuisti[i].name}</div><div class="price">${kassaMuisti[i].price.toFixed(2)} €</div>`;
-            } else {
-                nappi.innerHTML = `<div>${kassaMuisti[i].name}</div>`;
-            }
+            // Määritellään painikkeiden toiminnallisuus (Sivut 18-24 logiikka)
+            if(i === 1) { btn.innerText = "KAHVI\n(PLU 101)"; btn.onclick = () => { InputController.handleKeyPress('PLU', 101); updateDisp(); }; }
+            else if(i === 32) { btn.innerText = "CASH"; btn.onclick = () => { InputController.handleKeyPress('CASH'); updateDisp(); }; }
+            else if(i === 40) { btn.innerText = "MODE"; btn.onclick = () => { InputController.handleKeyPress('MODE_SWITCH'); updateDisp(); }; }
+            else { btn.innerText = "P" + i; }
             
-            nappi.onclick = () => tryMuuTuote(i);
-            grid.appendChild(nappi);
-        }
-    }
-
-    // Tilojen vaihtaminen yläpalkeista (REG, REP, PRG, S)
-    function switchMode(uusiTila) {
-        document.querySelectorAll('.tab').forEach(t => t.className = "tab");
-        document.getElementById('reg-grid').style.display = 'none';
-        document.getElementById('prg-menu').style.display = 'none';
-        document.getElementById('s-menu').style.display = 'none';
-        
-        nykyinenTila = uusiTila;
-        numpadSyote = "";
-        paivitaNaytot();
-
-        if(uusiTila === 'REG') {
-            document.getElementById('tab-reg').className = "tab active";
-            document.getElementById('reg-grid').style.display = 'grid';
-        } else if(uusiTila === 'PRG') {
-            document.getElementById('tab-prg').className = "tab prg-active";
-            document.getElementById('prg-menu').style.display = 'flex';
-            document.getElementById('plu-form').style.display = 'none';
-        } else if(uusiTila === 'S') {
-            document.getElementById('tab-s').className = "tab s-active";
-            document.getElementById('s-menu').style.display = 'flex';
-            document.getElementById('s-lock-screen').style.display = 'block';
-            document.getElementById('s-content-screen').style.display = 'none';
-            document.getElementById('s-password-input').value = "";
-        }
-    }
-
-    function paivitaNaytot() {
-        const statusText = document.getElementById('mode-status-text');
-        const msgBar = document.getElementById('message-bar');
-
-        if(nykyinenTila === 'REG') {
-            if(!signedIn) {
-                statusText.innerText = "SIGN ON REQUIRED";
-                msgBar.innerText = "SYSTEM: SYÖTÄ TYÖNTEKIJÄKOODI (1) JA VAHVISTA PAINAMALLA SUBTOTAL";
-            } else {
-                statusText.innerText = "REGISTER MODE";
-                msgBar.innerText = numpadSyote ? numpadSyote : "VALMIS MYYNTIIN. VALITSE TUOTE TAI SYÖTÄ SUMMA.";
-            }
-        } else if(nykyinenTila === 'PRG') {
-            statusText.innerText = "PROGRAM MODE active";
-            msgBar.innerText = "OHJELMOINTI: VALITSE TOIMINTO NÄYTÖLTÄ.";
-        } else if(nykyinenTila === 'S') {
-            statusText.innerText = "SECURE MODE active";
-            msgBar.innerText = "JÄRJESTELMÄLUKITUS: ANNA SALASANA NUMEROPADILLA.";
-        }
-    }
-
-    // Numeronäppäinten käsittely
-    function pressNum(num) {
-        numpadSyote += num;
-        if(nykyinenTila === 'S') {
-            document.getElementById('s-password-input').value = numpadSyote;
-        }
-        paivitaNaytot();
-    }
-
-    // Toimintonäppäinten käsittely (CLR, SUBTOTAL jne.)
-    function pressFn(fn) {
-        if(fn === 'CLR') {
-            numpadSyote = "";
-            if(nykyinenTila === 'S') document.getElementById('s-password-input').value = "";
-            paivitaNaytot();
-            return;
+            Keyboard.appendChild(btn);
         }
 
-        if(fn === 'SUBTOTAL') {
-            // 1. Työntekijän sisäänkirjaus REG-tilassa
-            if(nykyinenTila === 'REG' && !signedIn) {
-                if(numpadSyote === "1") {
-                    signedIn = true;
-                    numpadSyote = "";
-                    document.getElementById('mode-status-text').style.backgroundColor = "#3d3d3d";
-                    document.getElementById('mode-status-text').style.color = "#fff";
-                    paivitaNaytot();
-                } else {
-                    document.getElementById('message-bar').innerText = "VIRHE: VÄÄRÄ TYÖNTEKIJÄKOODI! (Kokeile numeroa 1)";
-                    numpadSyote = "";
-                }
-                return;
-            }
-
-            // 2. S-Moden salasanatarkistus (Ohjekirjan oletus: 2000)
-            if(nykyinenTila === 'S') {
-                if(numpadSyote === "2000") {
-                    document.getElementById('s-lock-screen').style.display = 'none';
-                    document.getElementById('s-content-screen').style.display = 'block';
-                    document.getElementById('message-bar').innerText = "S-MODE: JÄRJESTELMÄ AUKI.";
-                } else {
-                    document.getElementById('message-bar').innerText = "VIRHE: VÄÄRÄ SALASANA! (Ohjekirjan oletus on 2000)";
-                }
-                numpadSyote = "";
-                return;
-            }
-
-            // 3. Normaali loppusumma jos ollaan myynnissä
-            if(nykyinenTila === 'REG' && signedIn && kuittiTuotteet.length > 0) {
-                TulostaLoppusumma();
-            }
+        function updateDisp() {
+            Display.innerText = `MODE: ${SPS2000_Kernel.RAM.Mode} | SUBTOTAL: ${SPS2000_Kernel.RAM.ActiveReceipt.Subtotal.toFixed(2)} €`;
         }
-    }
-
-    // Tuotteen lyöminen kuitille
-    function tryMuuTuote(indeksi) {
-        if(nykyinenTila !== 'REG') {
-            document.getElementById('message-bar').innerText = "VIRHE: ET VOI MYYDÄ TUOTTEITA TÄSSÄ TILASSA!";
-            return;
-        }
-        if(!signedIn) {
-            document.getElementById('message-bar').innerText = "VIRHE: KIRJAUDU ENNSIN SISÄÄN (Paina 1 ja SUBTOTAL)!";
-            return;
-        }
-
-        const tuote = kassaMuisti[indeksi];
-        if(tuote.price === 0) {
-            document.getElementById('message-bar').innerText = `PAINIKE ${indeksi} ON TYHJÄ. MENE PRG-TILAAN OHJELMOIDAKSESI SEN!`;
-            return;
-        }
-
-        kuittiTuotteet.push(tuote);
-        paivitaKuitti();
-    }
-
-    function paivitaKuitti() {
-        const area = document.getElementById('receipt-area');
-        if(kuittiTuotteet.length === 0) {
-            area.innerHTML = '<div class="receipt-empty-text">[ Kuitti on tyhjä ]</div>';
-            return;
-        }
-
-        let html = "";
-        kuittiYhteensa = 0;
-        kuittiTuotteet.forEach(t => {
-            html += `<div class="receipt-line"><span>${t.name}</span><span>${t.price.toFixed(2)} €</span></div>`;
-            kuittiYhteensa += t.price;
-        });
-
-        area.innerHTML = html;
-        area.scrollTop = area.scrollHeight; // Ohjekirjan mukainen automaattirullaus alaspäin
-    }
-
-    function TulostaLoppusumma() {
-        const area = document.getElementById('receipt-area');
-        area.innerHTML += `
-            <div class="receipt-line" style="border-top: 1px dashed #000; margin-top:5px; padding-top:5px; font-weight:bold;">
-                <span>YHTEENSÄ:</span><span>${kuittiYhteensa.toFixed(2)} €</span>
-            </div>`;
-        kuittiTuotteet = [];
-        kuittiYhteensa = 0;
-        document.getElementById('message-bar').innerText = "KAUPPA FINALISOITU. KASSALAATIKKO AVATTU.";
-    }
-
-    // KASSAN SISÄISET OHJELMOINTITOIMINNOT (KÄYTTÖLIITTYMÄSTÄ KÄSIN)
-    function openPluProgramForm() {
-        document.getElementById('plu-form').style.display = 'block';
-    }
-
-    function savePluFromScreen() {
-        const num = parseInt(document.getElementById('pgm-key-num').value);
-        const name = document.getElementById('pgm-key-name').value.toUpperCase();
-        const price = parseFloat(document.getElementById('pgm-key-price').value);
-
-        if(!num || num < 1 || num > 40 || !name || isNaN(price)) {
-            alert("Täytä kaikki kentät oikein! Numero väliltä 1-40.");
-            return;
-        }
-
-        // Tallennetaan kassan sisäiseen muuttujaan ilman koodin avaamista
-        kassaMuisti[num] = { name: name, price: price };
-        paivitaKassanPainikkeet();
-
-        document.getElementById('pgm-key-num').value = "";
-        document.getElementById('pgm-key-name').value = "";
-        document.getElementById('pgm-key-price').value = "";
-        
-        document.getElementById('message-bar').innerText = `ONNISTUI: Painike ${num} asetettu tuotteelle ${name}!`;
-    }
-
-    function clearRegisterMemory() {
-        if(confirm("Haluatko varmasti suorittaa täyden tehdasnollauksen (RAM Initialise)? Kaikki ohjelmoimasi tuotteet pyyhitään.")) {
-            for(let i = 1; i <= 40; i++) {
-                kassaMuisti[i] = { name: "KEYLINK " + i, price: 0 };
-            }
-            paivitaKassanPainikkeet();
-            signedIn = false;
-            kuittiTuotteet = [];
-            switchMode('REG');
-        }
-    }
-
-    // Alustetaan kassa kun sivu latautuu
-    paivitaKassanPainikkeet();
-    paivitaNaytot();
-</script>
-
+    </script>
 </body>
 </html>
