@@ -13,22 +13,25 @@
 
     <div id="keyboard"></div>
 
-    <script src="src/kernel.js"></script>
-    
+   <script src="src/kernel.js"></script>
     <script src="src/parser.js"></script>
-    
     <script src="src/controller.js"></script>
-    
     <script src="src/reports.js"></script>
-    
     <script src="src/interface.js"></script>
 
     <script>
-        window.onload = () => {
-            console.log("SYSTEM: FIRMWARE LOADING...");
-            UI.initKeyboard(); 
-            console.log("SYSTEM: READY.");
-        };
+        // Käytetään setTimeoutia varmistamaan, että kaikki moduulit ovat latautuneet
+        window.addEventListener('load', () => {
+            try {
+                if(typeof UI !== 'undefined') {
+                    UI.initKeyboard();
+                    console.log("Kassa alustettu onnistuneesti.");
+                } else {
+                    console.error("UI-objektia ei löydy. Tarkista src/interface.js.");
+                }
+            } catch(e) {
+                console.error("Virhe alustuksessa:", e);
+            }
+        });
     </script>
 </body>
-</html>
