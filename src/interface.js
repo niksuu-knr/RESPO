@@ -1,39 +1,41 @@
-/**
- * UI: MASTER INTERFACE
- * Piirtää näppäimistön ja yhdistää logiikan
- */
 const UI = {
-    initKeyboard: () => {
+    initKeyboard: function() {
+        console.log("UI: Piirretään näppäimistöä...");
         const kb = document.getElementById('keyboard');
-        kb.innerHTML = ''; // Tyhjennä vanhat
+        if (!kb) {
+            console.error("Virhe: #keyboard elementtiä ei löydy!");
+            return;
+        }
         
-        // Luodaan painikkeet (esimerkki)
-        const keys = ["KAHVI", "PULLA", "PRG-EDIT", "CASH"];
-        keys.forEach(k => {
+        kb.innerHTML = ''; // Tyhjennä
+        const buttons = ["KAHVI", "PULLA", "PRG-EDIT", "CASH", "MODE"];
+        
+        buttons.forEach(btnText => {
             let b = document.createElement('div');
             b.className = 'key';
-            b.innerText = k;
-            b.onclick = () => UI.handleButton(k);
+            b.innerText = btnText;
+            b.onclick = () => {
+                if(btnText === "PRG-EDIT") UI.enterProgrammingMode();
+                else console.log(btnText + " painettu");
+            };
             kb.appendChild(b);
         });
+        console.log("UI: Näppäimistö piirretty.");
     },
 
-    handleButton: (action) => {
-        if (action === "PRG-EDIT") {
-            UI.enterProgrammingMode();
-        } else {
-            console.log("Käsitellään myynti: " + action);
-        }
-    },
-
-    enterProgrammingMode: () => {
-        const id = prompt("Syötä tuotenumero:");
+    enterProgrammingMode: function() {
+        const id = prompt("Syötä tuotenumero (esim 101):");
         const name = prompt("Syötä tuotteen nimi:");
         const price = prompt("Syötä hinta:");
         
         if(id && name && price) {
-            SPS2000_Kernel.programPLU(id, name, parseFloat(price));
-            alert("Tuote " + name + " tallennettu pysyvästi!");
+            // Varmistetaan että SPS2000_Kernel on olemassa
+            if (typeof SPS2000_Kernel !== 'undefined') {
+                SPS2000_Kernel.programPLU(id, name, parseFloat(price));
+                alert("Tuote " + name + " tallennettu!");
+            } else {
+                console.error("Kernel ei löydy!");
+            }
         }
     }
 };
