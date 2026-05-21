@@ -1,22 +1,26 @@
 /**
- * SAM4s SPS-2000 KERNEL - In-App Programming Version
+ * SPS-2000 KERNEL - MASTER VERSION
+ * Sisältää muistinhallinnan ja pysyvyyden (LocalStorage)
  */
-const Kernel = {
-    // 1. Ladataan data selaimen muistista (localStorage)
+const SPS2000_Kernel = {
+    // Tietokanta: Lataa selaimesta tai käytä oletusta
     db: JSON.parse(localStorage.getItem('sps2000_storage')) || {
-        PLU: { 101: { name: "KAHVI", price: 2.50 } },
+        PLU: { 101: { name: "KAHVI", price: 2.50 }, 102: { name: "PULLA", price: 3.00 } },
         Config: { tax: 0.14 }
     },
+    
+    // RAM-muisti: Aktiivinen tila
+    RAM: { mode: "REG", subtotal: 0, items: [] },
 
-    // 2. Tallennetaan data selaimen muistiin (Tämä tekee kassasta "elävän")
+    // Pysyvyys: Tallennus
     save: () => {
-        localStorage.setItem('sps2000_storage', JSON.stringify(Kernel.db));
+        localStorage.setItem('sps2000_storage', JSON.stringify(SPS2000_Kernel.db));
         console.log("SYSTEM: ASETUKSET TALLENNETTU");
     },
 
-    // 3. Lisätään uusi PLU-tuote sovelluksen sisältä
+    // Ohjelmointi: Päivitä tuotetietokantaa lennosta
     programPLU: (id, name, price) => {
-        Kernel.db.PLU[id] = { name: name, price: price };
-        Kernel.save();
+        SPS2000_Kernel.db.PLU[id] = { name: name, price: price };
+        SPS2000_Kernel.save();
     }
 };
