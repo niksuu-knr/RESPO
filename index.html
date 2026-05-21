@@ -3,136 +3,142 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SAM4S SPS-2000 Comprehensive Simulator</title>
+    <title>SAM4S SPS-2000 Täydellinen Laiteemulaattori</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', Courier, monospace; user-select: none; }
-        body { background-color: #121214; display: flex; justify-content: center; align-items: center; height: 100vh; color: #fff; }
+        body { background-color: #1e1e24; display: flex; justify-content: center; align-items: center; height: 100vh; color: #fff; }
 
-        /* LAITTEEN RUNKO */
-        .sps2000-case {
+        /* LAITTEEN FYYSINEN KUORI */
+        .terminal-frame {
             background-color: #334155;
-            border: 12px solid #1e293b;
-            border-radius: 16px;
+            border: 14px solid #1e293b;
+            border-radius: 20px;
             width: 1024px;
             height: 740px;
-            padding: 8px;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+            padding: 6px;
+            box-shadow: 0 35px 70px rgba(0,0,0,0.9);
             display: flex;
             flex-direction: column;
         }
 
-        .brand {
-            font-size: 13px;
-            color: #cbd5e1;
-            padding: 2px 10px;
+        .hardware-label {
+            font-size: 12px;
+            color: #94a3b8;
+            padding: 2px 8px;
             display: flex;
             justify-content: space-between;
             font-weight: bold;
+            letter-spacing: 1px;
         }
 
-        /* LCD NÄYTTÖ */
-        .lcd-display {
+        /* 12.1" LCD-NÄYTTÖ */
+        .lcd-screen {
             flex: 1;
-            background-color: #2b5c8f; /* Alkuperäinen sinertävä pohja */
+            background-color: #2b5c8f;
             border: 4px solid #000;
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            position: relative;
         }
 
-        /* TILA-AVAIMEN VÄLILEHDET (MODE KEY LOCK) */
-        .mode-selector {
+        /* TILA-AVAIN (MODE LOCK) VÄLILEHDET */
+        .mode-lock-bar {
             display: flex;
             background-color: #0f172a;
             border-bottom: 2px solid #000;
         }
-        .mode-tab {
-            padding: 10px 20px;
+        .mode-position {
+            padding: 10px 22px;
             font-weight: bold;
-            font-size: 14px;
+            font-size: 13px;
             color: #94a3b8;
             border-right: 2px solid #000;
             cursor: pointer;
             background-color: #1e293b;
         }
-        .mode-tab.active {
-            background-color: #ef4444; /* Punainen korostus aktiiviselle tilalle */
+        .mode-position.active {
+            background-color: #ef4444; /* Ohjelmointi/lukkotilan punainen valo */
             color: white;
         }
-        .system-status-bar {
+        .screen-status-info {
             flex: 1;
             display: flex;
             align-items: center;
             justify-content: flex-end;
             padding-right: 15px;
-            font-size: 12px;
+            font-size: 11px;
             color: #34d399;
         }
 
-        /* PÄÄNÄKYMÄT */
-        .workspace {
+        /* KÄYTTÖLIITTYMÄN PÄÄALUE */
+        .main-interface {
             flex: 1;
             display: flex;
             padding: 4px;
             gap: 4px;
+            background-color: #244d77;
         }
 
-        /* VASEN PUOLI: KUITTI & INFOT */
-        .left-screen {
-            width: 340px;
-            background-color: #f8fafc;
+        /* VASEN LAITA: KUITTI JA JÄRJESTELMÄVIESTIT */
+        .receipt-column {
+            width: 320px;
+            background-color: #f1f5f9;
             border: 2px solid #000;
             display: flex;
             flex-direction: column;
             color: #000;
         }
-        .receipt-title {
+        .receipt-header {
             background-color: #1e3a8a;
             color: white;
-            font-size: 12px;
+            font-size: 11px;
             padding: 6px;
             font-weight: bold;
             text-align: center;
+            letter-spacing: 1px;
         }
-        .receipt-body {
+        .receipt-scroll {
             flex: 1;
             padding: 8px;
             font-size: 13px;
             overflow-y: auto;
             background-color: #ffffff;
-            line-height: 1.3;
         }
-        .r-line { display: flex; justify-content: space-between; }
+        .bill-row { display: flex; justify-content: space-between; margin-bottom: 2px; }
         
-        .vfd-message-line {
+        .operator-message-line {
             background-color: #000;
             color: #f43f5e;
             padding: 6px;
             font-weight: bold;
             font-size: 12px;
             border-top: 2px solid #000;
-            min-height: 28px;
+            min-height: 32px;
+            display: flex;
+            align-items: center;
         }
-        .vfd-total-line {
+        .vfd-numeric-display {
             background-color: #020617;
             color: #22c55e;
-            padding: 8px;
-            font-size: 22px;
+            padding: 6px 10px;
+            font-size: 24px;
             font-weight: bold;
             display: flex;
             justify-content: space-between;
+            border-top: 1px solid #000;
         }
 
-        /* OIKEA PUOLI: DYNAAMINEN MATRIISI JA KIINTEÄT APUNÄPPÄIMET */
-        .right-screen {
+        /* OIKEA LAITA: KOSKETUSMATRIISI JA FYYSISET PAINIKKEET */
+        .input-column {
             flex: 1;
             display: flex;
             flex-direction: column;
             gap: 4px;
         }
 
-        /* KOSKETUSNÄPPÄINMATRIISI (KEYLINKS) */
-        .keylink-matrix {
+        /* 5x5 DYNAAMINEN KOSKETUSNÄYTTÖMATRIISI */
+        .touch-matrix {
             flex: 1;
             display: grid;
             grid-template-columns: repeat(5, 1fr);
@@ -140,9 +146,9 @@
             gap: 4px;
         }
 
-        /* KIINTEÄ ALALOHKO (FIXED KEYS & NUMPAD) */
-        .fixed-hardware-keys {
-            height: 250px;
+        /* KIINTEÄ ALALOHKO (FIXED HARDWARE KEYS) */
+        .fixed-keypad {
+            height: 240px;
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             gap: 4px;
@@ -150,8 +156,8 @@
             padding-top: 4px;
         }
 
-        /* PAINIKKEIDEN TYYLITTELY */
-        .sps-btn {
+        /* PAINIKKEIDEN YLEISTYYLIT */
+        .matrix-btn {
             border: 1px solid #000;
             border-bottom: 3px solid #000;
             border-radius: 4px;
@@ -166,551 +172,646 @@
             text-align: center;
             padding: 4px;
             box-shadow: inset 0 1px 0 rgba(255,255,255,0.4);
+            background-color: #94a3b8;
         }
-        .sps-btn:active {
+        .matrix-btn:active {
             border-bottom-width: 1px;
             transform: translateY(2px);
         }
 
-        /* SAM4S VÄRIPALETTI */
-        .c-blue { background-color: #60a5fa; color: #fff; }
-        .c-green { background-color: #34d399; color: #000; }
-        .c-amber { background-color: #fbbf24; color: #000; }
-        .c-purple { background-color: #c084fc; color: #fff; }
-        .c-red { background-color: #f87171; color: #fff; }
-        .c-numpad { background-color: #f1f5f9; color: #000; font-size: 22px; }
-        .c-hardware { background-color: #94a3b8; color: #000; font-size: 11px; }
-        .c-cash { background-color: #059669; color: #fff; font-size: 16px; grid-row: span 2; }
-        .c-inactive { background-color: #3b6fa6; border-color: #2b5c8f; cursor: default; }
-
-        /* BACKOFFICE / OHJELMOINTI- JA RAPORTOINTINÄKYMÄT (PRG, REP, S) */
-        .backoffice-panel {
-            flex: 1;
-            background-color: #1e293b;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            overflow-y: auto;
+        /* SAM4S VIRALLISET VÄRIKOODIT (SYSTEM PALETTE) */
+        .sam-blue { background-color: #60a5fa; color: #fff; }
+        .sam-green { background-color: #34d399; color: #000; }
+        .sam-amber { background-color: #fbbf24; color: #000; }
+        .sam-purple { background-color: #c084fc; color: #fff; }
+        .sam-red { background-color: #f87171; color: #fff; }
+        .sam-numpad { background-color: #f8fafc; color: #000; font-size: 22px; }
+        .sam-cash { background-color: #059669; color: #fff; font-size: 16px; grid-row: span 2; }
+        .sam-empty { background-color: #3b6fa6; border-color: #2b5c8f; color: rgba(0,0,0,0.2); }
+        
+        /* PRG JA S TILOJEN ERITYISILME NÄYTÖLLÄ */
+        .mode-indicator-overlay {
+            position: absolute;
+            top: 45px;
+            right: 10px;
+            padding: 4px 10px;
+            background-color: #dc2626;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+            border-radius: 4px;
+            z-index: 10;
+            display: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
         }
-        .bo-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        .bo-table th, .bo-table td { border: 1px solid #475569; padding: 6px 10px; text-align: left; font-size: 12px; }
-        .bo-table th { background-color: #0f172a; color: #38bdf8; }
-        .bo-input { padding: 4px 8px; background: #0f172a; border: 1px solid #475569; color: #fff; border-radius: 4px; font-size: 12px; }
-        .bo-btn { padding: 6px 12px; background: #3b82f6; border: none; color: white; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 11px; }
-        .bo-btn-danger { background: #ef4444; }
+
+        /* JÄRJESTELMÄN SISÄISET DIALOGIPOSUPIT (AITO KASSASYÖTTÖ) */
+        .sam-dialog-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            display: none;
+        }
+        .sam-dialog-box {
+            background-color: #e2e8f0;
+            border: 4px solid #0f172a;
+            border-radius: 8px;
+            width: 450px;
+            padding: 20px;
+            color: #000;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+        .dialog-title { font-weight: bold; margin-bottom: 15px; font-size: 14px; color: #1e3a8a; border-bottom: 2px solid #cbd5e1; padding-bottom: 5px; }
+        .dialog-field { margin-bottom: 12px; display: flex; flex-direction: column; gap: 4px; }
+        .dialog-field label { font-size: 11px; font-weight: bold; color: #475569; }
+        .dialog-field input, .dialog-field select { padding: 6px; font-size: 14px; font-family: monospace; border: 2px solid #cbd5e1; border-radius: 4px; }
+        .dialog-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; }
+        .dialog-btn { padding: 8px 16px; font-weight: bold; border: 1px solid #000; border-radius: 4px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div class="sps2000-case">
-        <div class="brand">
-            <span>SAM4S SPS-2000 MULTI-MODE SYSTEM</span>
-            <span id="hardwareClock">00/00/0000 00:00:00</span>
+    <div class="terminal-frame">
+        <div class="hardware-label">
+            <span>SAM4S SPS-2000 HARDWARE EMULATOR v1.15</span>
+            <span id="liveClock">00/00/0000 00:00:00</span>
         </div>
 
-        <div class="lcd-display">
-            <div class="mode-selector">
-                <div class="mode-tab active" id="mode-REG" onclick="changeMode('REG')">REG (Myynti)</div>
-                <div class="mode-tab" id="mode-REP" onclick="changeMode('REP')">REP (Raportit)</div>
-                <div class="mode-tab" id="mode-PRG" onclick="changeMode('PRG')">PRG (Tuoteohjelmointi)</div>
-                <div class="mode-tab" id="mode-S" onclick="changeMode('S')">S (Käyttäjänhallinta)</div>
-                <div class="system-status-bar" id="statusBar">OPR: - | MODE: REG | COMPULSORY SIGN-ON</div>
+        <div class="lcd-screen">
+            <div class="mode-lock-bar">
+                <div class="mode-position active" id="lock-REG" onclick="requestModeChange('REG')">REG (Myynti)</div>
+                <div class="mode-position" id="lock-REP" onclick="requestModeChange('REP')">REP (Raportit)</div>
+                <div class="mode-position" id="lock-PRG" onclick="requestModeChange('PRG')">PRG (Ohjelmointi)</div>
+                <div class="mode-position" id="lock-S" onclick="requestModeChange('S')">S (Järjestelmä)</div>
+                <div class="screen-status-info" id="statusString">OPR: - | MODE: REG | COMPULSORY SIGN-ON</div>
             </div>
 
-            <div class="workspace" id="panel-REG">
-                <div class="left-screen">
-                    <div class="receipt-title">CURRENT TRANSACTION RECORD</div>
-                    <div class="receipt-body" id="receiptLines">
+            <div class="mode-indicator-overlay" id="modeOverlay">PRG MODE</div>
+
+            <div class="main-interface">
+                <div class="receipt-column">
+                    <div class="receipt-header">TRANSACTION RECORD</div>
+                    <div class="receipt-scroll" id="receiptContainer">
                         </div>
-                    <div class="vfd-message-line" id="vfdMsg">SIGN ON REQUIRED</div>
-                    <div class="vfd-total-line">
-                        <span>SALDO:</span>
-                        <span id="totalDisp">0.00 €</span>
+                    <div class="operator-message-line" id="vfdMessage">SIGN ON REQUIRED</div>
+                    <div class="vfd-numeric-display">
+                        <span>TOTAL</span>
+                        <span id="vfdTotal">0.00 €</span>
                     </div>
                 </div>
 
-                <div class="right-screen">
-                    <div class="keylink-matrix" id="matrixGrid"></div>
+                <div class="input-column">
+                    <div class="touch-matrix" id="screenMatrix"></div>
 
-                    <div class="fixed-hardware-keys">
-                        <button class="sps-btn c-numpad" onclick="numPress('7')">7</button>
-                        <button class="sps-btn c-numpad" onclick="numPress('8')">8</button>
-                        <button class="sps-btn c-numpad" onclick="numPress('9')">9</button>
-                        <button class="sps-btn c-hardware" onclick="fnPress('ERR_CORR')">ERR.CORR<br>(Rivin korjaus)</button>
-                        <button class="sps-btn c-hardware" onclick="switchKeylink('JUOMAT')">JUOMAT<br>MENU</button>
+                    <div class="fixed-keypad">
+                        <button class="matrix-btn sam-numpad" onclick="hardwareNum('7')">7</button>
+                        <button class="matrix-btn sam-numpad" onclick="hardwareNum('8')">8</button>
+                        <button class="matrix-btn sam-numpad" onclick="hardwareNum('9')">9</button>
+                        <button class="matrix-btn" style="background-color:#94a3b8;" onclick="hardwareFn('ERR_CORR')">ERR.CORR<br>(Korjaus)</button>
+                        <button class="matrix-btn" style="background-color:#64748b; color:white;" onclick="changeKeylink(0)">MENU 1<br>(Juomat)</button>
 
-                        <button class="sps-btn c-numpad" onclick="numPress('4')">4</button>
-                        <button class="sps-btn c-numpad" onclick="numPress('5')">5</button>
-                        <button class="sps-btn c-numpad" onclick="numPress('6')">6</button>
-                        <button class="sps-btn c-hardware" onclick="fnPress('VOID')">VOID ITEM<br>(Mitätöi)</button>
-                        <button class="sps-btn c-hardware" onclick="switchKeylink('RUOAT')">RUOAT<br>MENU</button>
+                        <button class="matrix-btn sam-numpad" onclick="hardwareNum('4')">4</button>
+                        <button class="matrix-btn sam-numpad" onclick="hardwareNum('5')">5</button>
+                        <button class="matrix-btn sam-numpad" onclick="hardwareNum('6')">6</button>
+                        <button class="matrix-btn" style="background-color:#94a3b8;" onclick="hardwareFn('VOID')">VOID ITEM<br>(Mitätöi)</button>
+                        <button class="matrix-btn" style="background-color:#64748b; color:white;" onclick="changeKeylink(1)">MENU 2<br>(Ruoat)</button>
 
-                        <button class="sps-btn c-numpad" onclick="numPress('1')">1</button>
-                        <button class="sps-btn c-numpad" onclick="numPress('2')">2</button>
-                        <button class="sps-btn c-numpad" onclick="numPress('3')">3</button>
-                        <button class="sps-btn c-hardware" onclick="fnPress('SUBTOTAL')">SUBTOTAL<br>(Välisumma)</button>
-                        <button class="sps-btn c-cash" onclick="fnPress('CASH')">KÄTEINEN<br>CASH<br>TL</button>
+                        <button class="matrix-btn sam-numpad" onclick="hardwareNum('1')">1</button>
+                        <button class="matrix-btn sam-numpad" onclick="hardwareNum('2')">2</button>
+                        <button class="matrix-btn sam-numpad" onclick="hardwareNum('3')">3</button>
+                        <button class="matrix-btn" style="background-color:#94a3b8;" onclick="hardwareFn('SUBTOTAL')">SUBTOTAL<br>(Välisumma)</button>
+                        <button class="matrix-btn sam-cash" onclick="hardwareFn('CASH')">KÄTEINEN<br>CASH<br>TL</button>
 
-                        <button class="sps-btn c-numpad" onclick="numPress('0')">0</button>
-                        <button class="sps-btn c-numpad" onclick="numPress('00')">00</button>
-                        <button class="sps-btn c-numpad" onclick="numPress('.')">.</button>
-                        <button class="sps-btn c-red" onclick="fnPress('CLEAR')">CLR</button>
+                        <button class="matrix-btn sam-numpad" onclick="hardwareNum('0')">0</button>
+                        <button class="matrix-btn sam-numpad" onclick="hardwareNum('00')">00</button>
+                        <button class="matrix-btn sam-numpad" onclick="hardwareNum('.')">.</button>
+                        <button class="matrix-btn sam-red" onclick="hardwareFn('CLEAR')">CLR</button>
                         </div>
                 </div>
             </div>
 
-            <div class="backoffice-panel style-prg" id="panel-PRG" style="display:none;">
-                <h2>PRG-MODE: Tuotteiden ja Tuoteryhmien Hallinta</h2>
-                
-                <div style="background:#0f172a; padding:12px; border-radius:6px;">
-                    <h3>1. Hallitse Tuoteryhmiä (Kategoriat)</h3>
-                    <div style="margin-top:8px; display:flex; gap:10px;">
-                        <input type="text" id="prgNewCat" class="bo-input" placeholder="Uusi tuoteryhmä (esim. SNACKS)">
-                        <button class="bo-btn" onclick="prgAddCategory()">Lisää ryhmä</button>
+            <div class="sam-dialog-overlay" id="samDialog">
+                <div class="sam-dialog-box" id="dialogContent">
                     </div>
-                    <div id="prgCatList" style="margin-top:8px; font-size:12px; color:#94a3b8;"></div>
-                </div>
-
-                <div style="background:#0f172a; padding:12px; border-radius:6px; margin-top:10px;">
-                    <h3>2. Lisää / Muokkaa Tuotetta (PLU)</h3>
-                    <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; margin-top:8px;">
-                        <select id="prgProdCat" class="bo-input"></select>
-                        <input type="text" id="prgProdName" class="bo-input" placeholder="Tuotteen nimi">
-                        <input type="number" step="0.01" id="prgProdPrice" class="bo-input" placeholder="Normaalihinta (€)">
-                        <input type="number" step="0.01" id="prgProdSpecPrice" class="bo-input" placeholder="Erikoishinta (€, valinnainen)">
-                    </div>
-                    <button class="bo-btn" style="margin-top:10px; background:#10b981;" onclick="prgSaveProduct()">Tallenna / Päivitä tuote</button>
-                </div>
-
-                <h3>Nykyiset PLU-tuotteet järjestelmässä</h3>
-                <table class="bo-table">
-                    <thead>
-                        <tr><th>Ryhmä</th><th>Tuotteen nimi</th><th>Normaalihinta</th><th>Erikoishinta</th><th>Toiminnot</th></tr>
-                    </thead>
-                    <tbody id="prgProductTable"></tbody>
-                </table>
             </div>
 
-            <div class="backoffice-panel" id="panel-REP" style="display:none;">
-                <h2>REP-MODE: Myyntiraportit & Päätökset (X1 / Z1)</h2>
-                <p>Valitse ajettava raportti kuittirullalle tai järjestelmän historianäkymään.</p>
-                <div style="display:flex; gap:10px; margin:15px 0;">
-                    <button class="bo-btn" style="background:#fbbf24; color:#000;" onclick="runXReport()">AJA X1-RAPORTTI (Luku)</button>
-                    <button class="bo-btn bo-btn-danger" onclick="runZReport()">AJA Z1-RAPORTTI (Päivän nollaus)</button>
-                </div>
-                <h3>Raporttiarkisto / Esikatselu:</h3>
-                <pre id="repConsole" style="background:#000; padding:15px; color:#34d399; border-radius:4px; font-size:12px; min-height:250px;">Ei ajettuja raportteja tässä istunnossa.</pre>
-            </div>
-
-            <div class="backoffice-panel" id="panel-S" style="display:none;">
-                <h2>S-MODE: Järjestelmänhallinta & Myyjät (Clerks)</h2>
-                <div style="background:#0f172a; padding:12px; border-radius:6px;">
-                    <h3>Lisää uusi myyjä (Clerk) järjestelmään</h3>
-                    <div style="display:flex; gap:10px; margin-top:8px;">
-                        <input type="text" id="sNewUserName" class="bo-input" placeholder="Myyjän nimi">
-                        <input type="text" maxlength="4" id="sNewUserPin" class="bo-input" placeholder="4-numeroinen PIN">
-                        <button class="bo-btn" style="background:#10b981;" onclick="sAddClerk()">Tallenna myyjä</button>
-                    </div>
-                </div>
-                <h3 style="margin-top:15px;">Aktiiviset myyjät ja koodit</h3>
-                <table class="bo-table" style="width:500px;">
-                    <thead><tr><th>Myyjän nimi</th><th>PIN-koodi</th><th>Poisto</th></tr></thead>
-                    <tbody id="sClerkTable"></tbody>
-                </table>
-            </div>
         </div>
     </div>
 
     <script>
-        // --- JÄRJESTELMÄN ALKUDATA (SPS-2000 MUISTIRAKENNE) ---
-        let categories = ["JUOMAT", "RUOAT"];
-        let products = [
-            { id: 1, category: "JUOMAT", name: "Hanaolut 0.5L", price: 8.50, specialPrice: null },
-            { id: 2, category: "JUOMAT", name: "Siideri 0.4L", price: 9.00, specialPrice: 7.00 },
-            { id: 3, category: "JUOMAT", name: "Lonkero", price: 8.80, specialPrice: null },
-            { id: 4, category: "RUOAT", name: "Pippuripihvi", price: 34.00, specialPrice: null },
-            { id: 5, category: "RUOAT", name: "Lohikeitto", price: 16.50, specialPrice: 13.00 }
-        ];
-        let clerks = [
-            { name: "Tarjoilija Pekka", pin: "1111" },
-            { name: "Päällikkö Tiina", pin: "2222" }
-        ];
-
-        // --- TILASTOT & KUMULAATIOT (FINANCIAL TOTALS) ---
-        let financialTotals = { cash: 0, card: 0, totalSales: 0, receiptsCount: 0 };
-
-        // --- KASSAN REAALIAIKAINEN TILA ---
+        // --- LAITTEEN SISÄINEN SÄHKÖINEN MUISTI (RAM) ---
         let currentMode = "REG";
-        let activeKeylink = "JUOMAT";
-        let currentClerk = null;
+        let currentMenuIndex = 0; // 0 = Juomat, 1 = Ruoat
+        let activeClerk = null;
         let numpadBuffer = "";
-        let currentCart = [];
-        let subtotalLocked = false;
+        let activeTransaction = [];
+        let subtotalMode = false;
 
-        // --- ALUSTUS ---
-        window.onload = function() {
-            startClock();
-            refreshAllViews();
+        // Raportointilaskurit (Z-muisti)
+        let zCounters = { totalSales: 0, cashReceived: 0, receiptsCount: 0 };
+
+        // Myyjätietokanta (S-Mode hallitsee)
+        let clerksDatabase = [
+            { name: "KASSA PEKKA", pin: "1111" },
+            { name: "ESIMIES TIINA", pin: "2222" }
+        ];
+
+        // Matriisinäppäinten muistipaikat (5x5 per sivu x 2 sivua = 50 muistipaikkaa)
+        // Ohjekirjan mukaisesti jokainen paikka voi olla tyhjä, PLU tai erikoistoiminto
+        let matrixMemory = {
+            0: [ // SIVU 1: JUOMAT (Oletusasetukset tehtaalta)
+                { type: "PLU", name: "Hanaolut 0.5", price: 8.50, color: "sam-blue" },
+                { type: "PLU", name: "Siideri 0.4", price: 9.00, color: "sam-blue" },
+                { type: "PLU", name: "Lonkero", price: 8.80, color: "sam-blue" },
+                { type: "PLU", name: "Viini 16cl", price: 12.00, color: "sam-purple" },
+                { type: "PLU", name: "Vodka Shotti", price: 7.50, color: "sam-purple" },
+                { type: "CLERK_SIGN", name: "KIRJAUDU", color: "sam-amber" },
+                { type: "EMPTY" }, { type: "EMPTY" }, { type: "EMPTY" }, { type: "EMPTY" },
+                { type: "EMPTY" }, { type: "EMPTY" }, { type: "EMPTY" }, { type: "EMPTY" }, { type: "EMPTY" },
+                { type: "EMPTY" }, { type: "EMPTY" }, { type: "EMPTY" }, { type: "EMPTY" }, { type: "EMPTY" },
+                { type: "EMPTY" }, { type: "EMPTY" }, { type: "EMPTY" }, { type: "EMPTY" }, { type: "EMPTY" }
+            ],
+            1: [ // SIVU 2: RUOAT
+                { type: "PLU", name: "Pippuripihvi", price: 34.00, color: "sam-green" },
+                { type: "PLU", name: "Lohikeitto", price: 16.50, color: "sam-green" },
+                { type: "PLU", name: "Popcornit", price: 4.50, color: "sam-amber" },
+                { type: "EMPTY" }, { type: "EMPTY" },
+                { type: "EMPTY" }, { type: "EMPTY" }, { type: "EMPTY" }, { type: "EMPTY" }, { type: "EMPTY" },
+                { type: "EMPTY" }, { type: "EMPTY" }, { type: "EMPTY" }, { type: "EMPTY" }, { type: "EMPTY" },
+                { type: "EMPTY" }, { type: "EMPTY" }, { type: "EMPTY" }, { type: "EMPTY" }, { type: "EMPTY" },
+                { type: "EMPTY" }, { type: "EMPTY" }, { type: "EMPTY" }, { type: "EMPTY" }, { type: "EMPTY" }
+            ]
         };
 
-        function startClock() {
+        // --- ALUSTUSAJO ---
+        window.onload = function() {
             setInterval(() => {
                 const d = new Date();
-                document.getElementById('hardwareClock').innerText = d.toLocaleDateString('fi-FI') + " " + d.toLocaleTimeString('fi-FI');
+                document.getElementById('liveClock').innerText = d.toLocaleDateString('fi-FI') + " " + d.toLocaleTimeString('fi-FI');
             }, 1000);
-        }
+            renderTouchMatrix();
+            updateStatusBar();
+        };
 
-        // --- TILANVAIHTAJA (MODE LOCK KEY) ---
-        function changeMode(mode) {
-            currentMode = mode;
-            document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
-            document.getElementById('mode-' + mode).classList.add('active');
+        // --- AITO TILA-AVAIMEN KÄÄNTÖ (PASSWORD REQUIRED) ---
+        function requestModeChange(targetMode) {
+            if (targetMode === currentMode) return;
 
-            // Piilotetaan kaikki paneelit ja näytetään valittu
-            document.getElementById('panel-REG').style.display = (mode === 'REG') ? 'flex' : 'none';
-            document.getElementById('panel-PRG').style.display = (mode === 'PRG') ? 'flex' : 'none';
-            document.getElementById('panel-REP').style.display = (mode === 'REP') ? 'flex' : 'none';
-            document.getElementById('panel-S').style.display = (mode === 'S') ? 'flex' : 'none';
+            // Ohjekirjan mukaan PRG ja S tilat vaativat oletuskoodin 2000 numpadilta
+            if (targetMode === "PRG" || targetMode === "S" || targetMode === "REP") {
+                if (numpadBuffer !== "2000") {
+                    document.getElementById('vfdMessage').innerText = "ERROR: MODE PASSWORD REQ";
+                    numpadBuffer = "";
+                    return;
+                }
+            }
+
+            // Hyväksytään tilanvaihto, nollataan puskuri
+            numpadBuffer = "";
+            currentMode = targetMode;
+
+            // Päivitetään avainlukon visuaalisuus
+            document.querySelectorAll('.mode-position').forEach(el => el.classList.remove('active'));
+            document.getElementById('lock-' + targetMode).classList.add('active');
+
+            // Merkkivalo näytölle jos ollaan ylläpidossa
+            const overlay = document.getElementById('modeOverlay');
+            if (currentMode !== 'REG') {
+                overlay.style.display = "block";
+                overlay.innerText = currentMode + " MODE ACTIVE";
+                overlay.style.backgroundColor = currentMode === 'PRG' ? '#dc2626' : (currentMode === 'S' ? '#7c3aed' : '#d97706');
+            } else {
+                overlay.style.display = "none";
+            }
+
+            document.getElementById('vfdMessage').innerText = "MODE CHANGED TO " + targetMode;
+            
+            // Jos siirrytään raportointitilaan, ajetaan lukunäyttö kuittiin suoraan ohjekirjan tapaan
+            if (currentMode === "REP") {
+                runRepModeDefaultView();
+            } else {
+                document.getElementById('receiptContainer').innerHTML = '';
+            }
 
             updateStatusBar();
-            refreshAllViews();
+            renderTouchMatrix();
+            updateTransactionDisplay();
         }
 
         function updateStatusBar() {
-            const bar = document.getElementById('statusBar');
-            let clerkText = currentClerk ? currentClerk.name : "-";
-            let msg = `OPR: ${clerkText} | MODE: ${currentMode}`;
-            if (!currentClerk && currentMode === 'REG') msg += " | COMPULSORY SIGN-ON";
-            bar.innerText = msg;
+            const bar = document.getElementById('statusString');
+            let clerkName = activeClerk ? activeClerk.name : "-";
+            let str = `OPR: ${clerkName} | MODE: ${currentMode}`;
+            if (!activeClerk && currentMode === 'REG') str += " | COMPULSORY SIGN-ON";
+            bar.innerText = str;
         }
 
-        function refreshAllViews() {
-            if (currentMode === 'REG') {
-                renderMatrix();
-                updateCartDisplay();
-            } else if (currentMode === 'PRG') {
-                renderPrgViews();
-            } else if (currentMode === 'S') {
-                renderSViews();
-            }
-        }
-
-        // --- REG-MYYNTITILAN LOGIIKKA ---
-        function renderMatrix() {
-            const grid = document.getElementById('matrixGrid');
+        // --- DYNAAMINEN NÄYTTÖMATRIISI (MUUTTUU TILA-AVAIMEN MUKAAN TÄYSIN) ---
+        function renderTouchMatrix() {
+            const grid = document.getElementById('screenMatrix');
             grid.innerHTML = '';
 
-            // Suodatetaan tuotteet valitun valikon mukaan
-            let filtered = products.filter(p => p.category === activeKeylink);
+            let currentSivu = matrixMemory[currentMenuIndex];
 
-            // Jos myyjää ei ole kirjattu, näytetään kirjautumisnäppäimet
-            if (!currentClerk) {
-                clerks.forEach(c => {
-                    const btn = document.createElement('button');
-                    btn.className = "sps-btn c-amber";
-                    btn.innerHTML = `KIRJAUDU:<br>${c.name}`;
-                    btn.onclick = () => {
-                        currentClerk = c;
-                        document.getElementById('vfdMsg').innerText = "CLERK SIGNED ON: " + c.name;
-                        updateStatusBar();
-                        refreshAllViews();
-                    };
-                    grid.appendChild(btn);
-                });
-            } else {
-                // Piirretään tuotteet (PLU)
-                filtered.forEach(p => {
-                    const btn = document.createElement('button');
-                    btn.className = "sps-btn c-blue";
-                    let effectivePrice = p.specialPrice ? p.specialPrice : p.price;
-                    
-                    let priceTag = p.specialPrice 
-                        ? `<span style="color:#dc2626;font-weight:bold;">${p.specialPrice.toFixed(2)} €</span>` 
-                        : `${p.price.toFixed(2)} €`;
-
-                    btn.innerHTML = `<span>${p.name}</span><br><span>${priceTag}</span>`;
-                    btn.onclick = () => selectPLU(p);
-                    grid.appendChild(btn);
-                });
-
-                // Lisätään uloskirjaus-painike vapaaseen ruutuun
-                const logoutBtn = document.createElement('button');
-                logoutBtn.className = "sps-btn c-red";
-                logoutBtn.innerText = "SIGN OUT\n(Lopeta vuoro)";
-                logoutBtn.onclick = () => {
-                    currentClerk = null;
-                    currentCart = [];
-                    document.getElementById('vfdMsg').innerText = "SIGN ON REQUIRED";
-                    updateStatusBar();
-                    refreshAllViews();
-                };
-                grid.appendChild(logoutBtn);
-            }
-
-            // Täytetään loput 25 ruudun matriisista tyhjillä passeilla (SPS-2000 standardi)
-            let currentCount = grid.children.length;
-            for (let i = currentCount; i < 25; i++) {
-                const empty = document.createElement('button');
-                empty.className = "sps-btn c-inactive";
-                grid.appendChild(empty);
-            }
-        }
-
-        function switchKeylink(link) {
-            activeKeylink = link;
-            renderMatrix();
-        }
-
-        // Tuotteen valinta (PLU)
-        function selectPLU(product) {
-            if (!currentClerk) { beep(); return; }
-
-            let price = product.specialPrice ? product.specialPrice : product.price;
-
-            // OHJEKIRJAN MUKAINEN PRICE OVERRIDE: 
-            // Jos numeronäppäimistölle oli syötetty jotain ennen tuotteen painamista, se ylikirjoittaa hinnan!
-            if (numpadBuffer !== "") {
-                let overrideVal = parseFloat(numpadBuffer);
-                if (!isNaN(overrideVal) && overrideVal > 0) {
-                    price = overrideVal;
-                    document.getElementById('vfdMsg').innerText = "PRICE OVERRIDE ACCEPTED";
-                }
-                numpadBuffer = "";
-            }
-
-            currentCart.push({ name: product.name, price: price });
-            subtotalLocked = false;
-            updateCartDisplay();
-        }
-
-        // Numeronäppäimet
-        function numPress(val) {
-            if (val === '.' && numpadBuffer.includes('.')) return;
-            numpadBuffer += val;
-            document.getElementById('vfdMsg').innerText = "SYÖTE: " + numpadBuffer;
-        }
-
-        // Toimintonäppäimet (Fixed Hardware Keys)
-        function fnPress(action) {
-            if (action === 'CLEAR') {
-                numpadBuffer = "";
-                document.getElementById('vfdMsg').innerText = currentClerk ? "READY" : "SIGN ON REQUIRED";
-            }
-            else if (action === 'ERR_CORR') {
-                if (currentCart.length > 0) {
-                    let removed = currentCart.pop();
-                    document.getElementById('vfdMsg').innerText = "KORJATTU RIVI: " + removed.name;
-                    subtotalLocked = false;
-                    updateCartDisplay();
-                }
-            }
-            else if (action === 'VOID') {
-                if (currentCart.length > 0) {
-                    currentCart = [];
-                    subtotalLocked = false;
-                    document.getElementById('vfdMsg').innerText = "KOKO KUITTI MITÄTÖITY";
-                    updateCartDisplay();
-                }
-            }
-            else if (action === 'SUBTOTAL') {
-                if (currentCart.length === 0) return;
-                subtotalLocked = true;
-                document.getElementById('vfdMsg').innerText = "VÄLISUMMA LUKITTU. SYÖTÄ KÄTEINEN";
-            }
-            else if (action === 'CASH') {
-                if (currentCart.length === 0) return;
+            currentSivu.forEach((cell, index) => {
+                const btn = document.createElement('button');
                 
-                let total = currentCart.reduce((sum, item) => sum + item.price, 0);
-                
-                // Katsotaan onko syötetty annettua rahaa
-                if (numpadBuffer !== "") {
-                    let paid = parseFloat(numpadBuffer);
-                    if (paid >= total) {
-                        let change = paid - total;
-                        document.getElementById('vfdMsg').innerText = "TAKASIN: " + change.toFixed(2) + " €";
-                        
-                        // Kirjataan myynteihin
-                        financialTotals.cash += total;
-                        financialTotals.totalSales += total;
-                        financialTotals.receiptsCount++;
-                        
-                        finalizeTransaction();
+                // 1. REG-TILA (NORMAALI MYYNTI)
+                if (currentMode === "REG") {
+                    if (cell.type === "PLU") {
+                        btn.className = `matrix-btn ${cell.color}`;
+                        btn.innerHTML = `<span>${cell.name}</span><br><span>${cell.price.toFixed(2)} €</span>`;
+                        btn.onclick = () => handleRegPLUClick(cell);
+                    } else if (cell.type === "CLERK_SIGN") {
+                        btn.className = "matrix-btn sam-amber";
+                        btn.innerHTML = "OPERATOR<br>SIGN-ON";
+                        btn.onclick = () => triggerClerkSignOnDialog();
                     } else {
-                        document.getElementById('vfdMsg').innerText = "VIRHE: RAHA EI RIITÄ";
-                        beep();
+                        btn.className = "matrix-btn sam-empty";
+                        btn.innerText = "•";
                     }
-                } else {
-                    // Tasaraha käteinen
-                    document.getElementById('vfdMsg').innerText = "MAKSETTU TASARAHALLA";
-                    financialTotals.cash += total;
-                    financialTotals.totalSales += total;
-                    financialTotals.receiptsCount++;
-                    finalizeTransaction();
                 }
-            }
+                // 2. PRG-TILA (AITO TUOTTEIDEN OHJELMOINTI KOSKETUKSELLA)
+                else if (currentMode === "PRG") {
+                    btn.className = "matrix-btn";
+                    btn.style.backgroundColor = cell.type === "PLU" ? "#93c5fd" : "#cbd5e1";
+                    btn.style.border = "2px dashed #1e3a8a";
+                    
+                    if (cell.type === "PLU") {
+                        btn.innerHTML = `<span style="font-size:10px;color:#1e40af;">[PLU POUT]</span><br><strong>${cell.name}</strong><br>${cell.price.toFixed(2)}€`;
+                    } else {
+                        btn.innerHTML = `<span style="color:#64748b;">TYHJÄ RAKO</span><br><span style="font-size:10px;">Kosketa luodaksesi</span>`;
+                    }
+                    // Klikkaus avaa laitteen sisäisen ohjelmointi-ikkunan tälle ruudulle!
+                    btn.onclick = () => triggerPrgEditDialog(index);
+                }
+                // 3. S-TILA (PAINIKKEIDEN TYYPIN JA VÄRIN VAIHTO)
+                else if (currentMode === "S") {
+                    btn.className = "matrix-btn";
+                    btn.style.backgroundColor = "#e9d5ff";
+                    btn.style.border = "2px dashed #6b21a8";
+                    
+                    if (cell.type === "PLU") {
+                        btn.innerHTML = `<span style="font-size:9px;color:#6b21a8;">PAINIKE: PLU</span><br><strong>${cell.name}</strong><br>Väri: ${cell.color}`;
+                    } else if (cell.type === "CLERK_SIGN") {
+                        btn.innerHTML = `<span style="font-size:9px;color:#6b21a8;">FUNKTIO</span><br>SIGN-ON`;
+                    } else {
+                        btn.innerHTML = `<span style="color:#a855f7;">TYHJÄ</span><br><span style="font-size:10px;">Määritä tyyppi</span>`;
+                    }
+                    btn.onclick = () => triggerSEditDialog(index);
+                }
+                // 4. REP-TILA (RAPORTTIPAINIKKEET MATRIISISSA)
+                else if (currentMode === "REP") {
+                    btn.className = "matrix-btn sam-empty";
+                    if (index === 0) {
+                        btn.className = "matrix-btn sam-amber";
+                        btn.innerHTML = "FINANCIAL<br>RAPORTTI (X1)";
+                        btn.onclick = () => runFinancialX();
+                    } else if (index === 1) {
+                        btn.className = "matrix-btn sam-red";
+                        btn.innerHTML = "DAILY RESET<br>NOLLAUS (Z1)";
+                        btn.onclick = () => runFinancialZ();
+                    }
+                }
+
+                grid.appendChild(btn);
+            });
         }
 
-        function updateCartDisplay() {
-            const container = document.getElementById('receiptLines');
+        function changeKeylink(index) {
+            currentMenuIndex = index;
+            renderTouchMatrix();
+            document.getElementById('vfdMessage').innerText = "MENU KEYLINK CHANGED TO SIVU " + (index + 1);
+        }
+
+        // --- REG-TILAN MYYNTILOGIIKKA ---
+        function handleRegPLUClick(cell) {
+            if (!activeClerk) {
+                document.getElementById('vfdMessage').innerText = "ERROR: SIGN ON REQUIRED";
+                return;
+            }
+
+            let finalPrice = cell.price;
+
+            // OHJEKIRJAN MUKAINEN PRICE OVERRIDE:
+            // Jos numpadissa on numeroita valmiina, se korvaa tuotteen hinnan tälle kuitille!
+            if (numpadBuffer !== "") {
+                let override = parseFloat(numpadBuffer);
+                if (!isNaN(override) && override > 0) {
+                    finalPrice = override;
+                    document.getElementById('vfdMessage').innerText = "PRICE OVERRIDE OK";
+                }
+                numpadBuffer = "";
+            }
+
+            activeTransaction.push({ name: cell.name, price: finalPrice });
+            subtotalMode = false;
+            updateTransactionDisplay();
+        }
+
+        function updateTransactionDisplay() {
+            if (currentMode !== "REG") return;
+
+            const container = document.getElementById('receiptContainer');
             container.innerHTML = '';
             let total = 0;
 
-            currentCart.forEach(item => {
+            activeTransaction.forEach(item => {
                 const div = document.createElement('div');
-                div.className = "r-line";
+                div.className = "bill-row";
                 div.innerHTML = `<span>${item.name}</span><span>${item.price.toFixed(2)} €</span>`;
                 container.appendChild(div);
                 total += item.price;
             });
 
-            document.getElementById('totalDisp').innerText = total.toFixed(2) + " €";
+            document.getElementById('vfdTotal').innerText = total.toFixed(2) + " €";
             container.scrollTop = container.scrollHeight;
         }
 
-        function finalizeTransaction() {
-            currentCart = [];
-            numpadBuffer = "";
-            subtotalLocked = false;
-            updateCartDisplay();
+        // --- KIINTEÄT RAUDANÄPPÄIMET (FIXED HARDWARE) ---
+        function hardwareNum(val) {
+            if (val === '.' && numpadBuffer.includes('.')) return;
+            numpadBuffer += val;
+            document.getElementById('vfdMessage').innerText = "BUFF: " + numpadBuffer;
         }
 
-        function beep() {
-            // Jäljittelee ohjekirjan virheääntä (Error Beep)
-            console.log("SPS2000_ERROR_BEEP");
-        }
+        function hardwareFn(action) {
+            if (action === 'CLEAR') {
+                numpadBuffer = "";
+                document.getElementById('vfdMessage').innerText = activeClerk ? "READY" : "SIGN ON REQUIRED";
+            }
+            else if (action === 'ERR_CORR') {
+                if (currentMode === "REG" && activeTransaction.length > 0) {
+                    let removed = activeTransaction.pop();
+                    document.getElementById('vfdMessage').innerText = "KORJATTU: " + removed.name;
+                    updateTransactionDisplay();
+                }
+            }
+            else if (action === 'VOID') {
+                if (currentMode === "REG" && activeTransaction.length > 0) {
+                    activeTransaction = [];
+                    subtotalMode = false;
+                    document.getElementById('vfdMessage').innerText = "TRANSACTION VOIDED";
+                    updateTransactionDisplay();
+                }
+            }
+            else if (action === 'SUBTOTAL') {
+                if (currentMode === "REG" && activeTransaction.length > 0) {
+                    subtotalMode = true;
+                    document.getElementById('vfdMessage').innerText = "VÄLISUMMA LUKITTU. SYÖTÄ RAHA";
+                }
+            }
+            else if (action === 'CASH') {
+                if (currentMode !== "REG" || activeTransaction.length === 0) return;
 
+                let total = activeTransaction.reduce((s, i) => s + i.price, 0);
 
-        // --- PRG-OHJELMOINTITILAN LOGIIKKA (BACKOFFICE) ---
-        function renderPrgViews() {
-            // Täytetään kategorioiden valintalistat
-            const catSelect = document.getElementById('prgProdCat');
-            catSelect.innerHTML = categories.map(c => `<option value="${c}">${c}</option>`).join('');
+                if (numpadBuffer !== "") {
+                    let paid = parseFloat(numpadBuffer);
+                    if (paid >= total) {
+                        let change = paid - total;
+                        document.getElementById('vfdMessage').innerText = "TAKASIN: " + change.toFixed(2) + " €";
+                        
+                        // Tallennetaan muistiin raportteja varten
+                        zCounters.totalSales += total;
+                        zCounters.cashReceived += total;
+                        zCounters.receiptsCount++;
 
-            // Tulostetaan kategorialista tekstinä
-            document.getElementById('prgCatList').innerText = "Aktiiviset ryhmät: " + categories.join(', ');
-
-            // Rakennetaan tuotetaulukko
-            const tbody = document.getElementById('prgProductTable');
-            tbody.innerHTML = products.map((p, index) => `
-                <tr>
-                    <td>${p.category}</td>
-                    <td><strong>${p.name}</strong></td>
-                    <td>${p.price.toFixed(2)} €</td>
-                    <td>${p.specialPrice ? p.specialPrice.toFixed(2) + ' €' : '<span style="color:#64748b;">-</span>'}</td>
-                    <td>
-                        <button class="bo-btn bo-btn-danger" onclick="prgDeleteProduct(${index})">Poista PLU</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function prgAddCategory() {
-            const name = document.getElementById('prgNewCat').value.trim().toUpperCase();
-            if (name && !categories.includes(name)) {
-                categories.push(name);
-                document.getElementById('prgNewCat').value = "";
-                renderPrgViews();
+                        activeTransaction = [];
+                        numpadBuffer = "";
+                        updateTransactionDisplay();
+                    } else {
+                        document.getElementById('vfdMessage').innerText = "ERROR: LIIAN VÄHÄN RAHAA";
+                    }
+                } else {
+                    // Tasaraha
+                    document.getElementById('vfdMessage').innerText = "MAKSETTU TASARAHALLA";
+                    zCounters.totalSales += total;
+                    zCounters.cashReceived += total;
+                    zCounters.receiptsCount++;
+                    
+                    activeTransaction = [];
+                    numpadBuffer = "";
+                    updateTransactionDisplay();
+                }
             }
         }
 
-        function prgSaveProduct() {
-            const cat = document.getElementById('prgProdCat').value;
-            const name = document.getElementById('prgProdName').value.trim();
-            const price = parseFloat(document.getElementById('prgProdPrice').value);
-            const specPriceInput = document.getElementById('prgProdSpecPrice').value;
-            const specPrice = specPriceInput !== "" ? parseFloat(specPriceInput) : null;
+        // --- AIVAN AIDOT JÄRJESTELMÄDIALOGIT (KOSKETUSSYÖTÖT LAITTEESTA) ---
+        
+        // 1. Clerk Sign-On Ikkuna
+        function triggerClerkSignOnDialog() {
+            const container = document.getElementById('dialogContent');
+            container.innerHTML = `
+                <div class="dialog-title">SAM4S CLERK SIGN-ON SYSTEM</div>
+                <div class="dialog-field">
+                    <label>VALITSE OPERAATTORI:</label>
+                    <select id="signClerkIdx">
+                        ${clerksDatabase.map((c, i) => `<option value="${i}">${c.name}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="dialog-field">
+                    <label>SYÖTÄ 4-NUMEROINEN PIN KOSKETUKSELLA:</label>
+                    <input type="password" id="signClerkPin" maxlength="4" placeholder="****">
+                </div>
+                <div class="dialog-buttons">
+                    <button class="dialog-btn" style="background:#ef4444;color:white;" onclick="closeDialog()">PERUUTA</button>
+                    <button class="dialog-btn" style="background:#10b981;color:white;" onclick="submitClerkSignOn()">OK / ENTER</button>
+                </div>
+            `;
+            document.getElementById('samDialog').style.display = "flex";
+        }
 
-            if (!name || isNaN(price)) { alert("Nimi ja normaalihinta vaaditaan!"); return; }
+        function submitClerkSignOn() {
+            let idx = document.getElementById('signClerkIdx').value;
+            let pin = document.getElementById('signClerkPin').value;
+            let clerk = clerksDatabase[idx];
 
-            products.push({
-                id: Date.now(),
-                category: cat,
+            if (clerk && clerk.pin === pin) {
+                activeClerk = clerk;
+                document.getElementById('vfdMessage').innerText = "WELCOME " + clerk.name;
+                closeDialog();
+                updateStatusBar();
+                renderTouchMatrix();
+            } else {
+                alert("VIRHEELLINEN PIN-KOODI!");
+            }
+        }
+
+        // 2. PRG-Mode: Tuotteen ohjelmointi suoraan ruudusta käsin!
+        let activePrgIndex = null;
+        function triggerPrgEditDialog(index) {
+            activePrgIndex = index;
+            let currentCell = matrixMemory[currentMenuIndex][index];
+            
+            const container = document.getElementById('dialogContent');
+            container.innerHTML = `
+                <div class="dialog-title">PRG-MODE: PLU PAINIKKEEN OHJELMOINTI (RUUTU ${index+1})</div>
+                <div class="dialog-field">
+                    <label>TUOTTEEN DESCRIPTOR (NIMI NÄYTÖLLE):</label>
+                    <input type="text" id="prgName" value="${currentCell.type === 'PLU' ? currentCell.name : ''}" placeholder="Esim. HANAOLUT 0.5L">
+                </div>
+                <div class="dialog-field">
+                    <label>PERUSHINTA (€):</label>
+                    <input type="number" step="0.01" id="prgPrice" value="${currentCell.type === 'PLU' ? currentCell.price : ''}" placeholder="0.00">
+                </div>
+                <div class="dialog-buttons">
+                    <button class="dialog-btn" style="background:#64748b;color:white;" onclick="submitPrgDelete()">TYHJENNÄ RUUTU</button>
+                    <button class="dialog-btn" style="background:#ef4444;color:white;" onclick="closeDialog()">PERUUTA</button>
+                    <button class="dialog-btn" style="background:#10b981;color:white;" onclick="submitPrgSave()">SAVE TALLENNA</button>
+                </div>
+            `;
+            document.getElementById('samDialog').style.display = "flex";
+        }
+
+        function submitPrgSave() {
+            let name = document.getElementById('prgName').value.trim();
+            let price = parseFloat(document.getElementById('prgPrice').value);
+
+            if (!name || isNaN(price)) { alert("Syötä nimi ja hinta!"); return; }
+
+            // Katsotaan onko vanha väri tallessa, muuten asetetaan oletus sininen
+            let oldCell = matrixMemory[currentMenuIndex][activePrgIndex];
+            let color = oldCell.type === 'PLU' ? oldCell.color : 'sam-blue';
+
+            matrixMemory[currentMenuIndex][activePrgIndex] = {
+                type: "PLU",
                 name: name,
                 price: price,
-                specialPrice: specPrice
-            });
+                color: color
+            };
 
-            // Tyhjennetään kentät
-            document.getElementById('prgProdName').value = "";
-            document.getElementById('prgProdPrice').value = "";
-            document.getElementById('prgProdSpecPrice').value = "";
-            renderPrgViews();
+            closeDialog();
+            renderTouchMatrix();
+            document.getElementById('vfdMessage').innerText = "PLU UPDATED SUCCESSFULLY IN MEMORY";
         }
 
-        function prgDeleteProduct(index) {
-            products.splice(index, 1);
-            renderPrgViews();
+        function submitPrgDelete() {
+            matrixMemory[currentMenuIndex][activePrgIndex] = { type: "EMPTY" };
+            closeDialog();
+            renderTouchMatrix();
+            document.getElementById('vfdMessage').innerText = "PLU CLEARED FROM MATRIX POSITION";
         }
 
+        // 3. S-Mode: Painikkeen tyypin ja värin muokkaus lennosta suoraan ruudusta!
+        let activeSIndex = null;
+        function triggerSEditDialog(index) {
+            activeSIndex = index;
+            let currentCell = matrixMemory[currentMenuIndex][index];
 
-        // --- REP-RAPORTOINTITILA (X1 & Z1 RAPORTIT) ---
-        function runXReport() {
-            const consoleBox = document.getElementById('repConsole');
-            let txt = `*** SAM4S SPS-2000 FINANCIAL REPORT (X1) ***\n`;
-            txt += `TYYPPI: LUKURAPORTTI (EI NOLLAUSTA)\n`;
-            txt += `PÄIVÄYS: ${new Date().toLocaleString('fi-FI')}\n`;
-            txt += `-------------------------------------------\n`;
-            txt += `REKISTERÖIDYT KUITIT:       ${financialTotals.receiptsCount} kpl\n`;
-            txt += `KÄTEISMYYNTI (CASH TOTAL):  ${financialTotals.cash.toFixed(2)} €\n`;
-            txt += `KORTTIMYYNTI (CARD CHG):    ${financialTotals.card.toFixed(2)} €\n`;
-            txt += `===========================================\n`;
-            txt += `BRUTTOMYYNTI YHTEENSÄ:      ${financialTotals.totalSales.toFixed(2)} €\n`;
-            consoleBox.innerText = txt;
+            const container = document.getElementById('dialogContent');
+            container.innerHTML = `
+                <div class="dialog-title">S-MODE: PAINIKKEEN LAITEFUNKTIO (RUUTU ${index+1})</div>
+                <div class="dialog-field">
+                    <label>MÄÄRITÄ PAINIKKEEN TYYPPI (HARDWARE TYPE):</label>
+                    <select id="sTypeSelect" onchange="toggleSFields()">
+                        <option value="EMPTY" ${currentCell.type === 'EMPTY' ? 'selected' : ''}>TYHJÄ / EI REKISTERÖITY</option>
+                        <option value="PLU" ${currentCell.type === 'PLU' ? 'selected' : ''}>TUOTEPAINIKE (PLU)</option>
+                        <option value="CLERK_SIGN" ${currentCell.type === 'CLERK_SIGN' ? 'selected' : ''}>OPERAATTORIN SIGN-ON FUNKTIO</option>
+                    </select>
+                </div>
+                <div class="dialog-field" id="sColorField" style="${currentCell.type === 'PLU' ? '' : 'display:none;'}">
+                    <label>VALITSE PAINIKKEEN VÄRI (SAM4S 18-COLOR PALETTE):</label>
+                    <select id="sColorSelect">
+                        <option value="sam-blue" ${currentCell.color === 'sam-blue' ? 'selected' : ''}>SAM Kirkas Sininen</option>
+                        <option value="sam-green" ${currentCell.color === 'sam-green' ? 'selected' : ''}>SAM Myynti Vihreä</option>
+                        <option value="sam-amber" ${currentCell.color === 'sam-amber' ? 'selected' : ''}>SAM Huomio Oranssi</option>
+                        <option value="sam-purple" ${currentCell.color === 'sam-purple' ? 'selected' : ''}>SAM Tehoste Violetti</option>
+                        <option value="sam-red" ${currentCell.color === 'sam-red' ? 'selected' : ''}>SAM Hälytys Punainen</option>
+                    </select>
+                </div>
+                <div class="dialog-buttons">
+                    <button class="dialog-btn" style="background:#ef4444;color:white;" onclick="closeDialog()">PERUUTA</button>
+                    <button class="dialog-btn" style="background:#10b981;color:white;" onclick="submitSSave()">MUUTA MATRIISIA</button>
+                </div>
+            `;
+            document.getElementById('samDialog').style.display = "flex";
         }
 
-        function runZReport() {
-            if (!confirm("Haluatko varmasti ajaa Z1-päätösraportin?\nTämä tyhjentää ja nollaa kassan myyntilaskurit!")) return;
-
-            const consoleBox = document.getElementById('repConsole');
-            let txt = `*** SAM4S SPS-2000 DAILY RESET REPORT (Z1) ***\n`;
-            txt += `TYYPPI: PÄIVÄN PÄÄTÖSRAPORTTI (NOLLATTU)\n`;
-            txt += `PÄIVÄYS: ${new Date().toLocaleString('fi-FI')}\n`;
-            txt += `-------------------------------------------\n`;
-            txt += `KUITTEJA YHTEENSÄ:          ${financialTotals.receiptsCount} kpl\n`;
-            txt += `KÄTEISKERTYMÄ LOCKET:       ${financialTotals.cash.toFixed(2)} €\n`;
-            txt += `KORTTIKERTYMÄ LOCKET:       ${financialTotals.card.toFixed(2)} €\n`;
-            txt += `===========================================\n`;
-            txt += `NOLLATTU SUMMA YHTEENSÄ:    ${financialTotals.totalSales.toFixed(2)} €\n`;
-            txt += `\n>>> JÄRJESTELMÄN TALOUSTILIT NOLLATTU ONNISTUNEESTI <<<`;
-            consoleBox.innerText = txt;
-
-            // NOLLATAAN TIEDOT (OHJEKIRJAN MUKAINEN Z-AJO)
-            financialTotals = { cash: 0, card: 0, totalSales: 0, receiptsCount: 0 };
+        function toggleSFields() {
+            let type = document.getElementById('sTypeSelect').value;
+            document.getElementById('sColorField').style.display = type === 'PLU' ? 'block' : 'none';
         }
 
+        function submitSSave() {
+            let type = document.getElementById('sTypeSelect').value;
+            let color = document.getElementById('sColorSelect') ? document.getElementById('sColorSelect').value : 'sam-blue';
+            let oldCell = matrixMemory[currentMenuIndex][activeSIndex];
 
-        // --- S-TILAN LOGIIKKA (MYYJIEN HALLINTA) ---
-        function renderSViews() {
-            const tbody = document.getElementById('sClerkTable');
-            tbody.innerHTML = clerks.map((c, index) => `
-                <tr>
-                    <td>${c.name}</td>
-                    <td><code>${c.pin}</code></td>
-                    <td><button class="bo-btn bo-btn-danger" onclick="sDeleteClerk(${index})">Poista</button></td>
-                </tr>
-            `).join('');
-        }
-
-        function sAddClerk() {
-            const name = document.getElementById('sNewUserName').value.trim();
-            const pin = document.getElementById('sNewUserPin').value.trim();
-
-            if (!name || pin.length !== 4 || isNaN(parseInt(pin))) {
-                alert("Syötä nimi ja tasan 4-numeroinen PIN-koodi!");
-                return;
+            if (type === "EMPTY") {
+                matrixMemory[currentMenuIndex][activeSIndex] = { type: "EMPTY" };
+            } else if (type === "CLERK_SIGN") {
+                matrixMemory[currentMenuIndex][activeSIndex] = { type: "CLERK_SIGN", name: "SIGN-ON", color: "sam-amber" };
+            } else if (type === "PLU") {
+                // Jos se oli jo PLU, pidetään tiedot ja vaihdetaan vain väri, muuten luodaan tyhjä PLU-raami
+                let name = oldCell.type === 'PLU' ? oldCell.name : "UUSI PLU";
+                let price = oldCell.type === 'PLU' ? oldCell.price : 1.00;
+                matrixMemory[currentMenuIndex][activeSIndex] = { type: "PLU", name: name, price: price, color: color };
             }
 
-            clerks.push({ name: name, pin: pin });
-            document.getElementById('sNewUserName').value = "";
-            document.getElementById('sNewUserPin').value = "";
-            renderSViews();
+            closeDialog();
+            renderTouchMatrix();
+            document.getElementById('vfdMessage').innerText = "HARDWARE BUTTON STRUCTURE RE-MAPPED";
         }
 
-        function sDeleteClerk(index) {
-            if (clerks.length <= 1) { alert("Järjestelmässä on oltava vähintään yksi myyjä!"); return; }
-            clerks.splice(index, 1);
-            renderSViews();
+        function closeDialog() {
+            document.getElementById('samDialog').style.display = "none";
+        }
+
+
+        // --- REP-MODE: MYYNTIRAPORTTIEN AJO (SUORAAN KUITILLE) ---
+        function runRepModeDefaultView() {
+            const c = document.getElementById('receiptContainer');
+            c.innerHTML = `
+                <div style="text-align:center;font-weight:bold;">*** REP-MODE LOCK ACTIVE ***</div>
+                <br>
+                <p>Järjestelmä valmiina lukemaan muistia.</p>
+                <br>
+                <p>PAINA NÄYTÖSTÄ RAPORTTIA:</p>
+                <p>- RUUTU 1: X1 Talousraportti</p>
+                <p>- RUUTU 2: Z1 Päivän nollausajo</p>
+            `;
+        }
+
+        function runFinancialX() {
+            const c = document.getElementById('receiptContainer');
+            let txt = `
+                <div style="text-align:center;font-weight:bold;">* SAM4S FINANCIAL REPORT (X1) *</div>
+                <div style="text-align:center;font-size:11px;">EI NOLLAA LASKUREITA</div>
+                <p>PÄIVÄYS: ${new Date().toLocaleString('fi-FI')}</p>
+                <p>--------------------------------</p>
+                <div class="bill-row"><span>REKISTERÖIDYT KUITIT:</span><span>${zCounters.receiptsCount} kpl</span></div>
+                <div class="bill-row"><span>KÄTEISKERTYMÄ:</span><span>${zCounters.cashReceived.toFixed(2)} €</span></div>
+                <p>--------------------------------</p>
+                <div class="bill-row" style="font-weight:bold;"><span>BRUTTOMYYNTI YHT:</span><span>${zCounters.totalSales.toFixed(2)} €</span></div>
+            `;
+            c.innerHTML = txt;
+            document.getElementById('vfdMessage').innerText = "X1 REPORT PRINTED";
+        }
+
+        function runFinancialZ() {
+            const c = document.getElementById('receiptContainer');
+            let txt = `
+                <div style="text-align:center;font-weight:bold;color:#ef4444;">* SAM4S RESET REPORT (Z1) *</div>
+                <div style="text-align:center;font-size:11px;">!!! LASKURIT NOLLATTU !!!</div>
+                <p>PÄIVÄYS: ${new Date().toLocaleString('fi-FI')}</p>
+                <p>--------------------------------</p>
+                <div class="bill-row"><span>REKISTERÖIDYT KUITIT:</span><span>${zCounters.receiptsCount} kpl</span></div>
+                <div class="bill-row"><span>NOLLATTU KÄTEINEN:</span><span>${zCounters.cashReceived.toFixed(2)} €</span></div>
+                <p>--------------------------------</p>
+                <div class="bill-row" style="font-weight:bold;"><span>BRUTTOKERTYMÄ POISTETTU:</span><span>${zCounters.totalSales.toFixed(2)} €</span></div>
+                <br>
+                <div style="text-align:center;font-weight:bold;">>>> SYSTEM MEMORY FLUSHED <<<</div>
+            `;
+            c.innerHTML = txt;
+            
+            // Nollataan järjestelmän laitemuisti ohjekirjan mukaisesti!
+            zCounters = { totalSales: 0, cashReceived: 0, receiptsCount: 0 };
+            document.getElementById('vfdMessage').innerText = "Z1 DAILY COUNTERS RESET TO ZERO";
         }
     </script>
 </body>
