@@ -18,7 +18,7 @@ const UI = {
         }
 };
         console.log("UI: Näppäimistö piirretty.");
-    },
+    }
 
     enterProgrammingMode: function() {
         const id = prompt("Syötä tuotenumero (esim 101):");
