@@ -1,228 +1,28 @@
-/**
- * SAM4s SPS-2000 CORE - VAIHE 1: TIETOKANTARUNKO
- * Tämä koodi simuloi kassan sisäistä prosessoria ja muistia.
- */
-
-const SPS2000_Kernel = {
-    // 1. PYSYVÄ MUISTI (Non-Volatile Settings)
-    Config: {
-        RegisterID: "01",
-        TaxRates: { 1: 0.14, 2: 0.24 }, // ALV 14% ja 24%
-        ReceiptHeader: ["KAHVILA TESTI", "TESTIKUJA 1", "02600 ESPOO"]
-    },
-
-    // 2. KIIHTYVÄ MUISTI (RAM - Myyntitapahtumat)
-    RAM: {
-        Mode: "REG", // REG, PRG, REP, S
-        CurrentClerk: null,
-        ActiveReceipt: {
-            Items: [], // Lista tuotteista
-            Subtotal: 0,
-            TaxTotal: 0
-        },
-        // Finanssirekisterit (ne, jotka nollautuvat Z-raportissa)
-        Financials: {
-            GrossSales: 0,
-            NetSales: 0,
-            TotalTax: 0,
-            VoidCount: 0
-        }
-    },
-
-    // 3. TUOTETIETOKANTA (PLU)
-    PLU_Database: {
-        // Esimerkki: PLU 101, Nimi, Hinta, Veroryhmä
-        101: { name: "KAHVI", price: 2.50, taxGroup: 1 },
-        102: { name: "PULLA", price: 3.00, taxGroup: 1 }
-    }
-};
-
-// Ytimen perusfunktio tilan vaihtoon (SIVU 18-24 logiikka alkaa tästä)
-function setSystemMode(mode) {
-    if (["REG", "PRG", "REP", "S"].includes(mode)) {
-        SPS2000_Kernel.RAM.Mode = mode;
-        console.log(`SYSTEM: MODE CHANGED TO ${mode}`);
-    }
-}
-
-// Alustetaan ydin
-console.log("SPS-2000 Kernel Initialized. Database Ready.");
-
-/**
- * SAM4s SPS-2000 CORE - VAIHE 2: PARSER MOOTTORI
- * Tämä moduuli prosessoi näppäinkomennot ja päivittää RAM-tietokantaa.
- */
-
-const Parser = {
-    // Käsittelee PLU-myynnin: esim. (101, PLU)
-    processPLU: (pluID) => {
-        if (SPS2000_Kernel.RAM.Mode !== "REG") {
-            console.error("SYSTEM: MYYNTI VAIN REG-TILASSA");
-            return;
-        }
-
-        const item = SPS2000_Kernel.PLU_Database[pluID];
-        if (!item) {
-            console.error("SYSTEM: PLU EI LÖYDY");
-            return;
-        }
-
-        // Lasketaan vero (ohjekirjan mukainen logiikka)
-        const taxRate = SPS2000_Kernel.SystemOptions.TaxRates[item.taxGroup];
-        const taxAmount = item.price * taxRate;
-
-        // Päivitetään RAM-tapahtumapuskuri
-        const saleRecord = {
-            name: item.name,
-            price: item.price,
-            tax: taxAmount
-        };
-
-        SPS2000_Kernel.RAM.ActiveReceipt.Items.push(saleRecord);
-        SPS2000_Kernel.RAM.ActiveReceipt.Subtotal += item.price;
-        SPS2000_Kernel.RAM.ActiveReceipt.TaxTotal += taxAmount;
-
-        console.log(`PROCESSED: ${item.name} | Hinta: ${item.price} | Vero: ${taxAmount.toFixed(2)}`);
-    },
-
-    // Käsittelee kuitin finalisoinnin (Sivu 18: CASH)
-    finalizeSale: () => {
-        const receipt = SPS2000_Kernel.RAM.ActiveReceipt;
-        
-        // Siirretään RAM-tiedot pysyvään finanssirekisteriin
-        SPS2000_Kernel.RAM.Financials.GrossSales += receipt.Subtotal;
-        SPS2000_Kernel.RAM.Financials.TotalTax += receipt.TaxTotal;
-
-        // Tyhjennetään puskuri
-        SPS2000_Kernel.RAM.ActiveReceipt = { Items: [], Subtotal: 0, TaxTotal: 0 };
-        console.log("SYSTEM: KUITTI VALMIS. RAM NOLLATTU.");
-    }
-};
-/**
- * SAM4s SPS-2000 CORE - VAIHE 3: INPUT CONTROLLER
- * Tämä moduuli yhdistää näppäimistön logiikan parseriin.
- */
-
-const InputController = {
-    // Käsittelee fyysisen näppäimen painalluksen
-    handleKeyPress: (keyID, value = null) => {
-        const mode = SPS2000_Kernel.RAM.Mode;
-
-        // Esimerkki: PLU-näppäin
-        if (keyID === 'PLU') {
-            Parser.processPLU(value);
-        }
-        
-        // Esimerkki: CASH-näppäin
-        else if (keyID === 'CASH') {
-            if (SPS2000_Kernel.RAM.ActiveReceipt.Items.length > 0) {
-                Parser.finalizeSale();
-            } else {
-                console.log("SYSTEM: KUITTI ON TYHJÄ");
-            }
-        }
-        
-        // Esimerkki: MODE-vaihto (Sivu 18-24 hallinta)
-        else if (keyID === 'MODE_SWITCH') {
-            const modes = ['REG', 'PRG', 'REP', 'S'];
-            let nextIndex = (modes.indexOf(mode) + 1) % modes.length;
-            setSystemMode(modes[nextIndex]);
-        }
-    }
-};
-
-// SIMULAATIO: Näin syvällinen kassa toimii:
-// 1. Käyttäjä painaa "101" + "PLU"
-// 2. Controller välittää tiedon parserille
-// 3. Parseri tarkistaa tilan ja päivittää RAM-muistin
-/**
- * SAM4s SPS-2000 CORE - VAIHE 4: RAPORTOINTIMOOTTORI
- * Tämä moduuli huolehtii Z-raportin generoinnista ja RAM-nollauksesta.
- */
-
-const ReportingEngine = {
-    // Generoi raportin ja nollaa kassan (Z-Report)
-    runZReport: () => {
-        if (SPS2000_Kernel.RAM.Mode !== "REP") {
-            console.error("SYSTEM: RAPORTTI VAIN REP-TILASSA");
-            return;
-        }
-
-        const data = SPS2000_Kernel.RAM.Financials;
-        
-        // 1. Luodaan raportti "tulosteena"
-        const report = `
-        --- Z-RAPORTTI ---
-        KASSA: ${SPS2000_Kernel.Config.RegisterID}
-        BRUTTOMYYNTI: ${data.GrossSales.toFixed(2)} €
-        NETTOMYYNTI:  ${data.NetSales.toFixed(2)} €
-        VEROT YHT:    ${data.TotalTax.toFixed(2)} €
-        ------------------
-        `;
-
-        console.log(report);
-
-        // 2. RAM-muistin nollaus (Tämä simuloi NVRAM-nollausta)
-        SPS2000_Kernel.RAM.Financials = {
-            GrossSales: 0,
-            NetSales: 0,
-            TotalTax: 0,
-            VoidCount: 0
-        };
-
-        // 3. Päivitetään kassan tila
-        console.log("SYSTEM: Z-RAPORTTI VALMIS. KASSA NOLLATTU.");
-    },
-
-    // X-raportti (Vain lukee tiedot, ei nollaa)
-    runXReport: () => {
-        console.log("--- X-RAPORTTI (VAIN LUKU) ---");
-        console.log(SPS2000_Kernel.RAM.Financials);
-    }
-};
-
-// Logiikka visuaalisena mallina:
-//
 <!DOCTYPE html>
 <html lang="fi">
 <head>
     <meta charset="UTF-8">
-    <title>SAM4s SPS-2000 - Täysi Firmware Integraatio</title>
-    <style>
-        body { background: #222; color: #fff; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; }
-        .grid { display: grid; grid-template-columns: repeat(8, 80px); gap: 5px; margin-top: 20px; }
-        .key { width: 80px; height: 60px; background: #444; border: 1px solid #000; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 10px; text-align: center; }
-        .key:active { background: #666; }
-        #display { width: 640px; height: 100px; background: #000; color: #0f0; margin-top: 20px; padding: 10px; font-family: monospace; overflow: hidden; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAM4s SPS-2000 Firmware Simulator</title>
+    <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
 
-    <div id="display">KASSA VALMIS. TILA: REG</div>
-    <div class="grid" id="keyboard"></div>
+    <div id="display">SAM4s SPS-2000 | SYSTEM READY</div>
+
+    <div id="keyboard"></div>
+
+    <script src="src/kernel.js"></script>
+    <script src="src/parser.js"></script>
+    <script src="src/controller.js"></script>
+    <script src="src/reports.js"></script>
+    <script src="src/interface.js"></script>
 
     <script>
-        // Kytketään aiemmin luodut moottorit käyttöliittymään
-        const Keyboard = document.getElementById('keyboard');
-        const Display = document.getElementById('display');
-
-        // Luodaan 40 painiketta
-        for(let i = 1; i <= 40; i++) {
-            let btn = document.createElement('div');
-            btn.className = 'key';
-            
-            // Määritellään painikkeiden toiminnallisuus (Sivut 18-24 logiikka)
-            if(i === 1) { btn.innerText = "KAHVI\n(PLU 101)"; btn.onclick = () => { InputController.handleKeyPress('PLU', 101); updateDisp(); }; }
-            else if(i === 32) { btn.innerText = "CASH"; btn.onclick = () => { InputController.handleKeyPress('CASH'); updateDisp(); }; }
-            else if(i === 40) { btn.innerText = "MODE"; btn.onclick = () => { InputController.handleKeyPress('MODE_SWITCH'); updateDisp(); }; }
-            else { btn.innerText = "P" + i; }
-            
-            Keyboard.appendChild(btn);
-        }
-
-        function updateDisp() {
-            Display.innerText = `MODE: ${SPS2000_Kernel.RAM.Mode} | SUBTOTAL: ${SPS2000_Kernel.RAM.ActiveReceipt.Subtotal.toFixed(2)} €`;
-        }
+        // Alustetaan käyttöliittymä, kun kaikki moduulit on ladattu
+        window.onload = () => {
+            UI.initKeyboard(); // Funktio, joka piirtää napit src/interface.js -tiedostosta
+        };
     </script>
 </body>
 </html>
