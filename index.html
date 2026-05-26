@@ -2,69 +2,76 @@
 <html lang="fi">
 <head>
     <meta charset="UTF-8">
-    <title>NASTA Pro - Navigointi</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
     
     <style>
-        body { margin: 0; padding: 0; font-family: sans-serif; background: #000; }
-        #map { height: 100vh; width: 100vw; }
+        body { margin:0; padding:0; height:100vh; background:#333; overflow:hidden; font-family: sans-serif; }
+        .nasta-main { display: grid; grid-template-columns: 320px 1fr 200px; grid-template-rows: 1fr 110px; height: 100vh; }
         
-        /* HUD-näkymä kartan päällä */
-        .hud-navi {
-            position: absolute; top: 10px; left: 10px; z-index: 1000;
-            background: rgba(0,0,0,0.85); color: #fff; padding: 15px;
-            border: 2px solid #ff9900; border-radius: 8px; width: 300px;
-        }
-        .turn-text { font-size: 1.4rem; font-weight: bold; margin-bottom: 10px; }
-        .distance-text { font-size: 1.1rem; color: #ff9900; }
+        /* Kartta-alue */
+        .panel-map { position:relative; background:#222; }
+        #map { height: 100%; width: 100%; }
+
+        /* HUD - Nopeus ja suunta aitoon Nasta-tyyliin */
+        .nasta-hud { position:absolute; bottom:20px; left:20px; background:rgba(0,0,128,0.9); color:white; padding:10px; border:2px solid white; z-index:1000; font-family: monospace; }
+
+        /* Muut paneelit (sama kuin aiemmin) */
+        .panel-tasks { background:#e0e0e0; border-right:2px solid #555; padding:10px; }
+        .panel-hospitals { background:#444; padding:10px; }
+        .panel-status { grid-column: 1 / span 3; background:#222; display:grid; grid-template-columns: repeat(9, 1fr); gap:4px; padding:5px; }
+        .btn-status { color:white; font-weight:bold; display:flex; align-items:center; justify-content:center; border:1px solid #555; cursor:pointer; }
     </style>
 </head>
 <body>
 
-    <div class="hud-navi">
-        <div class="turn-text" id="turn-instruction">Etsitään reittiä...</div>
-        <div class="distance-text" id="distance-info">-- km jäljellä</div>
+<div class="nasta-main">
+    <div class="panel-tasks">
+        <div style="font-weight:bold; color:red;">703 HENGITYSVAIKEUS</div>
+        <div style="font-size:0.8rem; margin-top:10px;">HATANPÄÄN VALTATIE 1</div>
+    </div>
+    
+    <div class="panel-map">
+        <div id="map"></div>
+        <div class="nasta-hud">
+            NOPEUS: <span id="speed">0</span> km/h | SUUNTA: <span id="heading">--</span>°
+        </div>
     </div>
 
-    <div id="map"></div>
+    <div class="panel-hospitals">
+        <button style="width:100%; height:50px; background:#2e7d32; color:white;">TAYS</button>
+    </div>
 
-    <script>
-        const map = L.map('map').setView([61.497, 23.760], 14);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    <div class="panel-status">
+        <div class="btn-status" style="background:#f9a825;">1 VAPAA</div>
+        <div class="btn-status" style="background:#c62828;">3 MATKALLA</div>
+        <div class="btn-status" style="background:#ef6c00;">4 KOHTEESSA</div>
+    </div>
+</div>
 
-        // Alustetaan reititysohjain
-        let routingControl = L.Routing.control({
-            waypoints: [
-                L.latLng(61.497, 23.760), // Lähtöpiste (GPS päivittää tämän)
-                L.latLng(61.482, 23.753)  // Kohdepiste (esim. Hatanpää)
-            ],
-            router: L.Routing.osrmv1({ profile: 'car' }),
-            showAlternatives: false,
-            addWaypoints: false,
-            routeWhileDragging: false
-        }).addTo(map);
+<script>
+    // Alusta kartta
+    const map = L.map('map').setView([61.497, 23.760], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-        // Päivitetään ohjeet HUD-näkymään kun reitti löytyy
-        routingControl.on('routesfound', function(e) {
-            const routes = e.routes;
-            const summary = routes[0].summary;
-            const instruction = routes[0].instructions[0].text;
-            
-            document.getElementById('turn-instruction').innerText = instruction;
-            document.getElementById('distance-info').innerText = 
-                (summary.totalDistance / 1000).toFixed(1) + " km jäljellä | " + 
-                Math.round(summary.totalTime / 60) + " min";
-        });
+    // Reititysohjain (tämä piirtää sinisen navigointiviivan)
+    let route = L.Routing.control({
+        waypoints: [L.latLng(61.497, 23.760), L.latLng(61.482, 23.753)],
+        router: L.Routing.osrmv1({ profile: 'car' }),
+        lineOptions: { styles: [{ color: '#3388ff', weight: 6 }] },
+        createMarker: () => null
+    }).addTo(map);
 
-        // Simuloidaan GPS-päivitystä (oikeassa autossa tämä lukee laitteen sirua)
-        navigator.geolocation.watchPosition(pos => {
-            const lat = pos.coords.latitude;
-            const lon = pos.coords.longitude;
-            routingControl.spliceWaypoints(0, 1, L.latLng(lat, lon));
-        });
-    </script>
+    // GPS-seuranta autoon
+    navigator.geolocation.watchPosition(pos => {
+        const { latitude, longitude, speed, heading } = pos.coords;
+        // Päivitä auton sijainti ja reitti
+        route.spliceWaypoints(0, 1, L.latLng(latitude, longitude));
+        document.getElementById('speed').innerText = speed ? Math.round(speed * 3.6) : 0;
+        document.getElementById('heading').innerText = heading ? Math.round(heading) : "--";
+    }, null, { enableHighAccuracy: true });
+</script>
 </body>
 </html>
