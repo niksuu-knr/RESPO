@@ -2,74 +2,98 @@
 <html lang="fi">
 <head>
     <meta charset="UTF-8">
-    <title>NASTA Pro - Navigointi</title>
+    <title>NASTA Pro - Viranomaiskäyttöliittymä</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
     <style>
-        body, html { margin:0; padding:0; height:100vh; background:#222; font-family: sans-serif; overflow:hidden; }
-        .nasta-grid { display: grid; grid-template-columns: 350px 1fr 250px; grid-template-rows: 1fr 150px; height: 100vh; }
+        body, html { margin:0; padding:0; height:100vh; width:100vw; font-family: sans-serif; overflow:hidden; background:#222; }
+        #map { height: 100vh; width: 100vw; z-index: 1; }
+
+        .hud { position: absolute; z-index: 1000; }
         
-        .nav-footer { 
-            grid-column: 1 / span 3; background:#000; border-top:4px solid #fff; 
-            display:flex; align-items:center; padding:0 30px; gap:60px; color:white;
-        }
-        .turn-info { font-size: 2.2rem; font-weight:bold; }
-        .lane-box { display:flex; gap:10px; }
-        .lane { width:50px; height:90px; background:#333; position:relative; display:flex; align-items:center; justify-content:center; border:2px solid #555; }
-        .lane.active { background:#0f0; color:#000; font-weight:bold; font-size:2rem; }
-        .lane.blocked::after { content:'X'; color:red; font-size:3rem; font-weight:bold; }
+        /* Vasen paneeli: Haku ja Pikanäppäimet */
+        .top-left { top: 20px; left: 20px; width: 320px; display:flex; flex-direction:column; gap:10px; }
+        .search-input { width: 100%; height: 50px; padding: 10px; border: 2px solid #000; font-size: 1.2rem; }
+        .btn { height: 50px; color: #fff; font-weight: bold; cursor: pointer; border:none; }
+        .nav-btn { background: #000; }
+        .save-btn { background: #555; }
+        #fav-container { display:flex; flex-direction:column; gap:5px; }
+        .fav-btn { background: #2e7d32; color: white; padding: 10px; border:none; font-weight:bold; cursor:pointer; }
+
+        /* Nopeusmittari */
+        .speed-hud { top: 20px; right: 20px; background: rgba(0,0,0,0.85); color: #fff; padding: 15px; border: 3px solid #fff; text-align: center; }
+        .speed-val { font-size: 3rem; font-weight: bold; }
+        .warning { border-color: #f00 !important; color: #f00; }
+
+        /* Navigointi-alapalkki */
+        .bottom-bar { bottom: 0; left: 0; width: 100%; height: 120px; background: rgba(0,0,0,0.85); display: flex; align-items: center; padding: 0 40px; gap: 40px; color: white; border-top: 3px solid #fff; }
+        .turn-info { font-size: 2rem; font-weight: bold; flex-grow: 1; }
+        .lane-box { display: flex; gap: 10px; }
+        .lane { width: 50px; height: 80px; background: #333; display: flex; align-items: center; justify-content: center; border: 2px solid #555; }
+        .lane.active { background: #0f0; color: #000; font-weight: bold; font-size: 2rem; }
+        .lane.blocked::after { content: 'X'; color: red; font-size: 2.5rem; }
     </style>
 </head>
 <body>
 
-<div class="nasta-grid">
-    <div style="background:#d4d4d4; padding:15px;"><h3>TEHTÄVÄT</h3></div>
-    <div id="map" style="position:relative;"></div>
-    <div style="background:#444;"></div>
+    <div id="map"></div>
 
-    <div class="nav-footer">
-        <div class="turn-info" id="next-turn">HAETAAN REITTIÄ...</div>
+    <div class="hud top-left">
+        <input type="text" class="search-input" id="address-input" placeholder="Hae kohde...">
+        <button class="btn nav-btn" onclick="aloitaNavigointi()">NAVIGOI</button>
+        <button class="btn save-btn" onclick="tallennaPikanäppäin()">TALLENNA PIKANÄPPÄIMEKSI</button>
+        <div id="fav-container"></div>
+    </div>
+
+    <div class="hud speed-hud" id="speed-box">
+        <div style="font-size: 0.8rem;">RAJOITUS: 80</div>
+        <div class="speed-val" id="speed">0</div>
+        <div style="font-size: 1rem;">km/h</div>
+    </div>
+
+    <div class="hud bottom-bar">
+        <div class="turn-info" id="next-turn">VALMIUSTILASSA</div>
         <div class="lane-box" id="lane-guide"></div>
     </div>
-</div>
 
-<script>
-    const map = L.map('map', { zoomControl: false }).setView([60.392, 25.666], 15);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    <script>
+        const map = L.map('map', { zoomControl: false }).setView([60.392, 25.666], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-    let route = L.Routing.control({
-        waypoints: [L.latLng(60.392, 25.666), L.latLng(60.400, 25.670)],
-        router: L.Routing.osrmv1({ profile: 'car' })
-    }).addTo(map);
+        function aloitaNavigointi(osoite) {
+            const haku = osoite || document.getElementById('address-input').value;
+            document.getElementById('next-turn').innerText = "NAVIGOIDAAN: " + haku.toUpperCase();
+            renderLanes(['blocked', 'active', 'blocked']);
+        }
 
-    // Päivitä alapalkki kun reitti muuttuu
-    route.on('routesfound', function(e) {
-        const instruction = e.routes[0].instructions[0].text;
-        document.getElementById('next-turn').innerText = instruction.toUpperCase();
-        
-        // Simuloitu kaistaopastus (oikeassa systeemissä haettaisiin OSM-datasta)
-        renderLanes(['blocked', 'active', 'blocked']);
-    });
+        function tallennaPikanäppäin() {
+            const haku = document.getElementById('address-input').value;
+            if(!haku) return;
+            const btn = document.createElement('button');
+            btn.className = 'fav-btn';
+            btn.innerText = haku.toUpperCase();
+            btn.onclick = () => aloitaNavigointi(haku);
+            document.getElementById('fav-container').appendChild(btn);
+        }
 
-    function renderLanes(lanes) {
-        const box = document.getElementById('lane-guide');
-        box.innerHTML = '';
-        lanes.forEach(tila => {
-            const div = document.createElement('div');
-            div.className = 'lane ' + (tila === 'active' ? 'active' : 'blocked');
-            if(tila === 'active') div.innerText = '↑';
-            box.appendChild(div);
-        });
-    }
+        function renderLanes(lanes) {
+            const box = document.getElementById('lane-guide');
+            box.innerHTML = '';
+            lanes.forEach(tila => {
+                const div = document.createElement('div');
+                div.className = 'lane ' + tila;
+                if(tila === 'active') div.innerText = '↑';
+                box.appendChild(div);
+            });
+        }
 
-    // GPS-seuranta
-    navigator.geolocation.watchPosition(pos => {
-        const lat = pos.coords.latitude;
-        const lon = pos.coords.longitude;
-        route.spliceWaypoints(0, 1, L.latLng(lat, lon));
-    });
-</script>
+        // GPS-nopeusseuranta
+        navigator.geolocation.watchPosition(pos => {
+            const speed = Math.round(pos.coords.speed * 3.6);
+            document.getElementById('speed').innerText = speed;
+            if(speed > 80) document.getElementById('speed-box').classList.add('warning');
+            else document.getElementById('speed-box').classList.remove('warning');
+        }, null, { enableHighAccuracy: true });
+    </script>
 </body>
 </html>
