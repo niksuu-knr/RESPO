@@ -20,15 +20,15 @@
         .interactive { pointer-events: auto; }
 
         /* YLÄVALIKKO: Haku, hallinta ja ehdotukset */
-        .search-container { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; width: 450px; }
+        .search-container { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; width: 450px; max-width: 90vw; }
         .top-menu { background: rgba(30, 41, 59, 0.95); padding: 10px 20px; border-radius: 8px; border: 2px solid #64748B; display: flex; gap: 10px; align-items: center; }
-        .top-menu input { padding: 12px; font-size: 18px; border-radius: 4px; border: 1px solid #ccc; flex-grow: 1; background: #fff; color: #000; }
+        .top-menu input { padding: 12px; font-size: 18px; border-radius: 4px; border: 1px solid #ccc; flex-grow: 1; background: #fff; color: #000; width: 50%; }
         .top-menu button { padding: 12px 24px; font-size: 16px; font-weight: bold; border-radius: 4px; border: none; cursor: pointer; }
         .btn-start { background: #22C55E; color: white; }
         .btn-stop { background: #EF4444; color: white; }
 
-        .suggestions-list { background: #fff; color: #000; border-radius: 4px; border: 1px solid #64748B; max-height: 200px; overflow-y: auto; list-style: none; margin: 5px 0 0 0; padding: 0; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        .suggestions-list li { padding: 10px 15px; cursor: pointer; font-size: 16px; border-bottom: 1px solid #eee; }
+        .suggestions-list { background: #fff; color: #000; border-radius: 4px; border: 1px solid #64748B; max-height: 220px; overflow-y: auto; list-style: none; margin: 5px 0 0 0; padding: 0; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .suggestions-list li { padding: 12px 15px; cursor: pointer; font-size: 16px; border-bottom: 1px solid #eee; text-align: left; }
         .suggestions-list li:hover { background: #38BDF8; color: #fff; }
 
         /* OIKEA YLÄKULMA: Pyöreät nopeusmittarit */
@@ -39,7 +39,7 @@
         
         .hud-circle.speed-limit.danger { border-color: #EF4444; color: #EF4444; background: rgba(239, 68, 68, 0.3); box-shadow: 0 0 15px #EF4444; }
 
-        /* DYNAAMINEN OPASSUUNTA: Uusi graafinen elementti (sininen pyöristetty laatikko valkoisella nuolella) */
+        /* DYNAAMINEN OPASSUUNTA */
         #floating-instruction-box { 
             position: absolute; 
             bottom: 125px; 
@@ -55,46 +55,45 @@
             align-items: center; 
             gap: 20px; 
             min-width: 450px; 
-            max-width: 600px;
+            max-width: 90vw;
             display: none; 
         }
-        .arrow-container {
-            width: 50px;
-            height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-        .arrow-svg {
-            width: 45px;
-            height: 45px;
-            fill: #ffffff;
-            transition: transform 0.5s ease-in-out;
-        }
-        .instruction-text-container {
-            display: flex;
-            flex-direction: column;
-            text-align: left;
-        }
-        .instruction-main-text {
-            font-size: 26px; 
-            font-weight: bold;
-            line-height: 1.2;
-        }
-        .instruction-distance-text {
-            font-size: 18px;
-            color: #E0F2FE;
-            font-weight: 600;
-            margin-top: 2px;
-        }
+        .arrow-container { width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .arrow-svg { width: 45px; height: 45px; fill: #ffffff; transition: transform 0.5s ease-in-out; }
+        .instruction-text-container { display: flex; flex-direction: column; text-align: left; }
+        .instruction-main-text { font-size: 26px; font-weight: bold; line-height: 1.2; }
+        .instruction-distance-text { font-size: 18px; color: #E0F2FE; font-weight: 600; margin-top: 2px; }
 
         /* ALAPALKKI */
         .bottom-bar { position: absolute; bottom: 0; left: 0; width: 100%; height: 110px; background: #1E293B; border-top: 4px solid #38BDF8; display: grid; grid-template-columns: 1fr 1.2fr 1fr 0.8fr 0.8fr; align-items: center; color: white; text-align: center; }
-        .bar-section { border-right: 2px solid #334155; height: 70%; display: flex; flex-direction: column; justify-content: center; padding: 0 10px; }
+        .bar-section { border-right: 2px solid #334155; height: 70%; display: flex; flex-direction: column; justify-content: center; padding: 0 10px; overflow: hidden; }
         .bar-section:last-child { border-right: none; }
         .bar-label { font-size: 11px; color: #38BDF8; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; letter-spacing: 0.5px; }
         .bar-value { font-size: 22px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        @media (max-width: 768px) {
+            .search-container { top: 10px; }
+            .top-menu { padding: 6px 12px; gap: 6px; }
+            .top-menu input { padding: 8px; font-size: 14px; }
+            .top-menu button { padding: 8px 14px; font-size: 13px; }
+
+            .speed-zones { top: 70px; right: 10px; gap: 6px; }
+            .hud-circle { width: 55px; height: 55px; border-width: 3px; }
+            .hud-circle .num { font-size: 18px; }
+            .hud-circle .unit { font-size: 8px; }
+
+            #floating-instruction-box { bottom: 105px; padding: 10px 15px; gap: 12px; }
+            .arrow-container { width: 35px; height: 35px; }
+            .arrow-svg { width: 32px; height: 32px; }
+            .instruction-main-text { font-size: 18px; }
+            .instruction-distance-text { font-size: 14px; }
+
+            .bottom-bar { height: 90px; grid-template-columns: 1fr 1fr; grid-template-rows: auto auto; padding: 5px 0; }
+            .bar-section { height: 35px; border-right: none; border-bottom: 1px solid #334155; padding: 2px; }
+            .bar-section:nth-child(1) { grid-column: span 2; border-bottom: 1px solid #38BDF8; }
+            .bar-label { font-size: 9px; margin-bottom: 1px; }
+            .bar-value { font-size: 15px; }
+        }
     </style>
 </head>
 <body>
@@ -105,7 +104,7 @@
         
         <div class="search-container interactive">
             <div class="top-menu">
-                <input type="text" id="destination" placeholder="Syötä kohteen osoite..." oninput="haeEhdotukset(this.value)">
+                <input type="text" id="destination" placeholder="Syötä osoite..." oninput="haeEhdotukset(this.value)" onkeydown="if(event.key === 'Enter') laskeReittiSuoraan()">
                 <button class="btn-start" onclick="laskeReittiSuoraan()">ALOITA</button>
                 <button class="btn-stop" onclick="nollaaNavigointi()">LOPETA</button>
             </div>
@@ -174,22 +173,19 @@
         let sijoitusMerkki = L.marker([60.392, 25.666], {icon: naviciKuvake}).addTo(map);
         let routingControl;
         let nykyinenRajoitus = 0;
-        let viimeisinLat = 0;
-        let viimeisinLon = 0;
+        let viimeisinLat = 60.392;
+        let viimeisinLon = 25.666;
         let currentStep = 0;
         let routeSteps = [];
         let valittuKohdeLatLng = null;
         let hakuAjastin;
         let navigointiPaattynyt = false;
 
-        // SANAKIRJA: Muuttaa englanninkieliset opastustermit suomeksi ja palauttaa samalla nuolen kulman (asteina)
         function kaannaSuomeksiJaHaeKulma(teksti) {
             if (!teksti) return { teksti: "Aja suoraan", kulma: 0 };
-            
             let käännös = teksti;
-            let kulma = 0; // Oletus: suoraan ylös (0 astetta)
+            let kulma = 0;
             
-            // Tunnistetaan suunnat ja asetetaan nuolen rotaatiokulmat
             if (/left/gi.test(teksti)) {
                 if (/sharp/gi.test(teksti)) { kulma = -135; }
                 else if (/slight/gi.test(teksti)) { kulma = -45; }
@@ -202,7 +198,6 @@
                 kulma = 180;
             }
 
-            // Tekstien korvaukset suomeksi
             käännös = käännös.replace(/Head northeast/gi, "Aja koilliseen");
             käännös = käännös.replace(/Head northwest/gi, "Aja luoteeseen");
             käännös = käännös.replace(/Head southeast/gi, "Aja kaakkoon");
@@ -223,10 +218,10 @@
             käännös = käännös.replace(/Keep right/gi, "Pysy oikealla");
             käännös = käännös.replace(/Keep left/gi, "Pysy vasemmalla");
             
-            käännös = käännös.replace(/Enter the roundabout and take the 1st exit/gi, "Aja kiertoliittymään: 1. ulosmeno");
-            käännös = käännös.replace(/Enter the roundabout and take the 2nd exit/gi, "Aja kiertoliittymään: 2. ulosmeno");
-            käännös = käännös.replace(/Enter the roundabout and take the 3rd exit/gi, "Aja kiertoliittymään: 3. ulosmeno");
-            käännös = käännös.replace(/Enter the roundabout and take the 4th exit/gi, "Aja kiertoliittymään: 4. ulosmeno");
+            käännös = käännös.replace(/Enter the roundabout and take the 1st exit/gi, "Kiertoliittymä: 1. ulosmeno");
+            käännös = käännös.replace(/Enter the roundabout and take the 2nd exit/gi, "Kiertoliittymä: 2. ulosmeno");
+            käännös = käännös.replace(/Enter the roundabout and take the 3rd exit/gi, "Kiertoliittymä: 3. ulosmeno");
+            käännös = käännös.replace(/Enter the roundabout and take the 4th exit/gi, "Kiertoliittymä: 4. ulosmeno");
             käännös = käännös.replace(/At the roundabout take the 1st exit/gi, "Kiertoliittymästä 1. ulosmeno");
             käännös = käännös.replace(/At the roundabout take the 2nd exit/gi, "Kiertoliittymästä 2. ulosmeno");
             käännös = käännös.replace(/At the roundabout take the 3rd exit/gi, "Kiertoliittymästä 3. ulosmeno");
@@ -239,7 +234,6 @@
             return { teksti: käännös, kulma: kulma };
         }
 
-        // GPS-seuranta
         navigator.geolocation.watchPosition(pos => {
             if (navigointiPaattynyt) return;
 
@@ -252,7 +246,7 @@
             sijoitusMerkki.setLatLng(userLatLng);
             map.setView(userLatLng, 16);
 
-            if (viimeisinLat === 0 || map.distance([viimeisinLat, viimeisinLon], [lat, lon]) > 30) {
+            if (map.distance([viimeisinLat, viimeisinLon], [lat, lon]) > 30) {
                 viimeisinLat = lat;
                 viimeisinLon = lon;
                 haeNopeusrajoitus(lat, lon);
@@ -265,15 +259,11 @@
                 limitYmpyra.classList.remove('danger');
             }
 
-            // Reittipisteiden päivitys ja dynaamisen etäisyyden laskenta lennosta sekunnin välein
             if (routeSteps.length > 0 && currentStep < routeSteps.length) {
                 const nextStep = routeSteps[currentStep];
-                
-                // Lasketaan reaaliaikainen etäisyys nykyisestä GPS-sijainnista seuraavaan käännöskohtaan
                 const stepLatLng = L.latLng(nextStep.maneuver.location[0], nextStep.maneuver.location[1]);
                 const etaisyysKaannokseen = Math.round(map.distance(userLatLng, stepLatLng));
 
-                // Vaihdetaan seuraavaan ohjeeseen, kun ollaan tarpeeksi lähellä (alle 25 metriä)
                 if (etaisyysKaannokseen < 25) {
                     currentStep++;
                     paivitaHUDOhjeet(etaisyysKaannokseen);
@@ -281,20 +271,16 @@
                     paivitaHUDOhjeet(etaisyysKaannokseen);
                 }
 
-                // TARKISTUS 1: Automaattinen navigoinnin päättäminen metrilleen kohteessa
                 if (valittuKohdeLatLng) {
                     const etaisyysKohteeseen = map.distance(userLatLng, valittuKohdeLatLng);
-                    if (etaisyysKohteeseen <= 5) { // Alle 5 metriä lasketaan saapumiseksi GPS-epätarkkuus huomioiden
+                    if (etaisyysKohteeseen <= 5) {
                         navigointiPaattynyt = true;
                         document.getElementById('guidance-text').innerText = "Olet saapunut kohteeseen!";
                         document.getElementById('guidance-distance').innerText = "0 m";
                         document.getElementById('hud-turn').innerText = "Perillä";
                         document.getElementById('hud-dist').innerText = "0 m";
                         
-                        // Nollataan navigointi automaattisesti parin sekunnin kuluttua
-                        setTimeout(() => {
-                            nollaaNavigointi();
-                        }, 4000);
+                        setTimeout(() => { nollaaNavigointi(); }, 4000);
                     }
                 }
             }
@@ -329,7 +315,7 @@
                 .catch(() => {});
         }
 
-        // Autocomplete osoitehaulle
+        // PARANNETTU HAKU: Priorisoidaan tuloksia Suomesta ja käyttäjän oman sijainnin ympäriltä (n. 50km säteellä)
         function haeEhdotukset(teksti) {
             clearTimeout(hakuAjastin);
             const listaElementti = document.getElementById('suggestions');
@@ -340,7 +326,15 @@
             }
 
             hakuAjastin = setTimeout(() => {
-                fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(teksti)}&countrycodes=fi&limit=5`)
+                // Lasketaan hakuikkuna nykyisen sijainnin ympärille (~0.5 astetta) parhaan paikallisen tarkkuuden saamiseksi
+                const minLat = viimeisinLat - 0.4;
+                const maxLat = viimeisinLat + 0.4;
+                const minLon = viimeisinLon - 0.4;
+                const maxLon = viimeisinLon + 0.4;
+
+                const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(teksti)}&countrycodes=fi&viewbox=${minLon},${maxLat},${maxLon},${minLat}&limit=5&addressdetails=1`;
+
+                fetch(url)
                     .then(res => res.json())
                     .then(data => {
                         listaElementti.innerHTML = '';
@@ -348,19 +342,31 @@
                             listaElementti.style.display = 'block';
                             data.forEach(paikka => {
                                 const li = document.createElement('li');
-                                li.innerText = paikka.display_name.split(',').slice(0, 3).join(',');
-                                li.onclick = () => valitseEhdotus(paikka);
+                                
+                                // Siistitään osoitemuoto näyttämään vain oleellinen (esim: "Mannerheimintie 10, Helsinki")
+                                const a = paikka.address;
+                                const tie = a.road || a.pedestrian || a.suburb || a.amenity || "";
+                                const numero = a.house_number || "";
+                                const kaupunki = a.city || a.town || a.village || "";
+                                
+                                let näytettäväOsoite = paikka.display_name.split(',').slice(0, 2).join(',');
+                                if(tie) {
+                                    näytettäväOsoite = tie + (numero ? " " + numero : "") + (kaupunki ? ", " + kaupunki : "");
+                                }
+
+                                li.innerText = näytettäväOsoite;
+                                li.onclick = () => valitseEhdotus(paikka, näytettäväOsoite);
                                 listaElementti.appendChild(li);
                             });
                         } else {
                             listaElementti.style.display = 'none';
                         }
                     });
-            }, 300);
+            }, 250);
         }
 
-        function valitseEhdotus(paikka) {
-            document.getElementById('destination').value = paikka.display_name.split(',').slice(0, 3).join(',');
+        function valitseEhdotus(paikka, siistiOsoite) {
+            document.getElementById('destination').value = siistiOsoite;
             document.getElementById('suggestions').style.display = 'none';
             valittuKohdeLatLng = L.latLng(paikka.lat, paikka.lon);
             laskeReitti(valittuKohdeLatLng);
@@ -370,10 +376,17 @@
             const hakuSana = document.getElementById('destination').value;
             if (!hakuSana) return;
             
+            document.getElementById('suggestions').style.display = 'none';
+
             if(valittuKohdeLatLng) {
                 laskeReitti(valittuKohdeLatLng);
             } else {
-                fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(hakuSana)}&countrycodes=fi&limit=1`)
+                const minLat = viimeisinLat - 0.4;
+                const maxLat = viimeisinLat + 0.4;
+                const minLon = viimeisinLon - 0.4;
+                const maxLon = viimeisinLon + 0.4;
+                
+                fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(hakuSana)}&countrycodes=fi&viewbox=${minLon},${maxLat},${maxLon},${minLat}&limit=1`)
                     .then(res => res.json())
                     .then(data => {
                         if (data.length > 0) {
@@ -383,15 +396,19 @@
             }
         }
 
+        // PARANNETTU REITITYS: Käytetään suoraan virallista OSRM autoprofiilia nopeampaan hakuun
         function laskeReitti(kohdeLatLng) {
             if (routingControl) map.removeControl(routingControl);
             navigointiPaattynyt = false;
 
             routingControl = L.Routing.control({
                 waypoints: [sijoitusMerkki.getLatLng(), kohdeLatLng],
-                router: L.Routing.osrmv1({ serviceUrl: 'https://router.project-osrm.org/route/v1' }),
+                router: L.Routing.osrmv1({ 
+                    serviceUrl: 'https://router.project-osrm.org/route/v1',
+                    profile: 'driving'
+                }),
                 createMarker: () => null,
-                lineOptions: { styles: [{ color: '#0055ff', weight: 8, opacity: 0.9 }] }
+                lineOptions: { styles: [{ color: '#0055ff', weight: 7, opacity: 0.85 }] }
             }).addTo(map);
 
             routingControl.on('routesfound', function(e) {
@@ -422,24 +439,20 @@
             });
         }
 
-        // TARKISTUS 2 & 3: Päivitetään etäisyys dynaamisesti ja käännetään nuoligrafiikkaa nuoliston mukaisesti
         function paivitaHUDOhjeet(nykyinenEtaisyys) {
             if (currentStep < routeSteps.length) {
                 const vaihe = routeSteps[currentStep];
                 const dataohje = kaannaSuomeksiJaHaeKulma(vaihe.text);
                 
-                // Päivitetään pääteksti ylälaatikkoon ja alavalikkoon
                 document.getElementById('guidance-text').innerText = dataohje.teksti;
                 document.getElementById('hud-turn').innerText = dataohje.teksti + " (" + nykyinenEtaisyys + " m)";
 
-                // Päivitetään dynaaminen etäisyysnäkymä nuolilaatikkoon
                 if (nykyinenEtaisyys >= 1000) {
                     document.getElementById('guidance-distance').innerText = (nykyinenEtaisyys / 1000).toFixed(1) + " km päässä";
                 } else {
                     document.getElementById('guidance-distance').innerText = nykyinenEtaisyys + " m päässä";
                 }
 
-                // Käännetään SVG-nuoli lennosta dynaamisen kulman mukaisesti
                 document.getElementById('guidance-arrow').style.transform = `rotate(${dataohje.kulma}deg)`;
             }
         }
