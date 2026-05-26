@@ -2,450 +2,484 @@
 <html lang="fi">
 <head>
     <meta charset="UTF-8">
-    <title>Ajovarma Virkailijaportaali v14.00 — Kassa &amp; Maksutavat</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ensihoidon Kirjaamisjärjestelmä (Merlot Medi & SV210 + Historia)</title>
     <style>
         :root {
-            --ajovarma-navy: #112244;
-            --ajovarma-orange: #FF6600;
-            --ajovarma-bg: #F4F6F9;
-            --ajovarma-card: #FFFFFF;
-            --text-main: #333333;
-            --text-muted: #667788;
-            --border-color: #DDE2E8;
-            --focus-ring: #FF6600;
-            --success-green: #2E7D32;
-            --error-red: #C62828;
+            --primary-color: #005a9c;
+            --secondary-color: #eef6fb;
+            --dark-color: #333;
+            --light-color: #fff;
+            --border-color: #ccc;
+            --success-color: #28a745;
+            --alert-color: #dc3545;
         }
 
         body {
-            background-color: var(--ajovarma-bg);
-            color: var(--text-main);
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            font-size: 15px;
-            margin: 0; padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f7f6;
+            color: var(--dark-color);
         }
 
-        .app-container { max-width: 1600px; margin: 0 auto; padding: 30px; }
+        .main-layout {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .container {
+            background: var(--light-color);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .history-container {
+            background: var(--light-color);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-top: 4px solid var(--primary-color);
+            height: fit-content;
+        }
 
         header {
-            background-color: var(--ajovarma-navy); color: #ffffff;
-            padding: 20px 30px; display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 5px solid var(--ajovarma-orange); border-radius: 8px 8px 0 0;
+            text-align: center;
+            border-bottom: 3px solid var(--primary-color);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
         }
 
-        .logo-section h1 { margin: 0; font-size: 1.8rem; font-weight: 700; }
-        .logo-section h1 span { color: var(--ajovarma-orange); }
-        .logo-section p { margin: 3px 0 0 0; font-size: 0.85rem; opacity: 0.8; text-transform: uppercase; }
-
-        .user-badge { background: rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 20px; font-size: 0.9rem; }
-
-        .top-action-bar {
-            background: var(--ajovarma-card); border: 1px solid var(--border-color);
-            padding: 12px 20px; margin-top: 20px; border-radius: 6px; display: flex; gap: 15px; flex-wrap: wrap;
-        }
-        .action-chip {
-            background: #EFF2F5; color: var(--ajovarma-navy); padding: 6px 12px; border-radius: 4px; font-size: 0.85rem; font-weight: 600; border: 1px solid var(--border-color);
-        }
-        .action-chip span { color: var(--ajovarma-orange); margin-right: 3px; }
-
-        .grid-layout { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 25px; margin-top: 25px; }
-        .card { background-color: var(--ajovarma-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 24px; display: flex; flex-direction: column; }
-        .card-title { font-size: 1.15rem; font-weight: 700; color: var(--ajovarma-navy); margin-bottom: 20px; border-bottom: 2px solid #F0F2F5; padding-bottom: 10px; }
-
-        .input-block { margin-bottom: 16px; }
-        .input-block label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; }
-        .input-block input, .input-block select {
-            width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1px solid #C4CDD5; border-radius: 6px; font-size: 0.95rem; transition: all 0.2s;
-        }
-        
-        input:focus, select:focus, button:focus, .sheet:focus {
-            outline: none !important;
-            border-color: var(--focus-ring) !important;
-            box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.3) !important;
-            background-color: #FFFDFB !important;
+        header h1 {
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 24px;
         }
 
-        .modern-list { list-style: none; padding: 0; margin: 0; }
-        .modern-list-item {
-            background: #F8FAFC; border: 1px solid var(--border-color); border-radius: 6px; padding: 14px; margin-bottom: 10px;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .btn-open { background: var(--ajovarma-navy); color: white; border: none; padding: 8px 16px; border-radius: 4px; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
-
-        table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; padding-bottom: 10px; border-bottom: 2px solid #F0F2F5; }
-        td { padding: 12px 0; border-bottom: 1px solid #F0F2F5; font-size: 0.9rem; }
-
-        /* MODALIT (WIZARD JNE.) */
-        .modal-blur {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(17, 34, 68, 0.6); backdrop-filter: blur(4px); z-index: 100; justify-content: center; align-items: center;
-        }
-        .modal-card { background: #ffffff; width: 1400px; height: 88vh; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
-        .modal-header { background: var(--ajovarma-navy); color: white; padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; }
-        .wizard-split { display: grid; grid-template-columns: 7.5fr 2.5fr; flex: 1; overflow: hidden; }
-        
-        .paper-editor { background: #F0F2F5; padding: 30px; overflow-y: auto; display: flex; justify-content: center; }
-        .sheet {
-            background: #ffffff; width: 100%; max-width: 850px; min-height: 100%; border: 1px solid var(--border-color); padding: 50px; box-sizing: border-box; font-family: 'Courier New', Courier, monospace; font-size: 1rem; line-height: 1.6; outline: none; color: #000000;
+        /* Välilehdet (Tabs) */
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid var(--border-color);
+            margin-bottom: 20px;
         }
 
-        .sidebar-assist { background: #F8FAFC; border-left: 1px solid var(--border-color); padding: 20px; overflow-y: auto; }
-        .assist-group-title { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin: 15px 0 8px 0; }
-        .assist-pill { background: #ffffff; border: 1px solid #C4CDD5; border-radius: 6px; padding: 10px; width: 100%; text-align: left; font-size: 0.85rem; margin-bottom: 8px; display: flex; justify-content: space-between; }
-
-        .modal-footer { background: #F8FAFC; border-top: 1px solid var(--border-color); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
-
-        /* KASSAMODALIN RAKENNE */
-        .cash-modal {
-            background: #ffffff; width: 550px; border-radius: 12px; box-shadow: 0 15px 35px rgba(0,0,0,0.3); overflow: hidden; display: flex; flex-direction: column;
+        .tab-btn {
+            padding: 12px 24px;
+            cursor: pointer;
+            background: #e9e9e9;
+            border: none;
+            border-top-left-radius: 4px;
+            border-top-right-radius: 4px;
+            margin-right: 5px;
+            font-weight: bold;
+            transition: 0.3s;
         }
 
-        #loginScreen { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--ajovarma-navy); z-index: 200; display: flex; justify-content: center; align-items: center; }
+        .tab-btn.active {
+            background: var(--primary-color);
+            color: var(--light-color);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Lomakerakenne */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        input[type="text"], input[type="date"], input[type="time"], select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+
+        textarea {
+            resize: vertical;
+            height: 100px;
+        }
+
+        fieldset {
+            border: 1px solid var(--primary-color);
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 20px;
+            background-color: var(--secondary-color);
+        }
+
+        legend {
+            font-weight: bold;
+            color: var(--primary-color);
+            padding: 0 10px;
+        }
+
+        /* Painikkeet */
+        .btn-container {
+            text-align: right;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        /* Vitalilistaus */
+        .vitals-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+        }
+
+        /* Historia-osion tyylit */
+        .history-item {
+            background: #f9f9f9;
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        .history-item strong {
+            color: var(--primary-color);
+        }
+
+        .alert-no-history {
+            color: #666;
+            font-style: italic;
+        }
+
+        @media (max-width: 900px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+            .grid-2, .grid-3 {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
 
-<!-- ================= LOGIN ================= -->
-<div id="loginScreen">
-    <div style="background: white; padding: 45px; border-radius: 12px; width: 400px; text-align: center;">
-        <div style="font-size: 2rem; font-weight: 800; color: var(--ajovarma-navy); margin-bottom: 5px;">AJOVARMA</div>
-        <div style="color: var(--ajovarma-orange); font-weight: 600; font-size: 0.85rem; margin-bottom: 30px; text-transform: uppercase;">Pääte v14.00 — Kassa &amp; Maksutavat</div>
-        <div class="input-block" style="text-align: left;">
-            <label>Valitse Toimipiste</label>
-            <select id="userSelect" autofocus>
-                <option value="Ajovarma Helsinki (Malmi) - Piste 02">Ajovarma Helsinki (Malmi) - Piste 02</option>
-                <option value="Ajovarma Tampere - Piste 01">Ajovarma Tampere - Piste 01</option>
-            </select>
-        </div>
-        <button onclick="kirjauduSisaan()" style="width: 100%; background: var(--ajovarma-orange); color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer;">[Enter] Kirjaudu sisään</button>
-    </div>
-</div>
+<div class="main-layout">
+    
+    <!-- VASEN PUOLI: LOMAKE -->
+    <div class="container">
+        <header>
+            <h1>eEnsihoidon Kirjaamisalusta</h1>
+            <p style="margin: 5px 0 0 0; color: #666;">Merlot Medi & SV210 + Potilashistoria HETU:lla</p>
+        </header>
 
-<!-- ================= PÄÄRUUTU ================= -->
-<div class="app-container">
-    <header>
-        <div class="logo-section">
-            <h1>AJOVARMA<span>.</span></h1>
-            <p>Pikakirjoitus- ja kassapääte</p>
-        </div>
-        <div class="user-badge">Toimipiste: <strong id="winUser">-</strong> | <span id="winPvm">-</span></div>
-    </header>
-
-    <div class="top-action-bar">
-        <div class="action-chip"><span>[F1]</span> Tyhjennä kassa</div>
-        <div class="action-chip"><span>[F5]</span> Avaa Korttilupa</div>
-        <div class="action-chip"><span>[F6]</span> Avaa Opetuslupa</div>
-        <div class="action-chip"><span>[F7]</span> Avaa Tutkintotodistus</div>
-        <div class="action-chip"><span>[F3]</span> HETU-kenttä</div>
-        <div class="action-chip"><span>[F8]</span> MAKSA / LOPETA KASSA-AJO</div>
-    </div>
-
-    <div class="grid-layout">
-        <!-- 1. ASIAKASTIEDOT -->
-        <div class="card">
-            <div class="card-title">1. Perustiedot</div>
-            <div class="input-block"><label>Asiakkaan HETU</label><input type="text" id="hetuInput" placeholder="010195-XXXX" maxlength="11"></div>
-            <div class="input-block"><label>Asiakkaan Nimi</label><input type="text" id="nameInput" placeholder="Sukunimi Etunimi"></div>
-            <div class="input-block"><label>Katuosoite</label><input type="text" id="addressInput" placeholder="Katuosoite, Postinumero"></div>
-            <div class="input-block">
-                <label>Palvelutuote</label>
-                <select id="itemSelect">
-                    <option value="Ajokorttilupahakemus" data-hinta="40.00">Ajokorttilupahakemus — 40,00 €</option>
-                    <option value="Opetuslupahakemus" data-hinta="40.00">Opetuslupahakemus — 40,00 €</option>
-                    <option value="Ajokoe luokka B" data-hinta="112.00">Ajokoe luokka B — 112,00 €</option>
-                </select>
-            </div>
-            <button id="addCartBtn" onclick="lisaaKoriin()" style="background: var(--ajovarma-navy); color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: auto;">Lisää käsittelykoriin [Enter]</button>
+        <div class="tabs">
+            <button class="tab-btn active" onclick="openTab(event, 'perustiedot')">1. Perustiedot</button>
+            <button class="tab-btn" onclick="openTab(event, 'merlot_kliininen')">2. Kliininen tila (Merlot)</button>
+            <button class="tab-btn" onclick="openTab(event, 'sv210_matka')">3. Matkatiedot (SV210)</button>
         </div>
 
-        <!-- 2. LOMAKKEET -->
-        <div class="card">
-            <div class="card-title">2. Asiakirjapohjat [F5 / F6 / F7]</div>
-            <ul class="modern-list">
-                <li class="modern-list-item"><div><strong>[F5] Ajokorttilupa (T106)</strong></div><button class="btn-open" onclick="avaaWizard('ajokorttilupa')">Avaa</button></li>
-                <li class="modern-list-item"><div><strong>[F6] Opetuslupapäätös</strong></div><button class="btn-open" onclick="avaaWizard('opetuslupa')">Avaa</button></li>
-                <li class="modern-list-item"><div><strong>[F7] Tutkintotodistus</strong></div><button class="btn-open" onclick="avaaWizard('tutkintotodistus')">Avaa</button></li>
-            </ul>
-        </div>
+        <form id="ensihoitoForm" onsubmit="tallennaTiedot(event)">
+            
+            <!-- VÄLILEHTI 1: PERUSTIEDOT -->
+            <div id="perustiedot" class="tab-content active">
+                <fieldset>
+                    <legend>Potilaan tiedot</legend>
+                    <div class="form-group">
+                        <label for="hetu">Henkilötunnus (Hae historiatiedot syöttämällä tämä)</label>
+                        <input type="text" id="hetu" placeholder="PPKKVV-XXXX" required oninput="haePotilashistoria()">
+                    </div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label for="sukuNimi">Sukunimi</label>
+                            <input type="text" id="sukuNimi" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="etuNimet">Etunimet</label>
+                            <input type="text" id="etuNimet" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="kotikunta">Kotikunta</label>
+                        <input type="text" id="kotikunta">
+                    </div>
+                </fieldset>
 
-        <!-- 3. KASSA -->
-        <div class="card">
-            <div class="card-title">3. Käsittelykori — Paina [F8] maksaaksesi</div>
-            <table>
-                <thead><tr><th>Suorite</th><th style="text-align: right;">Hinta</th></tr></thead>
-                <tbody id="cartRows"></tbody>
-            </table>
-            <div style="margin-top: auto; text-align: right; border-top: 2px solid #F0F2F5; padding-top: 15px;">
-                <div style="font-size: 2rem; font-weight: 800; color: var(--ajovarma-navy);" id="totalSum">0.00 €</div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- ================= INTEGRUOTU MAKSUPÄÄTE-MODAL (UUSI OMINAISUUS) ================= -->
-<div id="paymentWindow" class="modal-blur">
-    <div class="cash-modal">
-        <div style="background: var(--ajovarma-navy); color: white; padding: 20px; font-weight: bold; font-size: 1.1rem;">
-            AJOVARMA KASSA — MAKSUTAPAHTUMA
-        </div>
-        <div style="padding: 25px;">
-            <div style="display: flex; justify-content: space-between; font-size: 1.2rem; margin-bottom: 20px; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;">
-                <span>Maksettava yhteensä:</span>
-                <strong style="color: var(--ajovarma-navy);" id="payTotal">0.00 €</strong>
+                <fieldset>
+                    <legend>Tehtävän tiedot</legend>
+                    <div class="grid-3">
+                        <div class="form-group">
+                            <label for="yksikko">Yksikkö</label>
+                            <input type="text" id="yksikko" placeholder="esim. EPP321" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="tehtavatunnus">Tehtävätunnus</label>
+                            <input type="text" id="tehtavatunnus" placeholder="2026-XXXXX">
+                        </div>
+                        <div class="form-group">
+                            <label for="kiireellisyys">Kiireellisyys</label>
+                            <select id="kiireellisyys">
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                                <option value="C">C</option>
+                                <option value="D">D</option>
+                            </select>
+                        </div>
+                    </div>
+                </fieldset>
             </div>
 
-            <!-- VALINNAT -->
-            <div class="input-block">
-                <label>Valitse maksutapa</label>
-                <select id="paymentMethodSelect" onchange="vaihdaMaksutapa()">
-                    <option value="kortti">KORTTIMAKSU (Pääteintegraatio) [1]</option>
-                    <option value="kateinen">KÄTEISMAKSU [2]</option>
-                </select>
+            <!-- VÄLILEHTI 2: MERLOT KLIININEN TILA -->
+            <div id="merlot_kliininen" class="tab-content">
+                <fieldset>
+                    <legend>Vitalifunktiot (Merlot)</legend>
+                    <div class="vitals-grid">
+                        <div class="form-group">
+                            <label for="syke">Syke (bpm)</label>
+                            <input type="text" id="syke">
+                        </div>
+                        <div class="form-group">
+                            <label for="rr">Verenpaine</label>
+                            <input type="text" id="rr" placeholder="120/80">
+                        </div>
+                        <div class="form-group">
+                            <label for="sat">SpO2 (%)</label>
+                            <input type="text" id="sat">
+                        </div>
+                        <div class="form-group">
+                            <label for="hengitystaajuus">Hengitystaajuus</label>
+                            <input type="text" id="hengitystaajuus">
+                        </div>
+                        <div class="form-group">
+                            <label for="gcs">GCS</label>
+                            <input type="text" id="gcs">
+                        </div>
+                        <div class="form-group">
+                            <label for="verensokeri">Verensokeri</label>
+                            <input type="text" id="verensokeri">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" style="margin-top: 15px;">
+                        <label for="hoidonKuvaus">Anamneesi, status ja annettu hoito</label>
+                        <textarea id="hoidonKuvaus" required></textarea>
+                    </div>
+                </fieldset>
             </div>
 
-            <!-- DYYNAMISET KENTÄT KÄTEISELLE -->
-            <div id="cashFields" style="display: none; background: #f8fafc; padding: 15px; border-radius: 6px; margin-bottom: 15px;">
-                <div class="input-block" style="margin-bottom: 10px;">
-                    <label>Asiakkaan antama käteinen (€)</label>
-                    <input type="number" id="cashReceivedInput" step="0.01" placeholder="0.00" oninput="laskeVaihtoraha()">
+            <!-- VÄLILEHTI 3: SV210 MATKAtiedot -->
+            <div id="sv210_matka" class="tab-content">
+                <fieldset>
+                    <legend>Kela SV210 Matkatiedot</legend>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label for="lahtopaikka">Lähtöpaikka</label>
+                            <input type="text" id="lahtopaikka">
+                        </div>
+                        <div class="form-group">
+                            <label for="maaranpaa">Määränpää</label>
+                            <input type="text" id="maaranpaa">
+                        </div>
+                    </div>
+
+                    <div class="grid-3">
+                        <div class="form-group">
+                            <label for="pvm">Matkapäivä</label>
+                            <input type="date" id="pvm">
+                        </div>
+                        <div class="form-group">
+                            <label for="lahtoAika">Lähtöaika</label>
+                            <input type="time" id="lahtoAika">
+                        </div>
+                        <div class="form-group">
+                            <label for="perillaAika">Perillä</label>
+                            <input type="time" id="perillaAika">
+                        </div>
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label for="kilometrit">Kilometrit</label>
+                            <input type="text" id="kilometrit">
+                        </div>
+                        <div class="form-group">
+                            <label for="maksaja">Maksaja</label>
+                            <select id="maksaja">
+                                <option value="kela">Kela-korvattava (SV210)</option>
+                                <option value="kunta_hva">Hyvinvointialue</option>
+                                <option value="itsepursu">Itse maksava</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="svPerustelu">Sairaankuljetuksen lääketieteellinen perustelu (Kela)</label>
+                        <select id="svPerustelu">
+                            <option value="Tila vaatii jatkuvaa seurantaa/hoitoa">Tila vaatii jatkuvaa seurantaa/hoitoa</option>
+                            <option value="Paari- tai makuukuljetuksen tarve">Paari- tai makuukuljetuksen tarve</option>
+                            <option value="Tartuntavaara tai muu lääketieteellinen syy">Tartuntavaara tai muu lääketieteellinen syy</option>
+                        </select>
+                    </div>
+                </fieldset>
+
+                <div class="btn-container">
+                    <button type="submit" class="btn btn-success">Tallenna & Lukitse kertomus</button>
                 </div>
-                <div style="display: flex; justify-content: space-between; font-size: 1.1rem; font-weight: bold; color: var(--success-green);">
-                    <span>Takaisin annettava vaihtoraha:</span>
-                    <span id="cashReturnChange">0.00 €</span>
-                </div>
             </div>
 
-            <!-- STATUS-ALUE (KORTTIMAKSUN ODOTUS JNE) -->
-            <div id="paymentStatusArea" style="text-align: center; padding: 15px; font-weight: bold; color: var(--ajovarma-orange); display: none;">
-                Odotetaan korttitapahtumaa maksupäätteeltä...
-            </div>
-        </div>
+        </form>
+    </div>
 
-        <div style="background: #f4f6f9; padding: 15px 25px; display: flex; justify-content: space-between; border-top: 1px solid var(--border-color);">
-            <button onclick="suljeMaksutapahtuma()" style="background: #ccc; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold;">[ESC] Peruuta</button>
-            <button id="confirmPaymentBtn" onclick="suoritaMaksunVahvistus()" style="background: var(--success-green); color: white; border: none; padding: 10px 25px; border-radius: 4px; cursor: pointer; font-weight: bold;">[Enter] Vahvista maksu</button>
+    <!-- OIKEA PUOLI: POTILASHISTORIA -->
+    <div class="history-container">
+        <h2>Potilaan historia</h2>
+        <div id="historianNaytto">
+            <p class="alert-no-history">Syötä henkilötunnus nähdäksesi aiemmat ensihoitokertomukset.</p>
         </div>
     </div>
-</div>
 
-<!-- ================= DOKUMENTTIWIZARD ================= -->
-<div id="printWindow" class="modal-blur">
-    <div class="modal-card">
-        <div class="modal-header">
-            <div>
-                <span style="font-size: 0.75rem; color: var(--ajovarma-orange); font-weight: bold; text-transform: uppercase;">Pikatäyttö: [ALT + 1...7]</span>
-                <h3 style="margin: 3px 0 0 0; font-weight: 600; font-size: 1.3rem;">Lomake-automaatio ja pikatäyttö</h3>
-            </div>
-            <div>Pvm: <span id="printDate"></span></div>
-        </div>
-        <div class="wizard-split">
-            <div class="paper-editor"><div id="liveEditor" class="sheet" contenteditable="true"></div></div>
-            <div class="sidebar-assist">
-                <div style="font-weight: bold; font-size:0.9rem; color: var(--ajovarma-navy);">Pikatäyttö:</div>
-                <div class="assist-group-title">Ajokorttiluokat</div>
-                <div class="assist-pill"><span>B - Henkilöauto</span><strong>[ALT+1]</strong></div>
-                <div class="assist-pill"><span>AM/120 - Mopo</span><strong>[ALT+2]</strong></div>
-                <div class="assist-pill"><span>A1 - Kevari</span><strong>[ALT+3]</strong></div>
-                <div class="assist-group-title">Erityisehdot</div>
-                <div class="assist-pill"><span>Koodi 01.01 (Lasit)</span><strong>[ALT+4]</strong></div>
-                <div class="assist-pill"><span>Koodi 78 (Automaatti)</span><strong>[ALT+5]</strong></div>
-                <div class="assist-group-title">Päätökset</div>
-                <div class="assist-pill"><span>Päätös: HYVÄKSYTTY</span><strong>[ALT+6]</strong></div>
-                <div class="assist-pill"><span>Ajokoe: HYLÄTTY</span><strong>[ALT+7]</strong></div>
-            </div>
-        </div>
-        <div class="modal-footer">
-            <span style="font-size: 0.85rem; color: var(--text-muted);">Palaa: <strong>[ESC]</strong> | Tulosta: <strong>[F8]</strong></span>
-            <div>
-                <button onclick="printWindow.style.display='none'" style="background: #E4E7EB; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; margin-right: 10px;">Sulje</button>
-                <button onclick="suoritaModerniTulostus()" style="background: var(--ajovarma-orange); color: white; border: none; padding: 10px 25px; border-radius: 6px; font-weight: bold; cursor: pointer;">Tallenna &amp; Tulosta [F8]</button>
-            </div>
-        </div>
-    </div>
 </div>
 
 <script>
-    const modernitPohjat = {
-        ajokorttilupa: `AJOVARMA OY / LUPAPALVELUT\nASIACASASIAKIRJA: Ajokorttilupahakemus (T106)\n--------------------------------------------------\n\nHAKIJAN TIEDOT:\nNimi: [NIMI]\nHETU: [HETU]\nOsoite: [OSOITE]\n\nHAETTAVAT LUOKAT:\n-> [Paina ALT + 1, 2 tai 3]\n\nTARKASTETUT ESITIEDOT:\n- Terveysvaatimukset täytetty.\n\nREKISTERIIN MERKITTÄVÄT ERITYISEHDOT:\n-> [Paina ALT + 4 tai 5]\n\nPÄÄTÖSLAUSEKE:\n-> [Paina ALT + 6 tai 7]\n\nKäsittelijä: [VIRKAILIJA]`,
-        opetuslupa: `AJOVARMA / OPETUSLUPAPÄÄTÖS\n--------------------------------------------------\n\nOPETUKSEN ANTAJA: [NIMI]\nOPETETTAVA OPPILAS / HETU:     [HETU]\n\nAJONEUVON TEKNINEN TARKASTUS:\n-> [Paina ALT+6 jos tarkastus suoritettu hyväksytysti]\n\nKäsittelijä: [VIRKAILIJA]`,
-        tutkintotodistus: `AJOVARMA / KULJETTAJANTUTKINTO\nTODISTUS AJOKOKEEN SUORITUKSESTA\n--------------------------------------------------\n\nCOKELAS: [NIMI]\nHENKILÖTUNNUS: [HETU]\n\nTUTKINNON TULOS JA SANALLINEN PALAUTE:\n-> [Paina ALT+6 tai ALT+7]\n\nKäsittelijä: [VIRKAILIJA]`
-    };
+    // Asetetaan kuluva päivämäärä oletukseksi matkapäivään
+    document.getElementById('pvm').valueAsDate = new Date();
 
-    let ostoskori = [];
-    let loppusumma = 0;
-
-    const loginScreen = document.getElementById('loginScreen');
-    const userSelect = document.getElementById('userSelect');
-    const winUser = document.getElementById('winUser');
-    const hetuInput = document.getElementById('hetuInput');
-    const nameInput = document.getElementById('nameInput');
-    const addressInput = document.getElementById('addressInput');
-    const itemSelect = document.getElementById('itemSelect');
-    const cartRows = document.getElementById('cartRows');
-    const totalSum = document.getElementById('totalSum');
-    const printWindow = document.getElementById('printWindow');
-    const liveEditor = document.getElementById('liveEditor');
-
-    // Kassamuuttujat
-    const paymentWindow = document.getElementById('paymentWindow');
-    const payTotal = document.getElementById('payTotal');
-    const paymentMethodSelect = document.getElementById('paymentMethodSelect');
-    const cashFields = document.getElementById('cashFields');
-    const cashReceivedInput = document.getElementById('cashReceivedInput');
-    const cashReturnChange = document.getElementById('cashReturnChange');
-    const paymentStatusArea = document.getElementById('paymentStatusArea');
-
-    document.getElementById('winPvm').innerText = new Date().toLocaleDateString('fi-FI');
-    document.getElementById('printDate').innerText = new Date().toLocaleDateString('fi-FI');
-
-    function kirjauduSisaan() {
-        winUser.innerText = userSelect.value;
-        loginScreen.style.display = 'none';
-        hetuInput.focus();
-    }
-
-    function lisaaKoriin() {
-        const asiakasId = hetuInput.value.toUpperCase() || "EI TUNNUSTA";
-        const opt = itemSelect.options[itemSelect.selectedIndex];
-        ostoskori.push({ nimi: opt.value, hinta: parseFloat(opt.getAttribute('data-hinta')), kohde: asiakasId });
-        paivitaKassa();
-        hetuInput.focus();
-        hetuInput.select();
-    }
-
-    function paivitaKassa() {
-        cartRows.innerHTML = ''; loppusumma = 0;
-        ostoskori.forEach((t) => {
-            cartRows.innerHTML += `<tr><td><strong>${t.nimi}</strong><br><small style="color:var(--text-muted);">${t.kohde}</small></td><td style="text-align:right; font-weight:600;">${t.hinta.toFixed(2)} €</td></tr>`;
-            loppusumma += t.hinta;
-        });
-        totalSum.innerText = loppusumma.toFixed(2) + " €";
-    }
-
-    /* KASSAOHJELMAN FUNKTIOT */
-    function avaaMaksutapahtuma() {
-        if (ostoskori.length === 0) return;
-        payTotal.innerText = loppusumma.toFixed(2) + " €";
-        paymentWindow.style.display = 'flex';
-        paymentMethodSelect.value = 'kortti';
-        vaihdaMaksutapa();
-        paymentMethodSelect.focus();
-    }
-
-    function vaihdaMaksutapa() {
-        if (paymentMethodSelect.value === 'kateinen') {
-            cashFields.style.display = 'block';
-            paymentStatusArea.style.display = 'none';
-            cashReceivedInput.value = '';
-            cashReturnChange.innerText = "0.00 €";
-            setTimeout(() => { cashReceivedInput.focus(); }, 50);
-        } else {
-            cashFields.style.display = 'none';
-            paymentStatusArea.style.display = 'block';
-            paymentStatusArea.innerText = "Odotetaan korttitapahtumaa maksupäätteeltä (Valmis: Enter)...";
+    // Välilehtien vaihtaminen
+    function openTab(evt, tabName) {
+        var i, tabcontent, tablinks;
+        tabcontent = document.getElementsByClassName("tab-content");
+        for (i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].classList.remove("active");
         }
+        tablinks = document.getElementsByClassName("tab-btn");
+        for (i = 0; i < tablinks.length; i++) {
+            tablinks[i].classList.remove("active");
+        }
+        document.getElementById(tabName).classList.add("active");
+        evt.currentTarget.classList.add("active");
     }
 
-    function laskeVaihtoraha() {
-        const saatu = parseFloat(cashReceivedInput.value) || 0;
-        const vaihtoraha = saatu - loppusumma;
-        if (vaihtoraha >= 0) {
-            cashReturnChange.innerText = vaihtoraha.toFixed(2) + " €";
-            cashReturnChange.style.color = "var(--success-green)";
-        } else {
-            cashReturnChange.innerText = "Käteinen ei riitä";
-            cashReturnChange.style.color = "var(--error-red)";
-        }
-    }
-
-    function suoritaMaksunVahvistus() {
-        if (paymentMethodSelect.value === 'kateinen') {
-            const saatu = parseFloat(cashReceivedInput.value) || 0;
-            if (saatu < loppusumma) {
-                alert("Virhe: Asiakkaan antama käteissumma on liian pieni!");
-                return;
-            }
-        }
+    // FUNKTIO: Hakee historian HETU:n perusteella
+    function haePotilashistoria() {
+        const hetu = document.getElementById('hetu').value.trim();
+        const historiaNaytto = document.getElementById('historianNaytto');
         
-        alert("MAKSU REKISTERÖITY TAPAHTUMALOKIIN!\n\nTyyppi: " + paymentMethodSelect.value.toUpperCase() + "\nSumma: " + loppusumma.toFixed(2) + " €\n\nKassakuitti tulostettu. Kori tyhjennetään.");
-        ostoskori = [];
-        paivitaKassa();
-        paymentWindow.style.display = 'none';
-        hetuInput.focus();
-    }
-
-    function suljeMaksutapahtuma() {
-        paymentWindow.style.display = 'none';
-        hetuInput.focus();
-    }
-
-    function avaaWizard(tyyppi) {
-        const nimi = nameInput.value || "[ASIAKKAAN NIMI]";
-        const hetu = hetuInput.value || "[HETU]";
-        const osoite = addressInput.value || "[OSOITE]";
-        const virkailija = winUser.innerText;
-        let teksti = modernitPohjat[tyyppi].replace("[NIMI]", nimi).replace("[HETU]", hetu).replace("[OSOITE]", osoite).replace("[VIRKAILIJA]", virkailija);
-        liveEditor.innerHTML = teksti.replace(/\n/g, "<br>");
-        printWindow.style.display = 'flex';
-        setTimeout(() => { liveEditor.focus(); }, 50);
-    }
-
-    function lisaaTekstiin(teksti) {
-        document.execCommand('insertHTML', false, teksti.replace(/\n/g, "<br>"));
-    }
-
-    function suoritaModerniTulostus() {
-        alert("LOMAKE TULOSTETTU.");
-        printWindow.style.display = 'none';
-        hetuInput.focus();
-    }
-
-    // NÄPPÄINYSTÖREITITYS v14
-    window.addEventListener('keydown', function(e) {
-        if(['F1','F3','F5','F6','F7','F8'].includes(e.key)) e.preventDefault();
-        if (loginScreen.style.display !== 'none') return;
-
-        // 1. Jos maksukanava on auki
-        if (paymentWindow.style.display === 'flex') {
-            if (e.key === 'Escape') { e.preventDefault(); suljeMaksutapahtuma(); }
-            if (e.key === '1') { e.preventDefault(); paymentMethodSelect.value = 'kortti'; vaihdaMaksutapa(); }
-            if (e.key === '2') { e.preventDefault(); paymentMethodSelect.value = 'kateinen'; vaihdaMaksutapa(); }
-            if (e.key === 'Enter' && document.activeElement !== paymentMethodSelect) { e.preventDefault(); suoritaMaksunVahvistus(); }
+        if (hetu.length < 6) {
+            historiaNaytto.innerHTML = '<p class="alert-no-history">Syötä henkilötunnus nähdäksesi aiemmat ensihoitokertomukset.</p>';
             return;
         }
 
-        // 2. Jos asiakirjawizard on auki
-        if (printWindow.style.display === 'flex') {
-            if (e.key === 'Escape') { printWindow.style.display = 'none'; hetuInput.focus(); }
-            if (e.key === 'F8') suoritaModerniTulostus();
-            if (e.altKey) {
-                e.preventDefault();
-                if (e.key === '1') lisaaTekstiin(' B (Henkilöauto) ');
-                if (e.key === '2') lisaaTekstiin(' AM/120 (Mopo) ');
-                if (e.key === '3') lisaaTekstiin(' A1 (Kevytmoottoripyörä) ');
-                if (e.key === '4') lisaaTekstiin(' Erityisehto: 01.01 (Silmälasit) ');
-                if (e.key === '5') lisaaTekstiin(' Erityisehto: 78 (Automaatti) ');
-                if (e.key === '6') lisaaTekstiin('\nPÄÄTÖS: HYVÄKSYTTY. Vaatimukset täytetty.\n');
-                if (e.key === '7') lisaaTekstiin('\nAJOKOETULOS: HYLÄTTY. Liikennerikkomus risteysalueella.\n');
-            }
+        // Haetaan localStoragesta hetun takana olevat kertomukset
+        const aiemmatKertomukset = JSON.parse(localStorage.getItem(hetu)) || [];
+
+        if (aiemmatKertomukset.length === 0) {
+            historiaNaytto.innerHTML = '<p class="alert-no-history" style="color: var(--alert-color);">Ei aiempia ensihoitokertomuksia tässä laitteessa.</p>';
+        } else {
+            let html = `<h4>Löydetty ${aiemmatKertomukset.length} aiempaa tehtävää:</h4>`;
+            
+            // Käydään kertomukset läpi (uusin ensin)
+            aiemmatKertomukset.reverse().forEach((kertomus, index) => {
+                html += `
+                    <div class="history-item">
+                        <strong>Pvm/Aika:</strong> ${kertomus.pvm} klo ${kertomus.lahtoAika || '--:--'}<br>
+                        <strong>Yksikkö & Tehtävä:</strong> ${kertomus.yksikko} (${kertomus.kiireellisyys}) / ${kertomus.tehtavatunnus || 'Ei tunnusta'}<br>
+                        <strong>Vitalit:</strong> HR: ${kertomus.syke} | RR: ${kertomus.rr} | SpO2: ${kertomus.sat}% | GCS: ${kertomus.gcs}<br>
+                        <strong>Hoito & Anamneesi:</strong> <span style="white-space: pre-wrap;">${kertomus.hoidonKuvaus}</span><br>
+                        <strong>Kuljetus:</strong> ${kertomus.matka} (${kertomus.kelaPerustelu})
+                    </div>
+                `;
+            });
+            historiaNaytto.innerHTML = html;
+        }
+    }
+
+    // FUNKTIO: Tallentaa uuden kertomuksen potilaan HETU:n alle
+    function tallennaTiedot(event) {
+        event.preventDefault();
+        
+        const hetu = document.getElementById('hetu').value.trim();
+        if (!hetu) {
+            alert("Virhe: Henkilötunnus vaaditaan!");
             return;
         }
 
-        // 3. Pääikkunan komennot
-        if (e.key === 'F1') { ostoskori = []; paivitaKassa(); }
-        if (e.key === 'F3') { hetuInput.focus(); hetuInput.select(); }
-        if (e.key === 'F5') avaaWizard('ajokorttilupa');
-        if (e.key === 'F6') avaaWizard('opetuslupa');
-        if (e.key === 'F7') avaaWizard('tutkintotodistus');
-        if (e.key === 'F8') avaaMaksutapahtuma();
+        // Luodaan objekti tämänhetkisistä tiedoista
+        const uusiKertomus = {
+            pvm: document.getElementById('pvm').value,
+            lahtoAika: document.getElementById('lahtoAika').value,
+            yksikko: document.getElementById('yksikko').value,
+            tehtavatunnus: document.getElementById('tehtavatunnus').value,
+            kiireellisyys: document.getElementById('kiireellisyys').value,
+            syke: document.getElementById('syke').value || 'ei mitattu',
+            rr: document.getElementById('rr').value || 'ei mitattu',
+            sat: document.getElementById('sat').value || 'ei mitattu',
+            gcs: document.getElementById('gcs').value || 'ei mitattu',
+            hoidonKuvaus: document.getElementById('hoidonKuvaus').value,
+            matka: document.getElementById('lahtopaikka').value + ' -> ' + document.getElementById('maaranpaa').value,
+            kelaPerustelu: document.getElementById('svPerustelu').value
+        };
 
-        if (e.key === 'Enter') {
-            if (document.activeElement === hetuInput) { e.preventDefault(); nameInput.focus(); }
-            else if (document.activeElement === nameInput) { e.preventDefault(); addressInput.focus(); }
-            else if (document.activeElement === addressInput) { e.preventDefault(); itemSelect.focus(); }
-            else if (document.activeElement === itemSelect) { e.preventDefault(); document.getElementById('addCartBtn').focus(); }
-        }
-    });
+        // Haetaan vanhat tiedot alta tai luodaan tyhjä lista jos uusi potilas
+        let potilaanHistoria = JSON.parse(localStorage.getItem(hetu)) || [];
+        
+        // Lisätään uusi kertomus listan jatkoksi
+        potilaanHistoria.push(uusiKertomus);
+        
+        // Tallennetaan takaisin selaimeen
+        localStorage.setItem(hetu, JSON.stringify(potilaanHistoria));
+
+        alert("Ensihoitokertomus lukittu ja tallennettu onnistuneesti potilaan HETU:n alle!");
+        
+        // Päivitetään historianäkymä heti
+        haePotilashistoria();
+        
+        // Tyhjennetään lomakkeen kliiniset tiedot seuraavaa varten, mutta jätetään potilastiedot näkyviin
+        document.getElementById('syke').value = '';
+        document.getElementById('rr').value = '';
+        document.getElementById('sat').value = '';
+        document.getElementById('hengitystaajuus').value = '';
+        document.getElementById('gcs').value = '';
+        document.getElementById('verensokeri').value = '';
+        document.getElementById('hoidonKuvaus').value = '';
+    }
 </script>
 
 </body>
