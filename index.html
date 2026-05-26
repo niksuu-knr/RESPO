@@ -21,20 +21,25 @@
         .hud-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; pointer-events: none; }
         .interactive { pointer-events: auto; }
 
-        /* YLÄVALIKKO: Haku ja hallinta */
-        .top-menu { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); background: rgba(30, 41, 59, 0.95); padding: 10px 20px; border-radius: 8px; border: 2px solid #64748B; display: flex; gap: 10px; align-items: center; }
-        .top-menu input { padding: 12px; font-size: 18px; border-radius: 4px; border: 1px solid #ccc; width: 250px; background: #fff; color: #000; }
+        /* YLÄVALIKKO: Haku, hallinta ja ehdotukset */
+        .search-container { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; width: 450px; }
+        .top-menu { background: rgba(30, 41, 59, 0.95); padding: 10px 20px; border-radius: 8px; border: 2px solid #64748B; display: flex; gap: 10px; align-items: center; }
+        .top-menu input { padding: 12px; font-size: 18px; border-radius: 4px; border: 1px solid #ccc; flex-grow: 1; background: #fff; color: #000; }
         .top-menu button { padding: 12px 24px; font-size: 16px; font-weight: bold; border-radius: 4px; border: none; cursor: pointer; }
         .btn-start { background: #22C55E; color: white; }
         .btn-stop { background: #EF4444; color: white; }
+
+        /* Hakuehdotusten lista */
+        .suggestions-list { background: #fff; color: #000; border-radius: 4px; border: 1px solid #64748B; max-height: 200px; overflow-y: auto; list-style: none; margin: 5px 0 0 0; padding: 0; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .suggestions-list li { padding: 10px 15px; cursor: pointer; font-size: 16px; border-bottom: 1px solid #eee; }
+        .suggestions-list li:hover { background: #38BDF8; color: #fff; }
 
         /* OIKEA YLÄKULMA: Pyöreät nopeusmittarit */
         .speed-zones { position: absolute; top: 15px; right: 20px; display: flex; flex-direction: column; gap: 10px; }
         .hud-circle { width: 85px; height: 85px; border-radius: 50%; background: rgba(0, 0, 0, 0.85); border: 5px solid #22C55E; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: bold; }
         .hud-circle .num { font-size: 28px; line-height: 1; }
         .hud-circle .unit { font-size: 10px; color: #94A3B8; }
-        /* Hälytystila ylinopeudella */
-        .hud-circle.speed-limit.danger { border-color: #EF4444; color: #EF4444; background: rgba(239, 68, 68, 0.2); }
+        .hud-circle .speed-limit.danger { border-color: #EF4444; color: #EF4444; background: rgba(239, 68, 68, 0.2); }
 
         /* DYNAAMINEN OPASSUUNTA: Alapalkin yläpuolella kelluva laatikko */
         #floating-instruction { position: absolute; bottom: 125px; left: 50%; transform: translateX(-50%); background: rgba(0, 85, 255, 0.95); color: white; padding: 15px 30px; border-radius: 12px; font-size: 28px; font-weight: bold; border: 2px solid #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.5); text-align: center; min-width: 450px; display: none; }
@@ -53,10 +58,13 @@
 
     <div class="hud-layer">
         
-        <div class="top-menu interactive">
-            <input type="text" id="destination" placeholder="Syötä kohteen osoite...">
-            <button class="btn-start" onclick="laskeReitti()">ALOITA</button>
-            <button class="btn-stop" onclick="nollaaNavigointi()">LOPETA</button>
+        <div class="search-container interactive">
+            <div class="top-menu">
+                <input type="text" id="destination" placeholder="Syötä kohteen osoite..." oninput="haeEhdotukset(this.value)">
+                <button class="btn-start" onclick="laskeReittiSuoraan()">ALOITA</button>
+                <button class="btn-stop" onclick="nollaaNavigointi()">LOPETA</button>
+            </div>
+            <ul id="suggestions" class="suggestions-list"></ul>
         </div>
 
         <div class="speed-zones interactive">
@@ -106,6 +114,8 @@
         let nykyinenRajoitus = 80;
         let currentStep = 0;
         let routeSteps = [];
+        let valittuKohdeLatLng = null;
+        let hakuAjastin;
 
         // GPS-seuranta ja automaattinen etappien vaihto
         navigator.geolocation.watchPosition(pos => {
@@ -126,54 +136,95 @@
                 limitYmpyra.classList.remove('danger');
             }
 
-            // GPS-seurantaan perustuva reittiohjeiden vaihto risteyksissä
+            // Paikkaseuranta etapeille
             if (routeSteps.length > 0 && currentStep < routeSteps.length) {
                 const nextStep = routeSteps[currentStep];
-                
-                // Päivitetään jäljellä oleva kokonaismatka dynaamisesti
-                if (routingControl) {
-                    // Jos ollaan lähellä nykyisen ohjeen risteyspistettä (alle 40 metriä)
-                    // Huom: OSRM-koordinaattien puuttuessa simuloituna, Leaflet Routing Machine päivittää tilan
-                    if (nextStep.distance < 40) {
-                        currentStep++;
-                        paivitaHUDOhjeet();
-                    }
+                if (nextStep.distance < 40) {
+                    currentStep++;
+                    paivitaHUDOhjeet();
                 }
             }
         }, null, { enableHighAccuracy: true });
 
-        // Reitityksen laskenta ja HUD-kytkentä
-        function laskeReitti() {
-            const hakuSana = document.getElementById('destination').value;
+        // Autocomplete: hakee ehdotuksia lennosta käyttäjän kirjoittaessa
+        function haeEhdotukset(teksti) {
+            clearTimeout(hakuAjastin);
+            const listaElementti = document.getElementById('suggestions');
             
-            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(hakuSana)}&countrycodes=fi`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.length > 0) {
-                        const kohdeLatLng = L.latLng(data[0].lat, data[0].lon);
-                        
-                        if (routingControl) map.removeControl(routingControl);
+            if (teksti.length < 3) {
+                listaElementti.style.display = 'none';
+                return;
+            }
 
-                        routingControl = L.Routing.control({
-                            waypoints: [sijoitusMerkki.getLatLng(), kohdeLatLng],
-                            router: L.Routing.osrmv1({ serviceUrl: 'https://router.project-osrm.org/route/v1' }),
-                            createMarker: () => null,
-                            lineOptions: { styles: [{ color: '#0055ff', weight: 8, opacity: 0.9 }] }
-                        }).addTo(map);
+            // Odotetaan hetki ettei palvelinta kuormiteta jokaisella kirjaimella (Debounce)
+            hakuAjastin = setTimeout(() => {
+                fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(teksti)}&countrycodes=fi&limit=5`)
+                    .then(res => res.json())
+                    .then(data => {
+                        listaElementti.innerHTML = '';
+                        if (data.length > 0) {
+                            listaElementti.style.display = 'block';
+                            data.forEach(paikka => {
+                                const li = document.createElement('li');
+                                li.innerText = paikka.display_name.split(',').slice(0, 3).join(','); // Tiivistetään osoite
+                                li.onclick = () => valitseEhdotus(paikka);
+                                listaElementti.appendChild(li);
+                            });
+                        } else {
+                            listaElementti.style.display = 'none';
+                        }
+                    });
+            }, 300);
+        }
 
-                        routingControl.on('routesfound', function(e) {
-                            const reitti = e.routes[0];
-                            routeSteps = reitti.instructions;
-                            currentStep = 0;
-                            
-                            document.getElementById('floating-instruction').style.display = 'block';
-                            document.getElementById('hud-dist').innerText = Math.round(reitti.summary.totalDistance) + " m";
-                            if(reitti.name) document.getElementById('hud-road').innerText = reitti.name;
-                            
-                            paivitaHUDOhjeet();
-                        });
-                    }
-                });
+        // Kun käyttäjä klikkaa ehdotusta listalta
+        function valitseEhdotus(paikka) {
+            document.getElementById('destination').value = paikka.display_name.split(',').slice(0, 3).join(',');
+            document.getElementById('suggestions').style.display = 'none';
+            valittuKohdeLatLng = L.latLng(paikka.lat, paikka.lon);
+            laskeReitti(valittuKohdeLatLng);
+        }
+
+        // Käynnistää reitityksen jos painetaan "ALOITA" ilman listavalintaa
+        function laskeReittiSuoraan() {
+            const hakuSana = document.getElementById('destination').value;
+            if (!hakuSana) return;
+            
+            if(valittuKohdeLatLng) {
+                laskeReitti(valittuKohdeLatLng);
+            } else {
+                fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(hakuSana)}&countrycodes=fi&limit=1`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.length > 0) {
+                            laskeReitti(L.latLng(data[0].lat, data[0].lon));
+                        }
+                    });
+            }
+        }
+
+        // Reitityksen rakentaminen kartalle
+        function laskeReitti(kohdeLatLng) {
+            if (routingControl) map.removeControl(routingControl);
+
+            routingControl = L.Routing.control({
+                waypoints: [sijoitusMerkki.getLatLng(), kohdeLatLng],
+                router: L.Routing.osrmv1({ serviceUrl: 'https://router.project-osrm.org/route/v1' }),
+                createMarker: () => null,
+                lineOptions: { styles: [{ color: '#0055ff', weight: 8, opacity: 0.9 }] }
+            }).addTo(map);
+
+            routingControl.on('routesfound', function(e) {
+                const reitti = e.routes[0];
+                routeSteps = reitti.instructions;
+                currentStep = 0;
+                
+                document.getElementById('floating-instruction').style.display = 'block';
+                document.getElementById('hud-dist').innerText = Math.round(reitti.summary.totalDistance) + " m";
+                if(reitti.name) document.getElementById('hud-road').innerText = reitti.name;
+                
+                paivitaHUDOhjeet();
+            });
         }
 
         // HUD-tekstien päivitys
@@ -185,11 +236,13 @@
             }
         }
 
-        // Lopeta ja nollaa järjestelmä
+        // Nollaus
         function nollaaNavigointi() {
             if (routingControl) map.removeControl(routingControl);
             routeSteps = [];
+            valittuKohdeLatLng = null;
             document.getElementById('destination').value = "";
+            document.getElementById('suggestions').style.display = 'none';
             document.getElementById('floating-instruction').style.display = 'none';
             document.getElementById('hud-turn').innerText = "Aja suoraan";
             document.getElementById('hud-dist').innerText = "- m";
