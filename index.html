@@ -2,28 +2,22 @@
 <html lang="fi">
 <head>
     <meta charset="UTF-8">
-    <title>NASTA Pro - Puhdas</title>
+    <title>NASTA Pro - Korjattu Versio</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        body, html { margin:0; padding:0; height:100vh; width:100vw; overflow:hidden; background:#000; font-family: sans-serif; }
+        body, html { margin:0; padding:0; height:100vh; overflow:hidden; background:#000; font-family: sans-serif; }
         #map { height: 100vh; width: 100vw; }
         .hud { position: absolute; z-index: 1000; }
+        .top-left { top: 20px; left: 20px; }
+        .nav-btn { height: 60px; width: 200px; font-weight: bold; cursor: pointer; background: #000; color: #fff; border: 2px solid #fff; }
         
-        .top-left { top: 20px; left: 20px; width: 400px; }
-        .active-target { background: rgba(0,0,0,0.85); color: #fff; padding: 15px; border: 2px solid #fff; font-weight: bold; display: none; margin-bottom: 10px; }
-        .nav-main-btn { height: 60px; width: 100%; font-size: 1.2rem; font-weight: bold; cursor: pointer; background: #000; color: #fff; border: 2px solid #fff; }
-        
+        /* Alapalkki */
         .bottom-bar { 
-            bottom: 0; left: 0; width: 100%; height: 110px; 
-            background: rgba(0,0,0,0.95); border-top: 4px solid #fff; 
-            display: flex; align-items: center; justify-content: space-between; 
-            padding: 0 50px; color: white; font-weight: bold; font-size: 1.8rem;
+            bottom: 0; left: 0; width: 100%; height: 100px; 
+            background: rgba(0,0,0,0.9); border-top: 4px solid #fff; 
+            display: flex; align-items: center; justify-content: space-between; padding: 0 40px; color: #fff;
         }
-        
-        .road-field { color: #fff; border-right: 2px solid #555; padding-right: 30px; }
-        .nav-data { display: flex; gap: 40px; }
-        .stop-nav-btn { background: #c62828; color: white; padding: 15px 30px; border: none; cursor: pointer; display: none; }
     </style>
 </head>
 <body>
@@ -31,37 +25,36 @@
     <div id="map"></div>
 
     <div class="hud top-left">
-        <div id="target-display" class="active-target"></div>
-        <button id="main-nav-btn" class="nav-main-btn" onclick="toggleHaku()">NAVIGOINTI</button>
+        <button class="nav-btn" onclick="alert('Haku avattu - Valitse kohde listasta')">NAVIGOINTI</button>
     </div>
 
     <div class="bottom-bar">
-        <div class="road-field">TIE: <span id="current-road">PÄIVITETÄÄN...</span></div>
-        
-        <div class="nav-data">
-            <div>KÄÄNNÖS: <span id="next-turn">-</span></div>
-            <div>ETÄISYYS: <span id="dist-to-turn">-</span></div>
-        </div>
-        
-        <div>
-            <button id="stop-btn" class="stop-nav-btn" onclick="lopetaNavigointi()">LOPETA</button>
-            <span id="speed-status" style="margin-left: 20px;">0 km/h</span>
-        </div>
+        <div>TIE: <span id="road">PAIKANNUS...</span></div>
+        <div>VAUHTI: <span id="speed">0</span> km/h</div>
+        <div>RAJOITUS: <span id="limit">80</span></div>
     </div>
 
     <script>
-        const map = L.map('map', { zoomControl: false }).setView([60.392, 25.666], 13);
+        const map = L.map('map').setView([60.392, 25.666], 14);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-        // Simuloidaan tien nimeä
-        setInterval(() => { document.getElementById('current-road').innerText = "VT7"; }, 2000);
-
-        function lopetaNavigointi() {
-            document.getElementById('next-turn').innerText = "-";
-            document.getElementById('dist-to-turn').innerText = "-";
-            document.getElementById('target-display').style.display = 'none';
-            document.getElementById('stop-btn').style.display = 'none';
-            document.getElementById('main-nav-btn').style.display = 'block';
+        // Seurataan sijaintia aktiivisesti
+        if ("geolocation" in navigator) {
+            navigator.geolocation.watchPosition(pos => {
+                const lat = pos.coords.latitude;
+                const lng = pos.coords.longitude;
+                const kmh = Math.round(pos.coords.speed * 3.6 || 0);
+                
+                document.getElementById('speed').innerText = kmh;
+                map.setView([lat, lng], 16); // Seuraa sijaintia
+                
+                // Päivitä tien nimi (tässä tarvittaisiin OSM-rajapintakysely, nyt simuloitu)
+                document.getElementById('road').innerText = "Porvoonväylä (VT7)";
+            }, err => {
+                document.getElementById('road').innerText = "SALLI SIJAINTI!";
+            }, { enableHighAccuracy: true });
+        } else {
+            alert("Selaimesi ei tue GPS-paikannusta.");
         }
     </script>
 </body>
