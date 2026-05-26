@@ -2,66 +2,74 @@
 <html lang="fi">
 <head>
     <meta charset="UTF-8">
-    <title>NASTA V-112 PÄÄTE</title>
+    <title>NASTA Pro - Navigointi</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
     <style>
-        body { margin:0; padding:0; background:#222; font-family: sans-serif; overflow:hidden; }
-        .grid { display:grid; grid-template-columns: 350px 1fr 250px; height:100vh; }
-        .panel { padding:15px; display:flex; flex-direction:column; gap:10px; }
-        .left { background:#d4d4d4; border-right:4px solid #000; }
-        .map-box { position:relative; }
-        #map { height:100%; width:100%; }
-        .right { background:#444; color:#fff; }
-        .btn { padding:15px; font-weight:bold; cursor:pointer; border:none; }
-        .alert { background:red; color:white; padding:10px; font-size:0.8rem; margin-top:5px; }
+        body, html { margin:0; padding:0; height:100vh; background:#222; font-family: sans-serif; overflow:hidden; }
+        .nasta-grid { display: grid; grid-template-columns: 350px 1fr 250px; grid-template-rows: 1fr 150px; height: 100vh; }
+        
+        .nav-footer { 
+            grid-column: 1 / span 3; background:#000; border-top:4px solid #fff; 
+            display:flex; align-items:center; padding:0 30px; gap:60px; color:white;
+        }
+        .turn-info { font-size: 2.2rem; font-weight:bold; }
+        .lane-box { display:flex; gap:10px; }
+        .lane { width:50px; height:90px; background:#333; position:relative; display:flex; align-items:center; justify-content:center; border:2px solid #555; }
+        .lane.active { background:#0f0; color:#000; font-weight:bold; font-size:2rem; }
+        .lane.blocked::after { content:'X'; color:red; font-size:3rem; font-weight:bold; }
     </style>
 </head>
 <body>
 
-<div class="grid">
-    <div class="panel left" id="alert-zone">
-        <h3>NASTA - LIIKENNETIEDOT</h3>
-    </div>
-    <div class="map-box"><div id="map"></div></div>
-    <div class="panel right">
-        <h3>PIKANÄPPÄIMET</h3>
-        <button class="btn" onclick="asetaKohde([60.39, 25.66])">PORVOO SAIRAALA</button>
-        <button class="btn" onclick="asetaKohde([60.16, 24.94])">HELSINKI</button>
+<div class="nasta-grid">
+    <div style="background:#d4d4d4; padding:15px;"><h3>TEHTÄVÄT</h3></div>
+    <div id="map" style="position:relative;"></div>
+    <div style="background:#444;"></div>
+
+    <div class="nav-footer">
+        <div class="turn-info" id="next-turn">HAETAAN REITTIÄ...</div>
+        <div class="lane-box" id="lane-guide"></div>
     </div>
 </div>
 
 <script>
-    const map = L.map('map').setView([60.392, 25.666], 13);
+    const map = L.map('map', { zoomControl: false }).setView([60.392, 25.666], 15);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-    let routeControl = L.Routing.control({
-        waypoints: [L.latLng(60.392, 25.666)],
+    let route = L.Routing.control({
+        waypoints: [L.latLng(60.392, 25.666), L.latLng(60.400, 25.670)],
         router: L.Routing.osrmv1({ profile: 'car' })
     }).addTo(map);
 
-    function asetaKohde(coords) {
-        routeControl.setWaypoints([L.latLng(60.392, 25.666), L.latLng(coords[0], coords[1])]);
-    }
-
-    async function tarkistaHäiriöt() {
-        const res = await fetch('https://tie.digitraffic.fi/api/traffic-message/v1/messages');
-        const data = await res.json();
-        const container = document.getElementById('alert-zone');
+    // Päivitä alapalkki kun reitti muuttuu
+    route.on('routesfound', function(e) {
+        const instruction = e.routes[0].instructions[0].text;
+        document.getElementById('next-turn').innerText = instruction.toUpperCase();
         
-        data.body.filter(m => m.severity === 'SEVERE').forEach(msg => {
-            const el = document.createElement('div');
-            el.className = 'alert';
-            el.innerText = msg.title;
-            container.appendChild(el);
-            // Karttamerkintä
-            L.marker([msg.location.lat, msg.location.lon]).addTo(map).bindPopup(msg.title);
+        // Simuloitu kaistaopastus (oikeassa systeemissä haettaisiin OSM-datasta)
+        renderLanes(['blocked', 'active', 'blocked']);
+    });
+
+    function renderLanes(lanes) {
+        const box = document.getElementById('lane-guide');
+        box.innerHTML = '';
+        lanes.forEach(tila => {
+            const div = document.createElement('div');
+            div.className = 'lane ' + (tila === 'active' ? 'active' : 'blocked');
+            if(tila === 'active') div.innerText = '↑';
+            box.appendChild(div);
         });
     }
 
-    tarkistaHäiriöt();
+    // GPS-seuranta
+    navigator.geolocation.watchPosition(pos => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+        route.spliceWaypoints(0, 1, L.latLng(lat, lon));
+    });
 </script>
 </body>
 </html>
