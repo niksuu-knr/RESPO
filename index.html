@@ -10,11 +10,9 @@
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 
     <style>
-        /* Täysruutukartta */
         body, html { margin: 0; padding: 0; height: 100vh; width: 100vw; overflow: hidden; font-family: Arial, sans-serif; background: #000; }
         #map { height: 100vh; width: 100vw; position: absolute; top: 0; left: 0; z-index: 1; }
 
-        /* Piilotetaan perinteinen valkoinen reittilistanäkymä */
         .leaflet-routing-container { display: none !important; }
 
         /* HUD-taso kartan päällä */
@@ -29,27 +27,27 @@
         .btn-start { background: #22C55E; color: white; }
         .btn-stop { background: #EF4444; color: white; }
 
-        /* Hakuehdotusten lista */
         .suggestions-list { background: #fff; color: #000; border-radius: 4px; border: 1px solid #64748B; max-height: 200px; overflow-y: auto; list-style: none; margin: 5px 0 0 0; padding: 0; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
         .suggestions-list li { padding: 10px 15px; cursor: pointer; font-size: 16px; border-bottom: 1px solid #eee; }
         .suggestions-list li:hover { background: #38BDF8; color: #fff; }
 
         /* OIKEA YLÄKULMA: Pyöreät nopeusmittarit */
         .speed-zones { position: absolute; top: 15px; right: 20px; display: flex; flex-direction: column; gap: 10px; }
-        .hud-circle { width: 85px; height: 85px; border-radius: 50%; background: rgba(0, 0, 0, 0.85); border: 5px solid #22C55E; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: bold; }
+        .hud-circle { width: 85px; height: 85px; border-radius: 50%; background: rgba(0, 0, 0, 0.85); border: 5px solid #22C55E; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: bold; transition: all 0.3s ease; }
         .hud-circle .num { font-size: 28px; line-height: 1; }
         .hud-circle .unit { font-size: 10px; color: #94A3B8; }
-        .hud-circle .speed-limit.danger { border-color: #EF4444; color: #EF4444; background: rgba(239, 68, 68, 0.2); }
+        
+        .hud-circle.speed-limit.danger { border-color: #EF4444; color: #EF4444; background: rgba(239, 68, 68, 0.3); box-shadow: 0 0 15px #EF4444; }
 
         /* DYNAAMINEN OPASSUUNTA: Alapalkin yläpuolella kelluva laatikko */
         #floating-instruction { position: absolute; bottom: 125px; left: 50%; transform: translateX(-50%); background: rgba(0, 85, 255, 0.95); color: white; padding: 15px 30px; border-radius: 12px; font-size: 28px; font-weight: bold; border: 2px solid #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.5); text-align: center; min-width: 450px; display: none; }
 
-        /* ALAPALKKI: Tilarivi */
-        .bottom-bar { position: absolute; bottom: 0; left: 0; width: 100%; height: 110px; background: #1E293B; border-top: 4px solid #38BDF8; display: grid; grid-template-columns: 1fr 1.5fr 1fr; align-items: center; color: white; text-align: center; }
-        .bar-section { border-right: 2px solid #334155; height: 70%; display: flex; flex-direction: column; justify-content: center; }
+        /* ALAPALKKI: Navici-tyylinen viisiosainen tilarivi */
+        .bottom-bar { position: absolute; bottom: 0; left: 0; width: 100%; height: 110px; background: #1E293B; border-top: 4px solid #38BDF8; display: grid; grid-template-columns: 1fr 1.2fr 1fr 0.8fr 0.8fr; align-items: center; color: white; text-align: center; }
+        .bar-section { border-right: 2px solid #334155; height: 70%; display: flex; flex-direction: column; justify-content: center; padding: 0 10px; }
         .bar-section:last-child { border-right: none; }
-        .bar-label { font-size: 12px; color: #38BDF8; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; }
-        .bar-value { font-size: 24px; font-weight: bold; }
+        .bar-label { font-size: 11px; color: #38BDF8; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; letter-spacing: 0.5px; }
+        .bar-value { font-size: 22px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     </style>
 </head>
 <body>
@@ -69,7 +67,7 @@
 
         <div class="speed-zones interactive">
             <div id="limit-zone" class="hud-circle speed-limit">
-                <span class="num" id="hud-limit">80</span>
+                <span class="num" id="hud-limit">--</span>
                 <span class="unit">RAJOITUS</span>
             </div>
             <div class="hud-circle car-speed" style="border-color: #38BDF8;">
@@ -83,15 +81,23 @@
         <div class="bottom-bar interactive">
             <div class="bar-section">
                 <div class="bar-label">Nykyinen Tie</div>
-                <div class="bar-value" id="hud-road">VT 7</div>
+                <div class="bar-value" id="hud-road">-</div>
             </div>
             <div class="bar-section">
                 <div class="bar-label">Seuraava Käännös</div>
                 <div class="bar-value" id="hud-turn">Aja suoraan</div>
             </div>
             <div class="bar-section">
-                <div class="bar-label">Etäisyys kohteeseen</div>
+                <div class="bar-label">Matka kohteeseen</div>
                 <div class="bar-value" id="hud-dist">- m</div>
+            </div>
+            <div class="bar-section">
+                <div class="bar-label">Matka-aika</div>
+                <div class="bar-value" id="hud-duration">- min</div>
+            </div>
+            <div class="bar-section">
+                <div class="bar-label">Perillä klo</div>
+                <div class="bar-value" id="hud-eta">--:--</div>
             </div>
         </div>
 
@@ -101,7 +107,6 @@
         const map = L.map('map', { zoomControl: false }).setView([60.392, 25.666], 15);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-        // Sininen Navici-tyylinen ajonooli
         const naviciKuvake = L.divIcon({
             html: '<div style="width:0; height:0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-bottom: 30px solid #0055ff; filter: drop-shadow(0px 0px 4px rgba(0,0,0,0.8));"></div>',
             className: 'navici-arrow',
@@ -111,13 +116,15 @@
         
         let sijoitusMerkki = L.marker([60.392, 25.666], {icon: naviciKuvake}).addTo(map);
         let routingControl;
-        let nykyinenRajoitus = 80;
+        let nykyinenRajoitus = 0;
+        let viimeisinLat = 0;
+        let viimeisinLon = 0;
         let currentStep = 0;
         let routeSteps = [];
         let valittuKohdeLatLng = null;
         let hakuAjastin;
 
-        // GPS-seuranta ja automaattinen etappien vaihto
+        // GPS-seuranta, etappien vaihto ja dynaaminen rajoitushaku
         navigator.geolocation.watchPosition(pos => {
             const lat = pos.coords.latitude;
             const lon = pos.coords.longitude;
@@ -128,15 +135,19 @@
             sijoitusMerkki.setLatLng(userLatLng);
             map.setView(userLatLng, 16);
 
-            // Ylinopeustarkistus
+            if (viimeisinLat === 0 || map.distance([viimeisinLat, viimeisinLon], [lat, lon]) > 30) {
+                viimeisinLat = lat;
+                viimeisinLon = lon;
+                haeNopeusrajoitus(lat, lon);
+            }
+
             const limitYmpyra = document.getElementById('limit-zone');
-            if (nopeus > nykyinenRajoitus) {
+            if (nykyinenRajoitus > 0 && nopeus > nykyinenRajoitus) {
                 limitYmpyra.classList.add('danger');
             } else {
                 limitYmpyra.classList.remove('danger');
             }
 
-            // Paikkaseuranta etapeille
             if (routeSteps.length > 0 && currentStep < routeSteps.length) {
                 const nextStep = routeSteps[currentStep];
                 if (nextStep.distance < 40) {
@@ -146,7 +157,36 @@
             }
         }, null, { enableHighAccuracy: true });
 
-        // Autocomplete: hakee ehdotuksia lennosta käyttäjän kirjoittaessa
+        function haeNopeusrajoitus(lat, lon) {
+            const radius = 40;
+            const query = `[out:json];way(around:${radius},${lat},${lon})[maxspeed];out tags;`;
+            const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
+
+            fetch(url)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.elements && data.elements.length > 0) {
+                        const tags = data.elements[0].tags;
+                        if (tags.maxspeed) {
+                            nykyinenRajoitus = parseInt(tags.maxspeed);
+                            document.getElementById('hud-limit').innerText = nykyinenRajoitus;
+                            
+                            if (tags.name) {
+                                document.getElementById('hud-road').innerText = tags.name;
+                            } else if (tags.ref) {
+                                document.getElementById('hud-road').innerText = tags.ref;
+                            }
+                            return;
+                        }
+                    }
+                    if (nykyinenRajoitus === 0) {
+                        document.getElementById('hud-limit').innerText = "--";
+                    }
+                })
+                .catch(() => {});
+        }
+
+        // Autocomplete
         function haeEhdotukset(teksti) {
             clearTimeout(hakuAjastin);
             const listaElementti = document.getElementById('suggestions');
@@ -156,7 +196,6 @@
                 return;
             }
 
-            // Odotetaan hetki ettei palvelinta kuormiteta jokaisella kirjaimella (Debounce)
             hakuAjastin = setTimeout(() => {
                 fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(teksti)}&countrycodes=fi&limit=5`)
                     .then(res => res.json())
@@ -166,7 +205,7 @@
                             listaElementti.style.display = 'block';
                             data.forEach(paikka => {
                                 const li = document.createElement('li');
-                                li.innerText = paikka.display_name.split(',').slice(0, 3).join(','); // Tiivistetään osoite
+                                li.innerText = paikka.display_name.split(',').slice(0, 3).join(',');
                                 li.onclick = () => valitseEhdotus(paikka);
                                 listaElementti.appendChild(li);
                             });
@@ -177,7 +216,6 @@
             }, 300);
         }
 
-        // Kun käyttäjä klikkaa ehdotusta listalta
         function valitseEhdotus(paikka) {
             document.getElementById('destination').value = paikka.display_name.split(',').slice(0, 3).join(',');
             document.getElementById('suggestions').style.display = 'none';
@@ -185,7 +223,6 @@
             laskeReitti(valittuKohdeLatLng);
         }
 
-        // Käynnistää reitityksen jos painetaan "ALOITA" ilman listavalintaa
         function laskeReittiSuoraan() {
             const hakuSana = document.getElementById('destination').value;
             if (!hakuSana) return;
@@ -203,7 +240,6 @@
             }
         }
 
-        // Reitityksen rakentaminen kartalle
         function laskeReitti(kohdeLatLng) {
             if (routingControl) map.removeControl(routingControl);
 
@@ -220,14 +256,32 @@
                 currentStep = 0;
                 
                 document.getElementById('floating-instruction').style.display = 'block';
-                document.getElementById('hud-dist').innerText = Math.round(reitti.summary.totalDistance) + " m";
-                if(reitti.name) document.getElementById('hud-road').innerText = reitti.name;
+                
+                // Päivitetään matka (m tai km riippuen pituudesta)
+                const kokonaisMatka = reitti.summary.totalDistance;
+                if (kokonaisMatka >= 1000) {
+                    document.getElementById('hud-dist').innerText = (kokonaisMatka / 1000).toFixed(1) + " km";
+                } else {
+                    document.getElementById('hud-dist').innerText = Math.round(kokonaisMatka) + " m";
+                }
+                
+                // AJAN JA ETA:N LASKENTA
+                const kestoSekunnit = reitti.summary.totalTime;
+                const kestoMinuutit = Math.round(kestoSekunnit / 60);
+                document.getElementById('hud-duration').innerText = kestoMinuutit + " min";
+                
+                // Perilläoloajan laskeminen nykyhetkestä
+                const perillaAika = new Date();
+                perillaAika.setMinutes(perillaAika.getMinutes() + kestoMinuutit);
+                
+                const tunnit = String(perillaAika.getHours()).padStart(2, '0');
+                const minuutit = String(perillaAika.getMinutes()).padStart(2, '0');
+                document.getElementById('hud-eta').innerText = tunnit + ":" + minuutit;
                 
                 paivitaHUDOhjeet();
             });
         }
 
-        // HUD-tekstien päivitys
         function paivitaHUDOhjeet() {
             if (currentStep < routeSteps.length) {
                 const vaihe = routeSteps[currentStep];
@@ -236,7 +290,6 @@
             }
         }
 
-        // Nollaus
         function nollaaNavigointi() {
             if (routingControl) map.removeControl(routingControl);
             routeSteps = [];
@@ -246,7 +299,9 @@
             document.getElementById('floating-instruction').style.display = 'none';
             document.getElementById('hud-turn').innerText = "Aja suoraan";
             document.getElementById('hud-dist').innerText = "- m";
-            document.getElementById('hud-road').innerText = "VT 7";
+            document.getElementById('hud-road').innerText = "-";
+            document.getElementById('hud-duration').innerText = "- min";
+            document.getElementById('hud-eta').innerText = "--:--";
         }
     </script>
 </body>
