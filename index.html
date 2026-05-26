@@ -2,26 +2,30 @@
 <html lang="fi">
 <head>
     <meta charset="UTF-8">
-    <title>NASTA Pro - Toiminnallinen</title>
+    <title>NASTA Pro - Toimiva</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        body, html { margin:0; padding:0; height:100vh; width:100vw; overflow:hidden; background:#000; font-family: sans-serif; color: white; }
+        body, html { margin:0; padding:0; height:100vh; overflow:hidden; background:#000; font-family: sans-serif; color: white; }
         #map { height: 100vh; width: 100vw; }
-        
         .hud { position: absolute; z-index: 1000; }
-        .top-left { top: 20px; left: 20px; }
         
-        /* Napit ja paneelit */
+        /* Napin tyyli */
+        .top-left { top: 20px; left: 20px; }
         .btn { height: 60px; padding: 0 20px; font-weight: bold; cursor: pointer; background: #000; color: #fff; border: 2px solid #fff; font-size: 1.2rem; }
         
+        /* Listan tyyli */
+        #kohdelista { display: none; background: rgba(0,0,0,0.9); border: 2px solid #fff; margin-top: 5px; width: 250px; }
+        .kohde-item { padding: 15px; border-bottom: 1px solid #555; cursor: pointer; }
+        .kohde-item:hover { background: #444; }
+
+        /* Alapalkki */
         .bottom-bar { 
             bottom: 0; left: 0; width: 100%; height: 100px; 
             background: rgba(0,0,0,0.95); border-top: 4px solid #fff; 
             display: flex; align-items: center; justify-content: space-around;
             padding: 0 20px; font-size: 1.5rem;
         }
-        
         .val { color: #0f0; font-weight: bold; }
     </style>
 </head>
@@ -30,7 +34,11 @@
     <div id="map"></div>
 
     <div class="hud top-left">
-        <button class="btn" onclick="avaaValikko()">NAVIGOINTI</button>
+        <button class="btn" onclick="toggleValikko()">NAVIGOINTI</button>
+        <div id="kohdelista">
+            <div class="kohde-item" onclick="valitseKohde('VT7 - Porvoonväylä')">VT7 - Porvoonväylä</div>
+            <div class="kohde-item" onclick="valitseKohde('Kehä III')">Kehä III</div>
+        </div>
     </div>
 
     <div class="bottom-bar">
@@ -40,26 +48,25 @@
     </div>
 
     <script>
-        // 1. Kartan alustus
         const map = L.map('map', { zoomControl: false }).setView([60.392, 25.666], 14);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-        // 2. Valikon toiminto
-        function avaaValikko() {
-            alert("Valikko avattu: Tässä näkyisi kohdelista.");
+        function toggleValikko() {
+            const l = document.getElementById('kohdelista');
+            l.style.display = (l.style.display === 'block') ? 'none' : 'block';
         }
 
-        // 3. GPS-seuranta
+        function valitseKohde(nimi) {
+            document.getElementById('tie-nimi').innerText = nimi;
+            document.getElementById('kohdelista').style.display = 'none';
+        }
+
+        // GPS-seuranta
         if ("geolocation" in navigator) {
             navigator.geolocation.watchPosition(pos => {
-                const speedKmh = Math.round(pos.coords.speed * 3.6 || 0);
-                document.getElementById('oma-nopeus').innerText = speedKmh;
-                
-                // Päivitetään kartan keskiö sijaintiin
+                const speed = Math.round(pos.coords.speed * 3.6 || 0);
+                document.getElementById('oma-nopeus').innerText = speed;
                 map.setView([pos.coords.latitude, pos.coords.longitude], 16);
-                
-                // Simuloitu tien nimi
-                document.getElementById('tie-nimi').innerText = "VT7";
             }, null, { enableHighAccuracy: true });
         }
     </script>
