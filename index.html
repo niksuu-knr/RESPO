@@ -3,559 +3,477 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Merlot Medi - Koulutussimulaattori</title>
+    <title>Codea eEHK - Koulutussimulaattori</title>
     <style>
         :root {
-            --merlot-blue: #004080;
-            --merlot-light-blue: #b0c4de;
-            --merlot-yellow: #f0e68c;
-            --merlot-green: #3cb371;
-            --bg-gray: #d3d3d3;
-            --panel-gray: #e0e0e0;
-            --btn-gray: #c0c0c0;
-            --text-color: #000;
+            --codea-dark: #22252a;
+            --codea-panel: #2f333a;
+            --codea-input: #3a3f47;
+            --codea-orange: #e67e22;
+            --codea-yellow: #f1c40f;
+            --codea-green: #2ecc71;
+            --codea-text: #ffffff;
+            --codea-text-dim: #a0a5b0;
         }
 
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: var(--bg-gray);
-            color: var(--text-color);
+            background-color: var(--codea-dark);
+            color: var(--codea-text);
             user-select: none;
             overflow: hidden;
             height: 100vh;
         }
 
-        /* Päärakenne kuvan mukaan */
-        .merlot-grid {
-            display: grid;
-            grid-template-columns: 150px 1fr 150px;
+        /* PÄÄRAKENNE */
+        .codea-container {
+            display: flex;
+            flex-direction: column;
             height: 100vh;
             width: 100vw;
         }
 
-        /* SIVUPALKIT */
-        .sidebar {
-            background-color: var(--panel-gray);
-            border: 2px solid #a0a0a0;
+        /* YLÄPALKKI (Tehtävän tiedot ja hätäkeskusdata) */
+        .codea-header {
+            background-color: #1a1c1f;
+            padding: 10px 15px;
             display: flex;
-            flex-direction: column;
-            padding: 5px;
-            gap: 4px;
-            box-sizing: border-box;
-        }
-
-        .sidebar-btn {
-            background-color: #e6e6e6;
-            border: 2px solid #808080;
-            border-radius: 4px;
-            padding: 8px 4px;
-            font-size: 0.75rem;
-            font-weight: bold;
-            text-align: center;
-            cursor: pointer;
-            box-shadow: inset -2px -2px 3px #888, inset 2px 2px 3px #fff;
-            min-height: 44px;
-            display: flex;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
+            border-bottom: 2px solid var(--codea-orange);
         }
 
-        .sidebar-btn:active, .top-btn:active, .action-btn:active {
-            box-shadow: inset 2px 2px 3px #888;
-            background-color: #d0d0d0;
-        }
-
-        .sidebar-btn.active {
-            background-color: var(--merlot-blue) !important;
-            color: white !important;
-            border-color: #002040;
-        }
-
-        /* KESKIALUE */
-        .center-workspace {
-            display: flex;
-            flex-direction: column;
-            background-color: #e6e6e6;
-            border-top: 2px solid #a0a0a0;
-            border-bottom: 2px solid #a0a0a0;
-            overflow: hidden;
-        }
-
-        /* YLÄNAVIGAATIO (Dynaamiset pikanäppäimet) */
-        .top-navbar {
-            background-color: #cccccc;
-            padding: 5px;
-            border-bottom: 2px solid #a0a0a0;
-        }
-
-        .top-row {
-            display: flex;
-            gap: 4px;
-            margin-bottom: 4px;
-        }
-
-        .top-btn {
-            padding: 6px 10px;
-            font-size: 0.75rem;
+        .mission-info {
+            font-size: 0.9rem;
             font-weight: bold;
-            border: 2px solid #808080;
-            border-radius: 4px;
-            cursor: pointer;
-            flex: 1;
-            text-align: center;
+        }
+        .mission-info span {
+            color: var(--codea-yellow);
         }
 
-        .btn-status { background-color: var(--merlot-blue); color: white; }
-        .btn-green { background-color: var(--merlot-green); color: white; }
-        .btn-yellow { background-color: var(--merlot-yellow); color: black; }
-
-        /* LOMAKE-ALUE */
-        .form-area {
+        /* KESKIALUE (Rullaavat kortit) */
+        .codea-main {
             flex: 1;
             padding: 15px;
             overflow-y: auto;
-            background-color: #dbdbdb;
+            box-sizing: border-box;
         }
 
-        .section-title {
-            background-color: var(--merlot-blue);
-            color: white;
-            font-size: 0.85rem;
-            font-weight: bold;
-            padding: 4px 8px;
-            display: inline-block;
-            margin-bottom: 15px;
-            border-radius: 2px;
-        }
-
-        .moduuli-paneeli {
+        .codea-page {
             display: none;
         }
 
-        .moduuli-paneeli.active {
+        .codea-page.active {
             display: block;
         }
 
-        /* Kirjausrivit */
-        .kirjaus-rivi {
-            display: grid;
-            grid-template-columns: 240px 1fr 60px 70px;
-            gap: 5px;
-            align-items: center;
-            margin-bottom: 8px;
+        /* CODEA KORTTI-RAKENNE */
+        .codea-card {
+            background-color: var(--codea-panel);
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
         }
 
-        .kirjaus-rivi label {
+        .card-title {
+            font-size: 1rem;
+            font-weight: bold;
+            color: var(--codea-orange);
+            margin-bottom: 12px;
+            border-bottom: 1px solid #444;
+            padding-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Syöttörivid */
+        .codea-row {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 12px;
+        }
+
+        .codea-row label {
             font-size: 0.8rem;
-            text-align: right;
-            padding-right: 10px;
-            font-weight: bold;
+            color: var(--codea-text-dim);
+            margin-bottom: 4px;
+            font-weight: 600;
         }
 
-        .kirjaus-rivi input, .kirjaus-rivi select {
-            padding: 6px;
-            border: 1px solid #808080;
+        .input-group {
+            display: flex;
+            gap: 5px;
+        }
+
+        .codea-input {
+            flex: 1;
+            background-color: var(--codea-input);
+            border: 1px solid #555;
+            color: var(--codea-text);
+            padding: 10px;
+            font-size: 0.9rem;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        /* Kosketusnäppäimet */
+        .codea-btn {
+            background-color: #4a515c;
+            border: none;
+            color: white;
+            padding: 10px 14px;
             font-size: 0.85rem;
-            background-color: #fff;
-            width: 100%;
-            box-sizing: border-box;
-            height: 30px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
         }
 
-        .action-btn {
-            background-color: #f0f0f0;
-            border: 1px solid #808080;
+        .codea-btn:active {
+            background-color: var(--codea-orange);
+        }
+
+        .btn-clock { background-color: #34495e; color: #5dade2; }
+        .btn-select { background-color: #5d6d7e; }
+
+        /* ALAVALIKKO (Codean tyypillinen navigaatio kuvakkeilla/teksteillä alhaalla) */
+        .codea-navbar {
+            background-color: #1a1c1f;
+            display: flex;
+            height: 65px;
+            border-top: 1px solid #333;
+        }
+
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             font-size: 0.75rem;
-            padding: 5px;
-            cursor: pointer;
-            text-align: center;
-            border-radius: 3px;
             font-weight: bold;
-            height: 30px;
-            box-shadow: inset -1px -1px 2px #999, inset 1px 1px 2px #fff;
-        }
-
-        .bottom-bar {
-            background-color: #b3b3b3;
-            padding: 6px;
-            text-align: right;
-            border-top: 1px solid #808080;
-        }
-
-        .btn-lock {
-            background-color: white;
-            border: 2px solid #808080;
-            font-weight: bold;
-            padding: 6px 25px;
+            color: var(--codea-text-dim);
             cursor: pointer;
-            box-shadow: inset -1px -1px 2px #999, inset 1px 1px 2px #fff;
+            border-right: 1px solid #25282e;
         }
 
-        /* MERLOT KOSKETUSMODAL */
-        .merlot-modal {
+        .nav-item:active, .nav-item.active {
+            background-color: var(--codea-panel);
+            color: var(--codea-orange);
+        }
+
+        .nav-item .icon {
+            font-size: 1.3rem;
+            margin-bottom: 3px;
+        }
+
+        /* LÄÄKETAULUKKO */
+        .codea-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 5px;
+        }
+        .codea-table th, .codea-table td {
+            padding: 8px;
+            font-size: 0.85rem;
+            border-bottom: 1px solid #444;
+            text-align: left;
+        }
+        .codea-table th { color: var(--codea-text-dim); }
+
+        /* MODAL POPUP */
+        .codea-modal {
             display: none;
             position: fixed;
-            z-index: 1000;
+            z-index: 2000;
             left: 0;
             top: 0;
             width: 100vw;
             height: 100vh;
-            background-color: rgba(0,0,0,0.5);
+            background-color: rgba(0,0,0,0.7);
             justify-content: center;
             align-items: center;
         }
 
         .modal-content {
-            background-color: var(--bg-gray);
-            border: 3px solid var(--merlot-blue);
+            background-color: var(--codea-panel);
+            border: 2px solid var(--codea-orange);
             width: 85%;
-            max-width: 650px;
+            max-width: 600px;
             border-radius: 6px;
             display: flex;
             flex-direction: column;
         }
 
         .modal-header {
-            background-color: var(--merlot-blue);
-            color: white;
             padding: 12px;
             font-weight: bold;
-            font-size: 0.9rem;
+            background-color: #1a1c1f;
             text-align: center;
+            border-bottom: 1px solid #444;
         }
 
-        .modal-buttons-grid {
+        .modal-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 10px;
             padding: 15px;
-            max-height: 380px;
+            max-height: 350px;
             overflow-y: auto;
         }
 
-        .quick-select-btn {
-            background-color: #f5f5f5;
-            border: 2px solid #808080;
-            padding: 14px;
+        .modal-grid-btn {
+            background-color: var(--codea-input);
+            border: 1px solid #555;
+            color: white;
+            padding: 15px 10px;
             font-size: 0.85rem;
             font-weight: bold;
-            cursor: pointer;
             border-radius: 4px;
+            cursor: pointer;
             text-align: center;
-            box-shadow: inset -2px -2px 2px #bbb, inset 2px 2px 2px #fff;
         }
 
-        .quick-select-btn:active {
-            background-color: var(--merlot-light-blue);
-        }
-
-        .modal-footer {
-            background-color: #b3b3b3;
-            padding: 10px;
-            text-align: center;
-            border-top: 1px solid #808080;
+        .modal-grid-btn:active {
+            background-color: var(--codea-orange);
         }
     </style>
 </head>
 <body>
 
-    <div class="merlot-grid">
+    <div class="codea-container">
         
-        <div class="sidebar" id="vasenValikko">
-            <div class="sidebar-btn active" onclick="vaihdaModuuli('ehk', this)">Ensihoito<br>kertomus</div>
-            <div class="sidebar-btn" onclick="vaihdaModuuli('esitiedot', this)">Esitiedot</div>
-            <div class="sidebar-btn" onclick="vaihdaModuuli('laakehoito', this)">Lääkehoito</div>
-            <div class="sidebar-btn" onclick="vaihdaModuuli('statusMod', this)">Status (Vitalit)</div>
-            <div class="sidebar-btn" onclick="vaihdaModuuli('vasteet', this)">Vasteet</div>
-            <div class="sidebar-btn" onclick="vaihdaModuuli('toteutus', this)">Toteutus</div>
+        <div class="codea-header">
+            <div class="mission-info">Tehtävä: <span>E721 (721A)</span></div>
+            <div class="mission-info">Koodi: <span>702 (Rintakipu)</span></div>
+            <button class="codea-btn" style="background-color: var(--codea-green);" onclick="tallennaKertomus()">Valmis / Lähetä</button>
         </div>
 
-        <div class="center-workspace">
+        <div class="codea-main">
             
-            <div class="top-navbar">
-                <div class="top-row">
-                    <button class="top-btn btn-status">Status</button>
-                    <button class="top-btn btn-yellow">Syykin</button>
-                    <button class="top-btn btn-yellow">Myrkytys</button>
-                    <button class="top-btn btn-yellow">Vamma</button>
-                    <button class="top-btn btn-yellow">Elvytys</button>
-                    <button class="top-btn btn-yellow">Hengitys</button>
+            <div id="page-perustiedot" class="codea-page active">
+                <div class="codea-card">
+                    <div class="card-title">Potilaan tunnistus</div>
+                    <div class="codea-row">
+                        <label>Henkilötunnus</label>
+                        <div class="input-group">
+                            <input type="text" id="hetu" class="codea-input" placeholder="PPKKVV-XXXX">
+                        </div>
+                    </div>
                 </div>
-                <div class="top-row">
-                    <button class="top-btn btn-green">Perustiedot</button>
-                    <button class="top-btn btn-yellow">Verenkierto</button>
-                    <button class="top-btn btn-yellow">Gastro/Uro</button>
-                    <button class="top-btn btn-yellow">Sairaus</button>
-                    <button class="top-btn btn-yellow">Neuro</button>
-                    <button class="top-btn btn-yellow">V-lomakkeet</button>
+
+                <div class="codea-card">
+                    <div class="card-title">Tapahtumatiedot</div>
+                    <div class="codea-row">
+                        <label>Pääoire / Ensisijainen syy</label>
+                        <div class="input-group">
+                            <input type="text" id="paaoire" class="codea-input" readonly>
+                            <button type="button" class="codea-btn btn-select" onclick="avaaCodeaValikko('paaoire')">Valitse</button>
+                        </div>
+                    </div>
+                    <div class="codea-row">
+                        <label>Kohteen tyyppi</label>
+                        <div class="input-group">
+                            <input type="text" id="kohdeTyyppi" class="codea-input" readonly>
+                            <button type="button" class="codea-btn btn-select" onclick="avaaCodeaValikko('kohdeTyyppi')">Valitse</button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="form-area">
-                
-                <div id="mod-ehk" class="moduuli-paneeli active">
-                    <div class="section-title">Pakolliset kysymykset</div>
-                    
-                    <div class="kirjaus-rivi">
-                        <label>Henkilötunnus (HETU):</label>
-                        <input type="text" id="hetu" placeholder="PPKKVV-XXXX" oninput="automaattiHaku()">
-                        <button type="button" class="action-btn" onclick="syotaKello('hetu')">Kello</button>
-                        <button type="button" class="action-btn" style="visibility:hidden">Valitse</button>
+            <div id="page-vitalit" class="codea-page">
+                <div class="codea-card">
+                    <div class="card-title">Hengitys & Verenkierto</div>
+                    <div class="codea-row">
+                        <label>Hengitystie (A)</label>
+                        <div class="input-group">
+                            <input type="text" id="ilmatie" class="codea-input" readonly>
+                            <button type="button" class="codea-btn btn-select" onclick="avaaCodeaValikko('ilmatie')">Valitse</button>
+                        </div>
                     </div>
-                    <div class="kirjaus-rivi">
-                        <label>Mistä apua haettu / tilattu:</label>
-                        <input type="text" id="mistaApua">
-                        <button type="button" class="action-btn" onclick="syotaKello('mistaApua')">Kello</button>
-                        <button type="button" class="action-btn" onclick="avaaSanasto('mistaApua')">Valitse</button>
-                    </div>
-                    <div class="kirjaus-rivi">
-                        <label>Miksi apua haettu, oire:</label>
-                        <input type="text" id="miksiApua">
-                        <button type="button" class="action-btn" onclick="syotaKello('miksiApua')">Kello</button>
-                        <button type="button" class="action-btn" onclick="avaaSanasto('miksiApua')">Valitse</button>
-                    </div>
-                    <div class="kirjaus-rivi">
-                        <label>Koska oire tai vamma alkoi:</label>
-                        <input type="text" id="koskaAlkoi">
-                        <button type="button" class="action-btn" onclick="syotaKello('koskaAlkoi')">Kello</button>
-                        <button type="button" class="action-btn" onclick="avaaSanasto('koskaAlkoi')">Valitse</button>
-                    </div>
-                    <div class="kirjaus-rivi">
-                        <label>Tila tulovaiheessa:</label>
-                        <input type="text" id="tilaTulo">
-                        <button type="button" class="action-btn" onclick="syotaKello('tilaTulo')">Kello</button>
-                        <button type="button" class="action-btn" onclick="avaaSanasto('tilaTulo')">Valitse</button>
+                    <div class="codea-row">
+                        <label>Sydänrytmi (ECG)</label>
+                        <div class="input-group">
+                            <input type="text" id="rytmi" class="codea-input" readonly>
+                            <button type="button" class="codea-btn btn-select" onclick="avaaCodeaValikko('rytmi')">Valitse</button>
+                        </div>
                     </div>
                 </div>
-
-                <div id="mod-esitiedot" class="moduuli-paneeli">
-                    <div class="section-title">Esitiedot & Anamneesi</div>
-                    <div class="kirjaus-rivi">
-                        <label>Mitä oli tekemässä:</label>
-                        <input type="text" id="mitaTekemassa">
-                        <button type="button" class="action-btn" onclick="syotaKello('mitaTekemassa')">Kello</button>
-                        <button type="button" class="action-btn" onclick="avaaSanasto('mitaTekemassa')">Valitse</button>
-                    </div>
-                    <div class="kirjaus-rivi">
-                        <label>Aiemmat sairaudet:</label>
-                        <input type="text" id="sairaudet">
-                        <button type="button" class="action-btn" onclick="syotaKello('sairaudet')">Kello</button>
-                        <button type="button" class="action-btn" onclick="avaaSanasto('sairaudet')">Valitse</button>
-                    </div>
-                </div>
-
-                <div id="mod-laakehoito" class="moduuli-paneeli">
-                    <div class="section-title">Annetut lääkkeet kentällä</div>
-                    <div class="kirjaus-rivi">
-                        <label>Lääkeaine & Annos:</label>
-                        <input type="text" id="laake">
-                        <button type="button" class="action-btn" onclick="syotaKello('laake')">Kello</button>
-                        <button type="button" class="action-btn" onclick="avaaSanasto('laake')">Valitse</button>
-                    </div>
-                </div>
-
-                <div id="mod-statusMod" class="moduuli-paneeli">
-                    <div class="section-title">Kliiniset mittaukset (ABCDE)</div>
-                    <div class="kirjaus-rivi">
-                        <label>Syke (HR, bpm):</label>
-                        <input type="text" id="syke">
-                        <button type="button" class="action-btn" onclick="syotaKello('syke')">Kello</button>
-                        <button type="button" class="action-btn" onclick="avaaSanasto('syke')">Valitse</button>
-                    </div>
-                    <div class="kirjaus-rivi">
-                        <label>Verenpaine (RR, mmHg):</label>
-                        <input type="text" id="rr">
-                        <button type="button" class="action-btn" onclick="syotaKello('rr')">Kello</button>
-                        <button type="button" class="action-btn" onclick="avaaSanasto('rr')">Valitse</button>
-                    </div>
-                    <div class="kirjaus-rivi">
-                        <label>Hapetustaso (SpO2 %):</label>
-                        <input type="text" id="spo2">
-                        <button type="button" class="action-btn" onclick="syotaKello('spo2')">Kello</button>
-                        <button type="button" class="action-btn" onclick="avaaSanasto('spo2')">Valitse</button>
-                    </div>
-                </div>
-
-                <div id="mod-vasteet" class="moduuli-paneeli">
-                    <div class="section-title">Hoidon vasteet</div>
-                    <div class="kirjaus-rivi">
-                        <label>Potilaan tila nyt:</label>
-                        <input type="text" id="vaste">
-                        <button type="button" class="action-btn" onclick="syotaKello('vaste')">Kello</button>
-                        <button type="button" class="action-btn" onclick="avaaSanasto('vaste')">Valitse</button>
-                    </div>
-                </div>
-
-                <div id="mod-toteutus" class="moduuli-paneeli">
-                    <div class="section-title">Tehtävän päätös ja SV210 kuljetusperuste</div>
-                    <div class="kirjaus-rivi">
-                        <label>Kuljetuspäätös / Kohde:</label>
-                        <input type="text" id="kohde">
-                        <button type="button" class="action-btn" onclick="syotaKello('kohde')">Kello</button>
-                        <button type="button" class="action-btn" onclick="avaaSanasto('kohde')">Valitse</button>
-                    </div>
-                    <div class="kirjaus-rivi">
-                        <label>SV210 Lääketieteellinen syy:</label>
-                        <input type="text" id="svSyy">
-                        <button type="button" class="action-btn" onclick="syotaKello('svSyy')">Kello</button>
-                        <button type="button" class="action-btn" onclick="avaaSanasto('svSyy')">Valitse</button>
-                    </div>
-                </div>
-
             </div>
 
-            <div class="bottom-bar">
-                <button class="btn-lock" onclick="lukitseKertomus()">Lukitus</button>
+            <div id="page-laakkeet" class="codea-page">
+                <div class="codea-card">
+                    <div class="card-title">Lääkitys & Nesteytys</div>
+                    <div class="codea-row">
+                        <label>Valitse annettava lääkeaine</label>
+                        <div class="input-group">
+                            <input type="text" id="valittuLaake" class="codea-input" placeholder="Klikkaa valitse..." readonly onclick="avaaCodeaValikko('valittuLaake')">
+                        </div>
+                    </div>
+                    <div class="codea-row">
+                        <label>Antotapa</label>
+                        <div class="input-group">
+                            <input type="text" id="valittuTapa" class="codea-input" readonly onclick="avaaCodeaValikko('valittuTapa')">
+                        </div>
+                    </div>
+                    <button class="codea-btn" style="background-color: var(--codea-orange); width: 100%; margin-top: 10px;" onclick="kirjaaLaakeAnnetuksi()">+ Kirjaa lääke annetuksi</button>
+                </div>
+
+                <div class="codea-card">
+                    <div class="card-title">Annetut lääkkeet aikajana</div>
+                    <table class="codea-table">
+                        <thead>
+                            <tr>
+                                <th>Klo</th>
+                                <th>Lääke</th>
+                                <th>Reitti</th>
+                            </tr>
+                        </thead>
+                        <tbody id="codeaLaakeLoki">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="page-paatos" class="codea-page">
+                <div class="codea-card">
+                    <div class="card-title">Tehtävän päätös (Koodit)</div>
+                    <div class="codea-row">
+                        <label>X- tai Y-tuloskoodi</label>
+                        <div class="input-group">
+                            <input type="text" id="tuloskoodi" class="codea-input" readonly>
+                            <button type="button" class="codea-btn btn-select" onclick="avaaCodeaValikko('tuloskoodi')">Valitse</button>
+                        </div>
+                    </div>
+                    <div class="codea-row">
+                        <label>Kuljetusperuste (Kela SV210)</label>
+                        <div class="input-group">
+                            <input type="text" id="kelaSyy" class="codea-input" readonly>
+                            <button type="button" class="codea-btn btn-select" onclick="avaaCodeaValikko('kelaSyy')">Valitse</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="codea-navbar">
+            <div class="nav-item active" onclick="vaihdaCodeaSivu('perustiedot', this)">
+                <div class="icon">👤</div>
+                Perustiedot
+            </div>
+            <div class="nav-item" onclick="vaihdaCodeaSivu('vitalit', this)">
+                <div class="icon">🫀</div>
+                Vitalit
+            </div>
+            <div class="nav-item" onclick="vaihdaCodeaSivu('laakkeet', this)">
+                <div class="icon">🧪</div>
+                Lääkehoito
+            </div>
+            <div class="nav-item" onclick="vaihdaCodeaSivu('paatos', this)">
+                <div class="icon">🚑</div>
+                Päätös
             </div>
         </div>
 
-        <div class="sidebar">
-            <div class="sidebar-btn" onclick="nollaaLomake()">Luo uusi</div>
-            <div class="sidebar-btn">Tyhjä asen.</div>
-            <div class="sidebar-btn">Poista EHK</div>
-            <div class="sidebar-btn" style="background-color: var(--merlot-light-blue);" onclick="vaihdaModuuli('toteutus', null)">Matkalasku SV210</div>
-            <div class="sidebar-btn" onclick="naytaHistoria()">Hoitohistoria</div>
-            <div class="sidebar-btn">Tutkimuslomake</div>
-            <div class="sidebar-btn">Diagnoosi</div>
-            <div class="sidebar-btn">Oma luovutus</div>
-        </div>
     </div>
 
-    <div id="merlotModal" class="merlot-modal">
+    <div id="codeaModal" class="codea-modal">
         <div class="modal-content">
-            <div class="modal-header" id="modalOtsikko">Valitse vastausvaihtoehto</div>
-            <div class="modal-buttons-grid" id="modalPainikkeet"></div>
-            <div class="modal-footer">
-                <button class="action-btn" style="padding: 5px 20px;" onclick="suljeSanasto()">Sulje</button>
-            </div>
+            <div class="modal-header" id="codeaModalOtsikko">Valitse pika-arvo</div>
+            <div class="modal-grid" id="codeaModalGrid"></div>
+            <div class="codea-btn" style="margin: 15px; text-align: center; background-color: #555;" onclick="suljeCodeaValikko()">Peruuta</div>
         </div>
     </div>
 
     <script>
-        // TÄYDELLINEN KOULUTUSSANASTO (Aito vastausdata)
-        const merlotSanastot = {
-            mistaApua: ["Koti / Oma asunto", "Julkinen paikka / Katu", "Hoivakoti", "Terveyskeskus", "Työpaikka"],
-            miksiApua: ["Rintakipu", "Hengenahdistus", "AVH-epäily (Halvausoire)", "Kouristelu", "Yleistilan lasku", "Rytmihäiriö"],
-            koskaAlkoi: ["Äkillisesti juuri nyt", "30 min sitten", "1-2 tuntia sitten", "Aamulla", "Yön aikana"],
-            tilaTulo: ["Makaa lattialla", "Istuu tuolissa", "Kävelee vastaan", "Tajuton", "Levoton/Sekava"],
-            mitaTekemassa: ["Lepotilassa", "Kävelemässä", "Raskaassa työssä", "Nukkumassa", "WC-käynnillä"],
-            sairaudet: ["Verenpainetauti", "Sepelvaltimotauti", "Diabetes", "Astma/COPD", "Eteisvärinä (Flamma)"],
-            laake: ["Nitro 0.4mg s.l.", "ASA 300mg p.o.", "Oksikodoni 2mg i.v.", "Fentanyyli 50µg i.v.", "Lääkehiili p.o."],
-            syke: ["Säännöllinen, normaali", "Harva (Bradykardia)", "Tiheä (Takykardia)", "Epäsäännöllinen (Flimmeri)"],
-            rr: ["Normaalitaso (120/80)", "Korkea (>160 syst)", "Matala (<100 syst)", "Ei mitattavissa"],
-            spo2: ["Normaali (>95%)", "Alentunut (90-94%)", "Vakava hypoksia (<90%)", "Happihoidolla korjaantunut"],
-            vaste: ["Oire helpottanut lääkkeellä", "Tila ennallaan", "Huonontunut kuljetuksen aikana", "Kivuton"],
-            kohde: ["Kuljetetaan: Akuutti Päivystys", "Kuljetetaan: Yliopistollinen sairaala", "Ei kuljetustarpeesta (X-5)", "Hoito ohjeistettu kohteessa (X-4)"],
-            svSyy: ["Jatkuva seuranta ajon aikana", "Makuu-/Paarikuljetusvaatimus", "Monitorointi ja lääkitys tarpeen", "Ei Kela-perustetta (X-koodi)"]
+        // CODEAN TARKAT KOSKETUSSANASTOT
+        const codeaSanastot = {
+            paaoire: ["Rintakipu / Sydänoire", "Hengenahdistus", "Tajuttomuus / Eloton", "Aivoverenkiertohäiriö", "Kouristelu", "Tapaturma / Vamma"],
+            kohdeTyyppi: ["Yksityisasunto", "Julkinen paikka", "Hoitolaitos / Palvelutalo", "Liikenneväylä / Katu", "Oppilaitos"],
+            ilmatie: ["Auki / Esteetön", "Uhkana tukkeutuminen", "Nieluputki / Vetotila", "Larynxmaski (I-Gel)", "Intuboitu"],
+            rytmi: ["Sinusrytmi (SR)", "Eteisvärinä (Flamma)", "Sinustakykardia", "Kammionlinen (VF/VT)", "Asystole / PEA"],
+            valittuLaake: ["ASA 300 mg", "Nitro 0.4 mg s.l.", "Fentanyyli 50 µg", "Oksikodoni 2 mg", "Salbutamoli 5 mg", "Adrenaliini 1 mg"],
+            valittuTapa: ["i.v. (Laskimoon)", "s.l. (Kielen alle)", "p.o. (Suun kautta)", "inh. (Inhalaatio)", "i.o. (Luuhun)"],
+            tuloskoodi: ["X-0: Kuljetetaan kohteeseen", "X-5: Ei kuljetustarvetta", "X-4: Tarkistettu, hoito kohteessa", "Y-1: Todettu kuolleeksi"],
+            kelaSyy: ["Jatkuva monitorointi tarpeen", "Makuukuljetusvaatimus (Paarit)", "Lääkinnällinen valvonta ajon aikana", "Ei korvausperustetta"]
         };
 
-        let aktiivinenKentta = "";
+        let nykyinenKenttaId = "";
 
-        // MODUULIN VAIHTO (Vasen pystypalkki ohjaa keskiosaa)
-        function vaihdaModuuli(moduuliId, element) {
-            document.querySelectorAll('.moduuli-paneeli').forEach(p => p.classList.remove('active'));
-            document.getElementById('mod-' + moduuliId).classList.add('active');
+        // Sivunvaihtologiikka
+        function vaihdaCodeaSivu(sivuId, element) {
+            document.querySelectorAll('.codea-page').forEach(p => p.classList.remove('active'));
+            document.getElementById('page-' + sivuId).classList.add('active');
             
-            if (element) {
-                document.querySelectorAll('#vasenValikko .sidebar-btn').forEach(b => b.classList.remove('active'));
-                element.classList.add('active');
-            }
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            element.classList.add('active');
         }
 
-        // KELLONAIKA PAINIKE
-        function syotaKello(kenttaId) {
-            const nyt = new Date();
-            const klo = nyt.toTimeString().split(' ')[0].substring(0, 5);
-            const input = document.getElementById(kenttaId);
-            input.value = klo + " " + input.value;
-        }
+        // Avaa Codea-tyylisen popup-valikon
+        function avaaCodeaValikko(kenttaId) {
+            nykyinenKenttaId = kenttaId;
+            const modal = document.getElementById('codeaModal');
+            const grid = document.getElementById('codeaModalGrid');
+            
+            document.getElementById('codeaModalOtsikko').innerText = "Valitse arvo kenttään";
+            grid.innerHTML = "";
 
-        // SANASTON AVAUS (Modal-popup pika-arvoilla)
-        function avaaSanasto(kenttaId) {
-            aktiivinenKentta = kenttaId;
-            const modal = document.getElementById('merlotModal');
-            const ruudukko = document.getElementById('modalPainikkeet');
-            
-            ruudukko.innerHTML = "";
-            
-            merlotSanastot[kenttaId].forEach(arvo => {
+            codeaSanastot[kenttaId].forEach(vaihtoehto => {
                 const btn = document.createElement('button');
-                btn.className = "quick-select-btn";
-                btn.innerText = arvo;
+                btn.className = "modal-grid-btn";
+                btn.innerText = vaihtoehto;
                 btn.onclick = function() {
-                    const input = document.getElementById(aktiivinenKentta);
-                    input.value = input.value ? input.value + " " + arvo : arvo;
-                    suljeSanasto();
+                    document.getElementById(nykyinenKenttaId).value = vaihtoehto;
+                    suljeCodeaValikko();
                 };
-                ruudukko.appendChild(btn);
+                grid.appendChild(btn);
             });
-            
+
             modal.style.display = "flex";
         }
 
-        function suljeSanasto() {
-            document.getElementById('merlotModal').style.display = "none";
+        function suljeCodeaValikko() {
+            document.getElementById('codeaModal').style.display = "none";
         }
 
-        // AUTOMAATTINEN HISTORIAHAKU HETU-KENTÄSTÄ
-        function automaattiHaku() {
-            const hetu = document.getElementById('hetu').value.trim();
-            if (hetu.length === 11) {
-                const historia = localStorage.getItem(hetu);
-                if (historia) {
-                    alert("KOULUTUS-ILMOITUS:\nPotilaalta löytyy aiempia ensihoitokertomuksia laitteen muistista. Voit tarkastella niitä 'Hoitohistoria'-painikkeesta.");
-                }
-            }
-        }
+        // Lääkkeen kirjaus aikajanalle
+        function kirjaaLaakeAnnetuksi() {
+            const laake = document.getElementById('valittuLaake').value;
+            const tapa = document.getElementById('valittuTapa').value;
 
-        // HOITOHISTORIAN NÄYTTÄMINEN
-        function naytaHistoria() {
-            const hetu = document.getElementById('hetu').value.trim();
-            if (!hetu) {
-                alert("Virhe: Syötä potilaan HETU ensin historian selaamiseksi.");
-                return;
-            }
-            const historia = JSON.parse(localStorage.getItem(hetu)) || [];
-            if (historia.length === 0) {
-                alert("Ei aiempia hoitotapahtumia tälle henkilötunnukselle.");
-            } else {
-                let txt = `Potilaan ${hetu} arkistoidut reissut:\n`;
-                historia.forEach((h, i) => {
-                    txt += `\n[Tehtävä ${i+1}] Pvm: ${h.pvm}\nSyy: ${h.miksiApua}\nStatus/Mittaustulos: ${h.syke}\nKohde/Päätös: ${h.kohde}\n---`;
-                });
-                alert(txt);
-            }
-        }
-
-        // LUKITUS JA TALLENNUS HETUN ALLE
-        function lukitseKertomus() {
-            const hetu = document.getElementById('hetu').value.trim();
-            if (!hetu) {
-                alert("LUKITUS EVÄTTY: Henkilötunnus (HETU) on pakollinen tieto ennen tallennusta!");
+            if (!laake || !tapa) {
+                alert("Virhe: Valitse ensin lääkeaine ja antotapa!");
                 return;
             }
 
-            const data = {
-                pvm: new Date().toLocaleDateString('fi-FI'),
-                mistaApua: document.getElementById('mistaApua').value,
-                miksiApua: document.getElementById('miksiApua').value,
-                syke: document.getElementById('syke').value,
-                kohde: document.getElementById('kohde').value
-            };
+            const nyt = new Date();
+            const klo = nyt.toTimeString().split(' ')[0].substring(0, 5);
+            
+            const tbody = document.getElementById('codeaLaakeLoki');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="color:var(--codea-yellow); font-weight:bold;">${klo}</td>
+                <td>${laake}</td>
+                <td style="color:var(--codea-text-dim);">${tapa.split(' ')[0]}</td>
+            `;
+            tbody.appendChild(tr);
 
-            let historia = JSON.parse(localStorage.getItem(hetu)) || [];
-            historia.push(data);
-            localStorage.setItem(hetu, JSON.stringify(historia));
-
-            alert("JÄRJESTELMÄ: Ensihoitokertomus on lukittu ja lähetetty onnistuneesti arkistoon.");
+            // Tyhjennetään valinnat seuraavaa varten
+            document.getElementById('valittuLaake').value = "";
+            document.getElementById('valittuTapa').value = "";
         }
 
-        function nollaaLomake() {
-            if (confirm("Haluatko varmasti nollata näytön uutta koulutustehtävää varten?")) {
-                location.reload();
+        function tallennaKertomus() {
+            const hetu = document.getElementById('hetu').value;
+            if(!hetu) {
+                alert("LÄHETYS EPÄONNISTUI: Potilaan henkilötunnus on pakollinen tieto viranomaisarkistoon!");
+                return;
             }
+            alert("CODEA JÄRJESTELMÄ:\nSähköinen ensihoitokertomus (eEHK) lukittu ja siirretty Kanta-arkistoon sekö sairaalan tietojärjestelmään.");
         }
     </script>
 </body>
