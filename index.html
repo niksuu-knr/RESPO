@@ -3,484 +3,646 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ensihoidon Kirjaamisjärjestelmä (Merlot Medi & SV210 + Historia)</title>
+    <title>Merlot Medi Pro - Kenttäjärjestelmä</title>
     <style>
         :root {
-            --primary-color: #005a9c;
-            --secondary-color: #eef6fb;
-            --dark-color: #333;
-            --light-color: #fff;
-            --border-color: #ccc;
-            --success-color: #28a745;
-            --alert-color: #dc3545;
+            --merlot-blue: #0b3c5d;
+            --merlot-light-blue: #328cc1;
+            --merlot-gold: #d9b310;
+            --dark-bg: #1d2731;
+            --text-dark: #333;
+            --text-light: #fff;
+            --gray-border: #ccc;
+            --alert-red: #d9534f;
+            --alert-orange: #f0ad4e;
+            --alert-green: #5cb85c;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
-            padding: 20px;
-            background-color: #f4f7f6;
-            color: var(--dark-color);
+            padding: 0;
+            background-color: #f0f2f5;
+            color: var(--text-dark);
         }
 
-        .main-layout {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 20px;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        .container {
-            background: var(--light-color);
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-
-        .history-container {
-            background: var(--light-color);
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            border-top: 4px solid var(--primary-color);
-            height: fit-content;
-        }
-
-        header {
-            text-align: center;
-            border-bottom: 3px solid var(--primary-color);
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
-
-        header h1 {
-            color: var(--primary-color);
-            margin: 0;
-            font-size: 24px;
-        }
-
-        /* Välilehdet (Tabs) */
-        .tabs {
+        /* Operatiivinen yläpalkki (Statuspainikkeet kuten oikeassa Merlotissa) */
+        .status-bar {
+            background-color: var(--dark-bg);
+            color: var(--text-light);
+            padding: 10px 20px;
             display: flex;
-            border-bottom: 2px solid var(--border-color);
-            margin-bottom: 20px;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
         }
 
-        .tab-btn {
-            padding: 12px 24px;
-            cursor: pointer;
-            background: #e9e9e9;
-            border: none;
-            border-top-left-radius: 4px;
-            border-top-right-radius: 4px;
-            margin-right: 5px;
+        .unit-info {
+            font-size: 1.2rem;
             font-weight: bold;
-            transition: 0.3s;
+            color: var(--merlot-gold);
         }
 
-        .tab-btn.active {
-            background: var(--primary-color);
-            color: var(--light-color);
+        .status-buttons {
+            display: flex;
+            gap: 5px;
         }
 
-        .tab-content {
-            display: none;
+        .status-btn {
+            background: #34495e;
+            color: white;
+            border: 1px solid #465c71;
+            padding: 8px 12px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 0.85rem;
         }
 
-        .tab-content.active {
-            display: block;
+        .status-btn.active {
+            background-color: var(--merlot-gold);
+            color: black;
+            border-color: var(--merlot-gold);
         }
 
-        /* Lomakerakenne */
-        .grid-2 {
+        /* Pääasettelu */
+        .workspace {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 280px 1fr 350px;
+            height: calc(100vh - 60px);
+        }
+
+        /* Vasen sivupalkki: Navigointi ja Tehtävätiedot */
+        .sidebar-left {
+            background-color: #ffffff;
+            border-right: 1px solid var(--gray-border);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+        }
+
+        /* Keskialue: Lomakkeet ja Kirjaus */
+        .main-content {
+            padding: 20px;
+            overflow-y: auto;
+            background-color: #f7f9fa;
+        }
+
+        /* Oikea sivupalkki: Potilashistoria & NEWS2 */
+        .sidebar-right {
+            background-color: #ffffff;
+            border-left: 1px solid var(--gray-border);
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
             gap: 20px;
         }
 
-        .grid-3 {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 15px;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        input[type="text"], input[type="date"], input[type="time"], select, textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            box-sizing: border-box;
-            font-size: 14px;
-        }
-
-        textarea {
-            resize: vertical;
-            height: 100px;
-        }
-
-        fieldset {
-            border: 1px solid var(--primary-color);
+        /* Kliiniset painikkeet (ABCDE-pika-arvot) */
+        .abcde-section {
+            background: white;
             border-radius: 6px;
             padding: 15px;
             margin-bottom: 20px;
-            background-color: var(--secondary-color);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border-left: 5px solid var(--merlot-blue);
         }
 
-        legend {
+        .abcde-title {
             font-weight: bold;
-            color: var(--primary-color);
-            padding: 0 10px;
+            color: var(--merlot-blue);
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
         }
 
-        /* Painikkeet */
-        .btn-container {
-            text-align: right;
-            margin-top: 20px;
-        }
-
-        .btn {
-            padding: 12px 25px;
-            border: none;
-            border-radius: 4px;
-            font-size: 16px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .btn-success {
-            background-color: var(--success-color);
-            color: white;
-        }
-
-        /* Vitalilistaus */
-        .vitals-grid {
+        .quick-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 15px;
         }
 
-        /* Historia-osion tyylit */
-        .history-item {
-            background: #f9f9f9;
-            border: 1px solid var(--border-color);
-            padding: 10px;
-            margin-bottom: 10px;
+        .form-control {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #555;
+        }
+
+        input, select, textarea {
+            padding: 8px;
+            border: 1px solid var(--gray-border);
             border-radius: 4px;
-            font-size: 13px;
-        }
-        .history-item strong {
-            color: var(--primary-color);
+            font-size: 0.9rem;
         }
 
-        .alert-no-history {
+        /* NEWS2 Palkki */
+        .news-box {
+            background: #f8f9fa;
+            border: 2px solid var(--gray-border);
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .news-score {
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 10px 0;
+            color: var(--alert-green);
+        }
+
+        /* Välilehdet keskellä */
+        .tab-nav {
+            display: flex;
+            background: #e9ecef;
+            padding: 5px 5px 0 5px;
+            gap: 20px;
+            border-bottom: 2px solid var(--merlot-blue);
+        }
+
+        .tab-link {
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: bold;
+            background: none;
+            border: none;
             color: #666;
-            font-style: italic;
         }
 
-        @media (max-width: 900px) {
-            .main-layout {
+        .tab-link.active {
+            background: var(--merlot-blue);
+            color: white;
+            border-top-left-radius: 4px;
+            border-top-right-radius: 4px;
+        }
+
+        .tab-pane {
+            display: none;
+            background: white;
+            padding: 20px;
+            border: 1px solid var(--gray-border);
+            border-top: none;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        /* Historia-kortit */
+        .history-card {
+            background: var(--secondary-color);
+            border: 1px solid var(--gray-border);
+            border-radius: 4px;
+            padding: 10px;
+            font-size: 0.85rem;
+            margin-bottom: 10px;
+        }
+
+        .history-card header {
+            font-weight: bold;
+            border-bottom: 1px dashed #ccc;
+            margin-bottom: 5px;
+            padding-bottom: 3px;
+        }
+
+        .btn-lock {
+            background-color: var(--merlot-blue);
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            font-size: 1rem;
+        }
+
+        .btn-lock:hover {
+            background-color: var(--merlot-light-blue);
+        }
+
+        @media (max-width: 1200px) {
+            .workspace {
                 grid-template-columns: 1fr;
+                height: auto;
             }
-            .grid-2, .grid-3 {
-                grid-template-columns: 1fr;
+            .sidebar-left, .sidebar-right {
+                border: none;
+                height: auto;
             }
         }
     </style>
 </head>
 <body>
 
-<div class="main-layout">
-    
-    <!-- VASEN PUOLI: LOMAKE -->
-    <div class="container">
-        <header>
-            <h1>eEnsihoidon Kirjaamisalusta</h1>
-            <p style="margin: 5px 0 0 0; color: #666;">Merlot Medi & SV210 + Potilashistoria HETU:lla</p>
-        </header>
+    <!-- OPERATIIVINEN YLÄPALKKI -->
+    <div class="status-bar">
+        <div class="unit-info">MERLOT MEDI PRO &nbsp;|&nbsp; <span id="displayUnit">EPP321</span></div>
+        <div class="status-buttons">
+            <button class="status-btn" id="st0" onclick="setStatus(0)">S0 (Vapaa)</button>
+            <button class="status-btn" id="st1" onclick="setStatus(1)">S1 (Vastaanotettu)</button>
+            <button class="status-btn" id="st2" onclick="setStatus(2)">S2 (Matkalla)</button>
+            <button class="status-btn" id="st3" onclick="setStatus(3)">S3 (Kohteessa)</button>
+            <button class="status-btn" id="st4" onclick="setStatus(4)">S4 (Kuljetuksessa)</button>
+            <button class="status-btn" id="st7" onclick="setStatus(7)">S7 (Sairaalassa)</button>
+        </div>
+        <div id="liveClock" style="font-family: monospace; font-size: 1.1rem;">18:07:18</div>
+    </div>
 
-        <div class="tabs">
-            <button class="tab-btn active" onclick="openTab(event, 'perustiedot')">1. Perustiedot</button>
-            <button class="tab-btn" onclick="openTab(event, 'merlot_kliininen')">2. Kliininen tila (Merlot)</button>
-            <button class="tab-btn" onclick="openTab(event, 'sv210_matka')">3. Matkatiedot (SV210)</button>
+    <div class="workspace">
+        
+        <!-- VASEN SIVUPALKKI: OPERATIIVINEN DATA -->
+        <div class="sidebar-left">
+            <h3 style="margin-top:0; color:var(--merlot-blue);">Tehtävän tiedot</h3>
+            <div class="form-control">
+                <label>Yksikkötunnus</label>
+                <input type="text" id="yksikko" value="EPP321" oninput="document.getElementById('displayUnit').innerText=this.value">
+            </div>
+            <div class="form-control">
+                <label>Hätäkeskustunnus</label>
+                <input type="text" id="hkTunnus" placeholder="2026-A12345">
+            </div>
+            <div class="form-control">
+                <label>Tehtäväkoodi</label>
+                <input type="text" id="tKoodi" placeholder="702B1 (Rintakipu)">
+            </div>
+            <hr style="width:100%; border:0; border-top:1px solid #eee;">
+            <h4 style="margin:0; color:#666;">Aikaleimaloki (Automaattinen)</h4>
+            <div id="timestampLog" style="font-family:monospace; font-size:0.8rem; background:#f8f9fa; padding:8px; border-radius:4px;">
+                Ei rekisteröityjä statuksia.
+            </div>
         </div>
 
-        <form id="ensihoitoForm" onsubmit="tallennaTiedot(event)">
-            
-            <!-- VÄLILEHTI 1: PERUSTIEDOT -->
-            <div id="perustiedot" class="tab-content active">
-                <fieldset>
-                    <legend>Potilaan tiedot</legend>
-                    <div class="form-group">
-                        <label for="hetu">Henkilötunnus (Hae historiatiedot syöttämällä tämä)</label>
-                        <input type="text" id="hetu" placeholder="PPKKVV-XXXX" required oninput="haePotilashistoria()">
-                    </div>
-                    <div class="grid-2">
-                        <div class="form-group">
-                            <label for="sukuNimi">Sukunimi</label>
-                            <input type="text" id="sukuNimi" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="etuNimet">Etunimet</label>
-                            <input type="text" id="etuNimet" required>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="kotikunta">Kotikunta</label>
-                        <input type="text" id="kotikunta">
-                    </div>
-                </fieldset>
-
-                <fieldset>
-                    <legend>Tehtävän tiedot</legend>
-                    <div class="grid-3">
-                        <div class="form-group">
-                            <label for="yksikko">Yksikkö</label>
-                            <input type="text" id="yksikko" placeholder="esim. EPP321" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="tehtavatunnus">Tehtävätunnus</label>
-                            <input type="text" id="tehtavatunnus" placeholder="2026-XXXXX">
-                        </div>
-                        <div class="form-group">
-                            <label for="kiireellisyys">Kiireellisyys</label>
-                            <select id="kiireellisyys">
-                                <option value="A">A</option>
-                                <option value="B">B</option>
-                                <option value="C">C</option>
-                                <option value="D">D</option>
-                            </select>
-                        </div>
-                    </div>
-                </fieldset>
+        <!-- KESKIALUE: KLIININEN JA SV210 KIRJAUS -->
+        <div class="main-content">
+            <div class="tab-nav">
+                <button class="tab-link active" onclick="switchTab(event, 'potilasTab')">Potilas & Anamneesi</button>
+                <button class="tab-link" onclick="switchTab(event, 'kliininenTab')">ABCDE / Vitalifunktiot</button>
+                <button class="tab-link" onclick="switchTab(event, 'svTab')">Kela SV210 Matka</button>
             </div>
 
-            <!-- VÄLILEHTI 2: MERLOT KLIININEN TILA -->
-            <div id="merlot_kliininen" class="tab-content">
-                <fieldset>
-                    <legend>Vitalifunktiot (Merlot)</legend>
-                    <div class="vitals-grid">
-                        <div class="form-group">
-                            <label for="syke">Syke (bpm)</label>
-                            <input type="text" id="syke">
+            <form id="merlotForm" onsubmit="saveKertomus(event)">
+                
+                <!-- POTILASTIEDOT & ANAMNEESI -->
+                <div id="potilasTab" class="tab-pane active">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
+                        <div class="form-control">
+                            <label>Henkilötunnus (Haku / Luo)</label>
+                            <input type="text" id="hetu" placeholder="PPKKVV-XXXX" required oninput="searchHistory()">
                         </div>
-                        <div class="form-group">
-                            <label for="rr">Verenpaine</label>
-                            <input type="text" id="rr" placeholder="120/80">
+                        <div class="form-control">
+                            <label>Kotikunta</label>
+                            <input type="text" id="kotikunta">
                         </div>
-                        <div class="form-group">
-                            <label for="sat">SpO2 (%)</label>
-                            <input type="text" id="sat">
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
+                        <div class="form-control">
+                            <label>Sukunimi</label>
+                            <input type="text" id="sukunimi" required>
                         </div>
-                        <div class="form-group">
-                            <label for="hengitystaajuus">Hengitystaajuus</label>
-                            <input type="text" id="hengitystaajuus">
+                        <div class="form-control">
+                            <label>Etunimet</label>
+                            <input type="text" id="etunimet" required>
                         </div>
-                        <div class="form-group">
-                            <label for="gcs">GCS</label>
-                            <input type="text" id="gcs">
+                    </div>
+                    <div class="form-control" style="margin-top:15px;">
+                        <label>Esitiedot / Anamneesi (Miksi kutsuttu, milloin alkanut)</label>
+                        <textarea id="anamneesi" style="height:120px;"></textarea>
+                    </div>
+                </div>
+
+                <!-- ABCDE & VITALIFUNKTIOT -->
+                <div id="kliininenTab" class="tab-pane">
+                    <!-- A & B -->
+                    <div class="abcde-section">
+                        <div class="abcde-title">A & B - Ilmatiet ja Hengitys</div>
+                        <div class="quick-grid">
+                            <div class="form-control">
+                                <label>Hengitystaajuus (/min)</label>
+                                <input type="number" id="rr_freq" min="0" max="60" oninput="calculateNEWS2()">
+                            </div>
+                            <div class="form-control">
+                                <label>SpO2 (%)</label>
+                                <input type="number" id="spo2" min="0" max="100" oninput="calculateNEWS2()">
+                            </div>
+                            <div class="form-control">
+                                <label>Lisähappi</label>
+                                <select id="oxygen" onchange="calculateNEWS2()">
+                                    <option value="no">Huoneilma (Ei lisähappea)</option>
+                                    <option value="yes">Lisähappi (Maski/Viikset)</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="verensokeri">Verensokeri</label>
-                            <input type="text" id="verensokeri">
+                    </div>
+
+                    <!-- C -->
+                    <div class="abcde-section">
+                        <div class="abcde-title">C - Verenkierto</div>
+                        <div class="quick-grid">
+                            <div class="form-control">
+                                <label>Syke / Syketaajuus (bpm)</label>
+                                <input type="number" id="hr" min="0" max="250" oninput="calculateNEWS2()">
+                            </div>
+                            <div class="form-control">
+                                <label>Systolinen verenpaine (mmHg)</label>
+                                <input type="number" id="sys_bp" min="0" max="300" oninput="calculateNEWS2()">
+                            </div>
+                            <div class="form-control">
+                                <label>Kapillaaritäyttö (sekuntia)</label>
+                                <input type="text" id="cap_refill" placeholder="esim. < 2s">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- D & E -->
+                    <div class="abcde-section">
+                        <div class="abcde-title">D & E - Tajunta ja Neurologia / Paljastaminen</div>
+                        <div class="quick-grid">
+                            <div class="form-control">
+                                <label>Tajunnan taso (ACVPU)</label>
+                                <select id="acvpu" onchange="calculateNEWS2()">
+                                    <option value="A">A - Alert (Kuvailee/Aktiivinen)</option>
+                                    <option value="C">C - Confusion (Uusi sekavuus)</option>
+                                    <option value="V">V - Voice (Vastaa puheelle)</option>
+                                    <option value="P">P - Pain (Reagoi vain kipuun)</option>
+                                    <option value="U">U - Unresponsive (Tajuton)</option>
+                                </select>
+                            </div>
+                            <div class="form-control">
+                                <label>Lämpötila (°C)</label>
+                                <input type="number" step="0.1" id="temp" oninput="calculateNEWS2()">
+                            </div>
+                            <div class="form-control">
+                                <label>Verensokeri (mmol/l)</label>
+                                <input type="number" step="0.1" id="vs">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-control">
+                        <label>Annetut hoidot, lääkkeet ja vasteet</label>
+                        <textarea id="hoitoTeksti" placeholder="esim. ASA 300mg p.o., Nitro 0.4mg s.l. Kiputilanne helpottanut..."></textarea>
+                    </div>
+                </div>
+
+                <!-- KELA SV210 MATKAtiedot -->
+                <div id="svTab" class="tab-pane">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
+                        <div class="form-control">
+                            <label>Lähtöpaikka</label>
+                            <input type="text" id="lahtoOsoite">
+                        </div>
+                        <div class="form-control">
+                            <label>Määränpää / Vastaanottava laitos</label>
+                            <input type="text" id="maaranpaaOsoite">
+                        </div>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
+                        <div class="form-control">
+                            <label>Kuljetetut kilometrit</label>
+                            <input type="number" id="km">
+                        </div>
+                        <div class="form-control">
+                            <label>Kuljetustapa / Kela-peruste</label>
+                            <select id="kelaSyy">
+                                <option value="Jatkuva seuranta">Tila vaatii jatkuvaa tarkkailua/hoitoa ajon aikana</option>
+                                <option value="Paarikuljetus">Paari- / makuukuljetusvaatimus</option>
+                                <option value="Sertifioitu siirto">Lääketieteellinen valvontatarve siirrossa</option>
+                            </select>
                         </div>
                     </div>
                     
-                    <div class="form-group" style="margin-top: 15px;">
-                        <label for="hoidonKuvaus">Anamneesi, status ja annettu hoito</label>
-                        <textarea id="hoidonKuvaus" required></textarea>
+                    <div style="margin-top:30px;">
+                        <button type="submit" class="btn-lock">LUKITSE JA TALLENNA ENSIHOITOKERTOMUS</button>
                     </div>
-                </fieldset>
+                </div>
+
+            </form>
+        </div>
+
+        <!-- OIKEA SIVUPALKKI: REAALIAIKAINEN DIAGNOSTIIKKA JA HISTORIA -->
+        <div class="sidebar-right">
+            <!-- NEWS2 monitori -->
+            <div class="news-box" id="newsContainer">
+                <h4 style="margin:0; color:#555;">Automaattinen NEWS2</h4>
+                <div class="news-score" id="newsDisplay">0</div>
+                <div id="newsRisk" style="font-weight:bold; font-size:0.9rem;">Matala riski</div>
             </div>
 
-            <!-- VÄLILEHTI 3: SV210 MATKAtiedot -->
-            <div id="sv210_matka" class="tab-content">
-                <fieldset>
-                    <legend>Kela SV210 Matkatiedot</legend>
-                    <div class="grid-2">
-                        <div class="form-group">
-                            <label for="lahtopaikka">Lähtöpaikka</label>
-                            <input type="text" id="lahtopaikka">
-                        </div>
-                        <div class="form-group">
-                            <label for="maaranpaa">Määränpää</label>
-                            <input type="text" id="maaranpaa">
-                        </div>
-                    </div>
-
-                    <div class="grid-3">
-                        <div class="form-group">
-                            <label for="pvm">Matkapäivä</label>
-                            <input type="date" id="pvm">
-                        </div>
-                        <div class="form-group">
-                            <label for="lahtoAika">Lähtöaika</label>
-                            <input type="time" id="lahtoAika">
-                        </div>
-                        <div class="form-group">
-                            <label for="perillaAika">Perillä</label>
-                            <input type="time" id="perillaAika">
-                        </div>
-                    </div>
-
-                    <div class="grid-2">
-                        <div class="form-group">
-                            <label for="kilometrit">Kilometrit</label>
-                            <input type="text" id="kilometrit">
-                        </div>
-                        <div class="form-group">
-                            <label for="maksaja">Maksaja</label>
-                            <select id="maksaja">
-                                <option value="kela">Kela-korvattava (SV210)</option>
-                                <option value="kunta_hva">Hyvinvointialue</option>
-                                <option value="itsepursu">Itse maksava</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="svPerustelu">Sairaankuljetuksen lääketieteellinen perustelu (Kela)</label>
-                        <select id="svPerustelu">
-                            <option value="Tila vaatii jatkuvaa seurantaa/hoitoa">Tila vaatii jatkuvaa seurantaa/hoitoa</option>
-                            <option value="Paari- tai makuukuljetuksen tarve">Paari- tai makuukuljetuksen tarve</option>
-                            <option value="Tartuntavaara tai muu lääketieteellinen syy">Tartuntavaara tai muu lääketieteellinen syy</option>
-                        </select>
-                    </div>
-                </fieldset>
-
-                <div class="btn-container">
-                    <button type="submit" class="btn btn-success">Tallenna & Lukitse kertomus</button>
+            <!-- Automaattinen ISBAR-raporttigeneraattori tiedonsiirtoon -->
+            <div style="background:#eef6fb; padding:12px; border-radius:6px; border:1px solid #bce1f4;">
+                <h4 style="margin:0 0 5px 0; color:var(--merlot-blue);">ISBAR-Yhteenveto raporteille</h4>
+                <div id="isbarPreview" style="font-size:0.8rem; color:#444; white-space:pre-line; font-family:monospace;">
+                    Täytä tietoja luodaksesi raportin radiopuhelinta tai sairaalan luovutusta varten.
                 </div>
             </div>
 
-        </form>
-    </div>
-
-    <!-- OIKEA PUOLI: POTILASHISTORIA -->
-    <div class="history-container">
-        <h2>Potilaan historia</h2>
-        <div id="historianNaytto">
-            <p class="alert-no-history">Syötä henkilötunnus nähdäksesi aiemmat ensihoitokertomukset.</p>
+            <!-- Potilashistoria takautuvasti -->
+            <div>
+                <h3 style="margin-top:0; color:var(--merlot-blue); border-bottom:2px solid #eee; padding-bottom:5px;">Potilaan Historia (HETU)</h3>
+                <div id="historyLogs">
+                    <p style="color:#777; font-style:italic; font-size:0.85rem;">Syötä HETU nähdäksesi aiemmat hoitotapahtumat.</p>
+                </div>
+            </div>
         </div>
+
     </div>
 
-</div>
+    <script>
+        // Kellonaikalaskuri yläpalkkiin
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('liveClock').innerText = now.toTimeString().split(' ')[0];
+        }, 1000);
 
-<script>
-    // Asetetaan kuluva päivämäärä oletukseksi matkapäivään
-    document.getElementById('pvm').valueAsDate = new Date();
-
-    // Välilehtien vaihtaminen
-    function openTab(evt, tabName) {
-        var i, tabcontent, tablinks;
-        tabcontent = document.getElementsByClassName("tab-content");
-        for (i = 0; i < tabcontent.length; i++) {
-            tabcontent[i].classList.remove("active");
-        }
-        tablinks = document.getElementsByClassName("tab-btn");
-        for (i = 0; i < tablinks.length; i++) {
-            tablinks[i].classList.remove("active");
-        }
-        document.getElementById(tabName).classList.add("active");
-        evt.currentTarget.classList.add("active");
-    }
-
-    // FUNKTIO: Hakee historian HETU:n perusteella
-    function haePotilashistoria() {
-        const hetu = document.getElementById('hetu').value.trim();
-        const historiaNaytto = document.getElementById('historianNaytto');
-        
-        if (hetu.length < 6) {
-            historiaNaytto.innerHTML = '<p class="alert-no-history">Syötä henkilötunnus nähdäksesi aiemmat ensihoitokertomukset.</p>';
-            return;
-        }
-
-        // Haetaan localStoragesta hetun takana olevat kertomukset
-        const aiemmatKertomukset = JSON.parse(localStorage.getItem(hetu)) || [];
-
-        if (aiemmatKertomukset.length === 0) {
-            historiaNaytto.innerHTML = '<p class="alert-no-history" style="color: var(--alert-color);">Ei aiempia ensihoitokertomuksia tässä laitteessa.</p>';
-        } else {
-            let html = `<h4>Löydetty ${aiemmatKertomukset.length} aiempaa tehtävää:</h4>`;
+        // Operatiivisten aikaleimojen tallennus
+        let timestamps = {};
+        function setStatus(statusNum) {
+            // Poistetaan vanha aktiivisuus
+            document.querySelectorAll('.status-btn').forEach(b => b.classList.remove('active'));
+            // Aktivoidaan uusi
+            document.getElementById('st' + statusNum).classList.add('active');
             
-            // Käydään kertomukset läpi (uusin ensin)
-            aiemmatKertomukset.reverse().forEach((kertomus, index) => {
-                html += `
-                    <div class="history-item">
-                        <strong>Pvm/Aika:</strong> ${kertomus.pvm} klo ${kertomus.lahtoAika || '--:--'}<br>
-                        <strong>Yksikkö & Tehtävä:</strong> ${kertomus.yksikko} (${kertomus.kiireellisyys}) / ${kertomus.tehtavatunnus || 'Ei tunnusta'}<br>
-                        <strong>Vitalit:</strong> HR: ${kertomus.syke} | RR: ${kertomus.rr} | SpO2: ${kertomus.sat}% | GCS: ${kertomus.gcs}<br>
-                        <strong>Hoito & Anamneesi:</strong> <span style="white-space: pre-wrap;">${kertomus.hoidonKuvaus}</span><br>
-                        <strong>Kuljetus:</strong> ${kertomus.matka} (${kertomus.kelaPerustelu})
-                    </div>
-                `;
-            });
-            historiaNaytto.innerHTML = html;
-        }
-    }
-
-    // FUNKTIO: Tallentaa uuden kertomuksen potilaan HETU:n alle
-    function tallennaTiedot(event) {
-        event.preventDefault();
-        
-        const hetu = document.getElementById('hetu').value.trim();
-        if (!hetu) {
-            alert("Virhe: Henkilötunnus vaaditaan!");
-            return;
+            const timeStr = new Date().toTimeString().split(' ')[0];
+            timestamps['S' + statusNum] = timeStr;
+            
+            // Päivitetään lokilaatikko vasemmalle
+            let logHtml = "";
+            for (const [status, time] of Object.entries(timestamps)) {
+                logHtml += `<strong>${status}:</strong> ${time}<br>`;
+            }
+            document.getElementById('timestampLog').innerHTML = logHtml;
         }
 
-        // Luodaan objekti tämänhetkisistä tiedoista
-        const uusiKertomus = {
-            pvm: document.getElementById('pvm').value,
-            lahtoAika: document.getElementById('lahtoAika').value,
-            yksikko: document.getElementById('yksikko').value,
-            tehtavatunnus: document.getElementById('tehtavatunnus').value,
-            kiireellisyys: document.getElementById('kiireellisyys').value,
-            syke: document.getElementById('syke').value || 'ei mitattu',
-            rr: document.getElementById('rr').value || 'ei mitattu',
-            sat: document.getElementById('sat').value || 'ei mitattu',
-            gcs: document.getElementById('gcs').value || 'ei mitattu',
-            hoidonKuvaus: document.getElementById('hoidonKuvaus').value,
-            matka: document.getElementById('lahtopaikka').value + ' -> ' + document.getElementById('maaranpaa').value,
-            kelaPerustelu: document.getElementById('svPerustelu').value
-        };
+        // Välilehtiohjaus
+        function switchTab(evt, tabId) {
+            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-link').forEach(l => l.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            evt.currentTarget.classList.add('active');
+        }
 
-        // Haetaan vanhat tiedot alta tai luodaan tyhjä lista jos uusi potilas
-        let potilaanHistoria = JSON.parse(localStorage.getItem(hetu)) || [];
-        
-        // Lisätään uusi kertomus listan jatkoksi
-        potilaanHistoria.push(uusiKertomus);
-        
-        // Tallennetaan takaisin selaimeen
-        localStorage.setItem(hetu, JSON.stringify(potilaanHistoria));
+        // NEWS2 Pisteytyslaskuri (Kansallinen opas)
+        function calculateNEWS2() {
+            let score = 0;
+            
+            const rr_freq = parseInt(document.getElementById('rr_freq').value) || 0;
+            const spo2 = parseInt(document.getElementById('spo2').value) || 0;
+            const oxygen = document.getElementById('oxygen').value;
+            const sys_bp = parseInt(document.getElementById('sys_bp').value) || 0;
+            const hr = parseInt(document.getElementById('hr').value) || 0;
+            const acvpu = document.getElementById('acvpu').value;
+            const temp = parseFloat(document.getElementById('temp').value) || 0;
 
-        alert("Ensihoitokertomus lukittu ja tallennettu onnistuneesti potilaan HETU:n alle!");
-        
-        // Päivitetään historianäkymä heti
-        haePotilashistoria();
-        
-        // Tyhjennetään lomakkeen kliiniset tiedot seuraavaa varten, mutta jätetään potilastiedot näkyviin
-        document.getElementById('syke').value = '';
-        document.getElementById('rr').value = '';
-        document.getElementById('sat').value = '';
-        document.getElementById('hengitystaajuus').value = '';
-        document.getElementById('gcs').value = '';
-        document.getElementById('verensokeri').value = '';
-        document.getElementById('hoidonKuvaus').value = '';
-    }
-</script>
+            // Hengitystaajuus pisteytys
+            if (rr_freq > 0) {
+                if (rr_freq <= 8 || rr_freq >= 25) score += 3;
+                else if (rr_freq >= 21 && rr_freq <= 24) score += 2;
+                else if (rr_freq >= 9 && rr_freq <= 11) score += 1;
+            }
 
+            // SpO2 pisteytys (Asteikko 1 oletuksena)
+            if (spo2 > 0) {
+                if (spo2 <= 91) score += 3;
+                else if (spo2 >= 92 && spo2 <= 93) score += 2;
+                else if (spo2 >= 94 && spo2 <= 95) score += 1;
+            }
+
+            // Lisähappi
+            if (oxygen === 'yes') score += 2;
+
+            // Systolinen verenpaine
+            if (sys_bp > 0) {
+                if (sys_bp <= 90 || sys_bp >= 220) score += 3;
+                else if (sys_bp >= 91 && sys_bp <= 100) score += 2;
+                else if (sys_bp >= 101 && sys_bp <= 110) score += 1;
+            }
+
+            // Syke
+            if (hr > 0) {
+                if (hr <= 40 || hr >= 131) score += 3;
+                else if (hr >= 111 && hr <= 130) score += 2;
+                else if (hr >= 41 && hr <= 50) score += 1;
+            }
+
+            // Tajunta (ACVPU - muut kuin A antaa suoraan 3 pistettä)
+            if (acvpu !== 'A') score += 3;
+
+            // Lämpötila
+            if (temp > 0) {
+                if (temp <= 35.0) score += 3;
+                else if (temp >= 39.1) score += 2;
+                else if ((temp >= 35.1 && temp <= 36.0) || (temp >= 38.1 && temp <= 39.0)) score += 1;
+            }
+
+            // Päivitetään käyttöliittymäindikaattorit
+            const display = document.getElementById('newsDisplay');
+            const risk = document.getElementById('newsRisk');
+            const container = document.getElementById('newsContainer');
+            
+            display.innerText = score;
+            
+            if (score === 0) {
+                risk.innerText = "Normaalitila";
+                container.style.backgroundColor = "#e2f0d9";
+                display.style.color = var(--alert-green);
+            } else if (score >= 1 && score <= 4) {
+                risk.innerText = "Matala riski (Vaste: Yksikköseuranta)";
+                container.style.backgroundColor = "#fff2cc";
+                display.style.color = "orange";
+            } else if (score >= 5 && score <= 6) {
+                risk.innerText = "Keskisuuri riski (Harkitse lääkärikonsultaatiota)";
+                container.style.backgroundColor = "#fce4d6";
+                display.style.color = "darkorange";
+            } else {
+                risk.innerText = "KORKEA RISKI (Välitön hoitovaste/Konsultaatio)";
+                container.style.backgroundColor = "#f8cbad";
+                display.style.color = "red";
+            }
+
+            updateISBAR();
+        }
+
+        // Automaattinen ISBAR-raportin rakentaminen
+        function updateISBAR() {
+            const sukunimi = document.getElementById('sukunimi').value || 'N.N.';
+            const hetu = document.getElementById('hetu').value || 'xxxxxx-xxxx';
+            const koodi = document.getElementById('tKoodi').value || 'Ei koodia';
+            const news = document.getElementById('newsDisplay').innerText;
+            const hr = document.getElementById('hr').value || '?';
+            const bp = document.getElementById('sys_bp').value || '?';
+            const hoito = document.getElementById('hoitoTeksti').value || 'Ei aloitettuja hoitoja.';
+
+            const isbar = `[I] ${document.getElementById('yksikko').value}, tulossa potilaalla ${sukunimi} (${hetu})\n[S] Tehtäväkoodeilla ${koodi}, NEWS2-pisteet tällä hetkellä: ${news}.\n[B] Anamneesi: ${document.getElementById('anamneesi').value.substring(0,60)}...\n[A] Syke: ${hr}/min, Syst. BP: ${bp}mmHg.\n[R] Hoitovaste: ${hoito.substring(0,50)}...`;
+            document.getElementById('isbarPreview').innerText = isbar;
+        }
+
+        // POTILASHISTORIAN HAKU HETU-KENTÄSTÄ
+        function searchHistory() {
+            const hetu = document.getElementById('hetu').value.trim();
+            const logBox = document.getElementById('historyLogs');
+
+            if (hetu.length < 6) {
+                logBox.innerHTML = '<p style="color:#777; font-style:italic; font-size:0.85rem;">Syötä HETU nähdäksesi aiemmat hoitotapahtumat.</p>';
+                return;
+            }
+
+            const dataHistory = JSON.parse(localStorage.getItem(hetu)) || [];
+
+            if(dataHistory.length === 0) {
+                logBox.innerHTML = '<p style="color:var(--alert-red); font-size:0.85rem;">Ei aiempaa historiaa tässä laitteessa.</p>';
+            } else {
+                let html = "";
+                dataHistory.reverse().forEach((log) => {
+                    html += `
+                        <div class="history-card">
+                            <header>${log.pvm} | Yksikkö: ${log.yksikko}</header>
+                            <div><strong>Koodi:</strong> ${log.koodi} | <strong>NEWS2:</strong> ${log.news}</div>
+                            <div style="font-size:0.8rem; color:#555; margin-top:3px;">${log.hoito.substring(0,100)}...</div>
+                        </div>
+                    `;
+                });
+                logBox.innerHTML = html;
+            }
+            updateISBAR();
+        }
+
+        // TALLENNUS JÄRJESTELMÄÄN
+        function saveKertomus(event) {
+            event.preventDefault();
+            const hetu = document.getElementById('hetu').value.trim();
+            
+            if(!hetu) {
+                alert("Henkilötunnus puuttuu!");
+                return;
+            }
+
+            const uusiKertomus = {
+                pvm: new Date().toLocaleDateString('fi-FI'),
+                yksikko: document.getElementById('yksikko').value,
+                koodi: document.getElementById('tKoodi').value,
+                news: document.getElementById('newsDisplay').innerText,
+                hoito: document.getElementById('hoitoTeksti').value || 'Ei kirjattuja lääkkeitä/hoitoja',
+                aikaleimat: timestamps
+            };
+
+            let potilaanHistoria = JSON.parse(localStorage.getItem(hetu)) || [];
+            potilaanHistoria.push(uusiKertomus);
+            localStorage.setItem(hetu, JSON.stringify(potilaanHistoria));
+
+            alert("Kertomus lukittu virallisesti suojattuun arkistoon (localStorage).");
+            searchHistory();
+        }
+    </script>
 </body>
 </html>
