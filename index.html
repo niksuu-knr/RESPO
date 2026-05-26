@@ -2,57 +2,68 @@
 <html lang="fi">
 <head>
     <meta charset="UTF-8">
-    <title>NASTA PRO - Navigaattori</title>
+    <title>NASTA Pro - Navigointi</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
     
     <style>
-        body { margin:0; padding:0; background:#111; }
+        body { margin: 0; padding: 0; font-family: sans-serif; background: #000; }
         #map { height: 100vh; width: 100vw; }
         
-        /* Navigaattorin tiedot näytön päällä */
-        .navi-hud {
-            position: absolute; top: 20px; left: 20px; z-index: 1000;
-            background: rgba(0,0,0,0.85); color: white; padding: 20px;
-            border-left: 10px solid #e67e22; border-radius: 5px;
-            width: 300px;
+        /* HUD-näkymä kartan päällä */
+        .hud-navi {
+            position: absolute; top: 10px; left: 10px; z-index: 1000;
+            background: rgba(0,0,0,0.85); color: #fff; padding: 15px;
+            border: 2px solid #ff9900; border-radius: 8px; width: 300px;
         }
-        .speed-limit { font-size: 3rem; color: #f1c40f; font-weight: bold; }
-        .turn-instruction { font-size: 1.2rem; margin-top: 10px; }
+        .turn-text { font-size: 1.4rem; font-weight: bold; margin-bottom: 10px; }
+        .distance-text { font-size: 1.1rem; color: #ff9900; }
     </style>
 </head>
 <body>
 
-    <div class="navi-hud">
-        <div style="font-size:0.8rem; color:#aaa;">NOPEUSRAJOITUS</div>
-        <div class="speed-limit" id="rajoitus">-- km/h</div>
-        <div class="turn-instruction" id="ohje">Lasketaan reittiä...</div>
+    <div class="hud-navi">
+        <div class="turn-text" id="turn-instruction">Etsitään reittiä...</div>
+        <div class="distance-text" id="distance-info">-- km jäljellä</div>
     </div>
 
     <div id="map"></div>
 
     <script>
-        const map = L.map('map').setView([60.39, 25.66], 14);
+        const map = L.map('map').setView([61.497, 23.760], 14);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-        let routing = L.Routing.control({
-            waypoints: [L.latLng(60.39, 25.66), L.latLng(60.40, 25.67)],
-            router: L.Routing.osrmv1({ profile: 'car' })
+        // Alustetaan reititysohjain
+        let routingControl = L.Routing.control({
+            waypoints: [
+                L.latLng(61.497, 23.760), // Lähtöpiste (GPS päivittää tämän)
+                L.latLng(61.482, 23.753)  // Kohdepiste (esim. Hatanpää)
+            ],
+            router: L.Routing.osrmv1({ profile: 'car' }),
+            showAlternatives: false,
+            addWaypoints: false,
+            routeWhileDragging: false
         }).addTo(map);
 
-        // Päivitetään ohjeet reitin perusteella
-        routing.on('routesfound', function(e) {
-            const step = e.routes[0].instructions[0];
-            document.getElementById('ohje').innerText = step.text;
+        // Päivitetään ohjeet HUD-näkymään kun reitti löytyy
+        routingControl.on('routesfound', function(e) {
+            const routes = e.routes;
+            const summary = routes[0].summary;
+            const instruction = routes[0].instructions[0].text;
             
-            // OSRM palauttaa 'maxspeed' tiedon, jos se on saatavilla reitityksessä
-            if(step.extra && step.extra.maxspeed) {
-                document.getElementById('rajoitus').innerText = step.extra.maxspeed + " km/h";
-            } else {
-                document.getElementById('rajoitus').innerText = "50 km/h"; // Oletus
-            }
+            document.getElementById('turn-instruction').innerText = instruction;
+            document.getElementById('distance-info').innerText = 
+                (summary.totalDistance / 1000).toFixed(1) + " km jäljellä | " + 
+                Math.round(summary.totalTime / 60) + " min";
+        });
+
+        // Simuloidaan GPS-päivitystä (oikeassa autossa tämä lukee laitteen sirua)
+        navigator.geolocation.watchPosition(pos => {
+            const lat = pos.coords.latitude;
+            const lon = pos.coords.longitude;
+            routingControl.spliceWaypoints(0, 1, L.latLng(lat, lon));
         });
     </script>
 </body>
