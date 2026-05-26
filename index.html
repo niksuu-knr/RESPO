@@ -3,65 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NASTA Pro Navigaattori</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+    <title>NASTA HUD</title>
     <style>
-        body, html { margin:0; padding:0; height:100vh; width:100vw; overflow:hidden; background:#000; color:#fff; font-family: sans-serif; }
-        #map { height: 100vh; width: 100vw; }
-        
-        .hud { position: absolute; top: 10px; left: 10px; z-index: 1000; width: 95%; max-width: 400px; }
-        .nav-btn { width: 100%; padding: 20px; font-size: 1.5rem; font-weight: bold; background: #000; color: #fff; border: 3px solid #fff; cursor: pointer; }
-        
-        .bottom-bar { 
-            position: absolute; bottom: 0; width: 100%; height: 120px; background: rgba(0,0,0,0.95); 
-            display: flex; align-items: center; justify-content: space-between; padding: 0 20px; box-sizing: border-box; font-size: 1.5rem; z-index: 1000;
+        body, html { margin:0; padding:0; height:100vh; background:#000; color:#fff; font-family: sans-serif; overflow:hidden; }
+        /* HUD-palkki: Vain kriittinen tieto */
+        .hud-bar { 
+            position: absolute; top: 0; width: 100%; height: 120px; 
+            background: rgba(0,0,0,0.9); border-bottom: 4px solid #fff; 
+            display: flex; align-items: center; justify-content: space-around; font-size: 2rem;
         }
-        .data-box { text-align: center; }
-        .val { color: #0f0; display: block; font-size: 2rem; }
+        /* Haku: Koko näytön peittävä, kunnes valittu */
+        #search-overlay { 
+            position: absolute; top: 120px; width: 100%; height: calc(100% - 120px); 
+            background: #000; padding: 20px; box-sizing: border-box; 
+        }
+        input { width: 100%; height: 80px; font-size: 2rem; background: #222; color: #fff; border: 2px solid #fff; }
+        .nav-btn { background: #007bff; color: #fff; padding: 20px; margin-top: 10px; width: 100%; font-size: 1.5rem; }
     </style>
 </head>
 <body>
-    <div id="map"></div>
 
-    <div class="hud">
-        <button class="nav-btn" onclick="aloitaHaku()">VALITSE KOHDE</button>
+    <div class="hud-bar">
+        <div>KÄÄNNÖS: <span id="turn-dir">OIKEAAN</span></div>
+        <div>MATKA: <span id="turn-dist">350 m</span></div>
+        <div>KAISTA: <span id="lane-info">OIKEA</span></div>
     </div>
 
-    <div class="bottom-bar">
-        <div class="data-box">TIE<span id="tie-info" class="val">-</span></div>
-        <div class="data-box">RAJOITUS<span id="nopeus-rajoitus" class="val">80</span></div>
-        <div class="data-box">VAUHTI<span id="oma-nopeus" class="val">0</span></div>
+    <div id="search-overlay">
+        <input type="text" id="dest-input" placeholder="Syötä määränpää...">
+        <button class="nav-btn" onclick="aloitaNavigointi()">AVAA GOOGLE MAPS / WAZE</button>
     </div>
 
     <script>
-        const map = L.map('map', { zoomControl: false }).setView([60.392, 25.666], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-
-        let routingControl;
-        let userPos;
-
-        // Seurataan sijaintia
-        navigator.geolocation.watchPosition(pos => {
-            userPos = L.latLng(pos.coords.latitude, pos.coords.longitude);
-            document.getElementById('oma-nopeus').innerText = Math.round(pos.coords.speed * 3.6 || 0);
-            map.setView(userPos, 15);
-        }, null, { enableHighAccuracy: true });
-
-        function aloitaHaku() {
-            const dest = prompt("Kirjoita määränpää (esim. Porvoo):");
-            if(dest) {
-                // Tässä oikeassa sovelluksessa tehtäisiin geocoding-haku
-                // Nyt piirretään reitti simuloituun kohteeseen
-                if (routingControl) map.removeControl(routingControl);
-                routingControl = L.Routing.control({
-                    waypoints: [userPos, L.latLng(60.392, 25.666)],
-                    router: L.Routing.osrmv1({ profile: 'car' })
-                }).addTo(map);
-                document.getElementById('tie-info').innerText = "VT7";
-            }
+        function aloitaNavigointi() {
+            const kohde = document.getElementById('dest-input').value;
+            // Tämä avaa puhelimen/tabletin navigointisovelluksen
+            window.location.href = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(kohde)}`;
+            document.getElementById('search-overlay').style.display = 'none';
         }
     </script>
 </body>
