@@ -42,7 +42,7 @@
         /* DYNAAMINEN OPASSUUNTA: Alapalkin yläpuolella kelluva laatikko */
         #floating-instruction { position: absolute; bottom: 125px; left: 50%; transform: translateX(-50%); background: rgba(0, 85, 255, 0.95); color: white; padding: 15px 30px; border-radius: 12px; font-size: 28px; font-weight: bold; border: 2px solid #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.5); text-align: center; min-width: 450px; display: none; }
 
-        /* ALAPALKKI: Navici-tyylinen viisiosainen tilarivi */
+        /* ALAPALKKI */
         .bottom-bar { position: absolute; bottom: 0; left: 0; width: 100%; height: 110px; background: #1E293B; border-top: 4px solid #38BDF8; display: grid; grid-template-columns: 1fr 1.2fr 1fr 0.8fr 0.8fr; align-items: center; color: white; text-align: center; }
         .bar-section { border-right: 2px solid #334155; height: 70%; display: flex; flex-direction: column; justify-content: center; padding: 0 10px; }
         .bar-section:last-child { border-right: none; }
@@ -124,7 +124,52 @@
         let valittuKohdeLatLng = null;
         let hakuAjastin;
 
-        // GPS-seuranta, etappien vaihto ja dynaaminen rajoitushaku
+        // SANAKIRJA: Muuttaa englanninkieliset opastustermit suomeksi
+        function kaannaSuomeksi(teksti) {
+            if (!teksti) return "Aja suoraan";
+            
+            let käännös = teksti;
+            
+            // Suunnat ja peruskäännökset
+            käännös = käännös.replace(/Head northeast/gi, "Aja koilliseen");
+            käännös = käännös.replace(/Head northwest/gi, "Aja luoteeseen");
+            käännös = käännös.replace(/Head southeast/gi, "Aja kaakkoon");
+            käännös = käännös.replace(/Head southwest/gi, "Aja lounaaseen");
+            käännös = käännös.replace(/Head north/gi, "Aja pohjoiseen");
+            käännös = käännös.replace(/Head south/gi, "Aja etelään");
+            käännös = käännös.replace(/Head east/gi, "Aja itään");
+            käännös = käännös.replace(/Head west/gi, "Aja länteen");
+            
+            käännös = käännös.replace(/Turn sharp right/gi, "Käänny jyrkästi oikealle");
+            käännös = käännös.replace(/Turn sharp left/gi, "Käänny jyrkästi vasemmalle");
+            käännös = käännös.replace(/Turn slight right/gi, "Käänny loivasti oikealle");
+            käännös = käännös.replace(/Turn slight left/gi, "Käänny loivasti vasemmalle");
+            käännös = käännös.replace(/Turn right/gi, "Käänny oikealle");
+            käännös = käännös.replace(/Turn left/gi, "Käänny vasemmalle");
+            käännös = käännös.replace(/Make a U-turn/gi, "Tee u-käännös");
+            käännös = käännös.replace(/Continue straight/gi, "Jatka suoraan");
+            käännös = käännös.replace(/Keep right/gi, "Pysy oikealla");
+            käännös = käännös.replace(/Keep left/gi, "Pysy vasemmalla");
+            
+            // Kiertoliittymät
+            käännös = käännös.replace(/Enter the roundabout and take the 1st exit/gi, "Aja kiertoliittymään ja valitse 1. erkanemissuunta");
+            käännös = käännös.replace(/Enter the roundabout and take the 2nd exit/gi, "Aja kiertoliittymään ja valitse 2. erkanemissuunta");
+            käännös = käännös.replace(/Enter the roundabout and take the 3rd exit/gi, "Aja kiertoliittymään ja valitse 3. erkanemissuunta");
+            käännös = käännös.replace(/Enter the roundabout and take the 4th exit/gi, "Aja kiertoliittymään ja valitse 4. erkanemissuunta");
+            käännös = käännös.replace(/At the roundabout take the 1st exit/gi, "Kiertoliittymästä 1. ulosmeno");
+            käännös = käännös.replace(/At the roundabout take the 2nd exit/gi, "Kiertoliittymästä 2. ulosmeno");
+            käännös = käännös.replace(/At the roundabout take the 3rd exit/gi, "Kiertoliittymästä 3. ulosmeno");
+            
+            // Saapumiset
+            käännös = käännös.replace(/You have arrived at your destination/gi, "Olet saapunut kohteeseen");
+            käännös = käännös.replace(/on the right/gi, "oikealla");
+            käännös = käännös.replace(/on the left/gi, "vasemmalla");
+            käännös = käännös.replace(/onto/gi, "tielle:");
+
+            return käännös;
+        }
+
+        // GPS-seuranta
         navigator.geolocation.watchPosition(pos => {
             const lat = pos.coords.latitude;
             const lon = pos.coords.longitude;
@@ -186,7 +231,7 @@
                 .catch(() => {});
         }
 
-        // Autocomplete
+        // Autocomplete osoitehaulle
         function haeEhdotukset(teksti) {
             clearTimeout(hakuAjastin);
             const listaElementti = document.getElementById('suggestions');
@@ -257,7 +302,6 @@
                 
                 document.getElementById('floating-instruction').style.display = 'block';
                 
-                // Päivitetään matka (m tai km riippuen pituudesta)
                 const kokonaisMatka = reitti.summary.totalDistance;
                 if (kokonaisMatka >= 1000) {
                     document.getElementById('hud-dist').innerText = (kokonaisMatka / 1000).toFixed(1) + " km";
@@ -265,15 +309,12 @@
                     document.getElementById('hud-dist').innerText = Math.round(kokonaisMatka) + " m";
                 }
                 
-                // AJAN JA ETA:N LASKENTA
                 const kestoSekunnit = reitti.summary.totalTime;
                 const kestoMinuutit = Math.round(kestoSekunnit / 60);
                 document.getElementById('hud-duration').innerText = kestoMinuutit + " min";
                 
-                // Perilläoloajan laskeminen nykyhetkestä
                 const perillaAika = new Date();
                 perillaAika.setMinutes(perillaAika.getMinutes() + kestoMinuutit);
-                
                 const tunnit = String(perillaAika.getHours()).padStart(2, '0');
                 const minuutit = String(perillaAika.getMinutes()).padStart(2, '0');
                 document.getElementById('hud-eta').innerText = tunnit + ":" + minuutit;
@@ -282,11 +323,14 @@
             });
         }
 
+        // HUD-tekstien päivitys käännösfunktion läpi
         function paivitaHUDOhjeet() {
             if (currentStep < routeSteps.length) {
                 const vaihe = routeSteps[currentStep];
-                document.getElementById('floating-instruction').innerText = vaihe.text;
-                document.getElementById('hud-turn').innerText = vaihe.text;
+                const suomenkielinenOhje = kaannaSuomeksi(vaihe.text);
+                
+                document.getElementById('floating-instruction').innerText = suomenkielinenOhje;
+                document.getElementById('hud-turn').innerText = suomenkielinenOhje;
             }
         }
 
