@@ -2,28 +2,28 @@
 <html lang="fi">
 <head>
     <meta charset="UTF-8">
-    <title>NASTA Pro - Puhdas Kartta</title>
+    <title>NASTA Pro - Puhdas</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
     <style>
-        body, html { margin:0; padding:0; height:100vh; width:100vw; overflow:hidden; background:#000; }
+        body, html { margin:0; padding:0; height:100vh; width:100vw; overflow:hidden; background:#000; font-family: sans-serif; }
         #map { height: 100vh; width: 100vw; }
-
-        /* HUD:it kartan päällä - ei listoja */
         .hud { position: absolute; z-index: 1000; }
-        .top-left { top: 20px; left: 20px; width: 300px; display: flex; flex-direction: column; gap: 10px; }
+        
+        .top-left { top: 20px; left: 20px; width: 400px; }
+        .active-target { background: rgba(0,0,0,0.85); color: #fff; padding: 15px; border: 2px solid #fff; font-weight: bold; display: none; margin-bottom: 10px; }
+        .nav-main-btn { height: 60px; width: 100%; font-size: 1.2rem; font-weight: bold; cursor: pointer; background: #000; color: #fff; border: 2px solid #fff; }
         
         .bottom-bar { 
-            bottom: 0; left: 0; width: 100%; height: 100px; 
-            background: rgba(0,0,0,0.9); border-top: 3px solid #fff;
-            display: flex; align-items: center; padding: 0 40px; color: white;
-            font-size: 2.5rem; font-weight: bold;
+            bottom: 0; left: 0; width: 100%; height: 110px; 
+            background: rgba(0,0,0,0.95); border-top: 4px solid #fff; 
+            display: flex; align-items: center; justify-content: space-between; 
+            padding: 0 50px; color: white; font-weight: bold; font-size: 1.8rem;
         }
         
-        button { height: 50px; cursor: pointer; border: none; font-weight: bold; }
-        .nav-btn { background: #000; color: #fff; }
-        .stop-btn { background: #c62828; color: #fff; display: none; }
+        .road-field { color: #fff; border-right: 2px solid #555; padding-right: 30px; }
+        .nav-data { display: flex; gap: 40px; }
+        .stop-nav-btn { background: #c62828; color: white; padding: 15px 30px; border: none; cursor: pointer; display: none; }
     </style>
 </head>
 <body>
@@ -31,35 +31,37 @@
     <div id="map"></div>
 
     <div class="hud top-left">
-        <button id="start-btn" class="nav-btn" onclick="aloita()">NAVIGOI KOHTEESEEN</button>
-        <button id="stop-btn" class="stop-btn" onclick="lopeta()">LOPETA</button>
+        <div id="target-display" class="active-target"></div>
+        <button id="main-nav-btn" class="nav-main-btn" onclick="toggleHaku()">NAVIGOINTI</button>
     </div>
 
-    <div class="hud bottom-bar" id="hud-text">VALMIUSTILASSA</div>
+    <div class="bottom-bar">
+        <div class="road-field">TIE: <span id="current-road">PÄIVITETÄÄN...</span></div>
+        
+        <div class="nav-data">
+            <div>KÄÄNNÖS: <span id="next-turn">-</span></div>
+            <div>ETÄISYYS: <span id="dist-to-turn">-</span></div>
+        </div>
+        
+        <div>
+            <button id="stop-btn" class="stop-nav-btn" onclick="lopetaNavigointi()">LOPETA</button>
+            <span id="speed-status" style="margin-left: 20px;">0 km/h</span>
+        </div>
+    </div>
 
     <script>
         const map = L.map('map', { zoomControl: false }).setView([60.392, 25.666], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-        let control = L.Routing.control({
-            waypoints: [],
-            router: L.Routing.osrmv1({ profile: 'car' }),
-            createMarker: () => null,
-            lineOptions: { styles: [{ color: '#00ccff', opacity: 0.8, weight: 8 }] }
-        }).addTo(map);
+        // Simuloidaan tien nimeä
+        setInterval(() => { document.getElementById('current-road').innerText = "VT7"; }, 2000);
 
-        function aloita() {
-            control.setWaypoints([L.latLng(60.392, 25.666), L.latLng(60.400, 25.670)]);
-            document.getElementById('start-btn').style.display = 'none';
-            document.getElementById('stop-btn').style.display = 'block';
-            document.getElementById('hud-text').innerText = "VT7 -> KÄÄNNY OIKEALLE 500M";
-        }
-
-        function lopeta() {
-            control.setWaypoints([]);
-            document.getElementById('start-btn').style.display = 'block';
+        function lopetaNavigointi() {
+            document.getElementById('next-turn').innerText = "-";
+            document.getElementById('dist-to-turn').innerText = "-";
+            document.getElementById('target-display').style.display = 'none';
             document.getElementById('stop-btn').style.display = 'none';
-            document.getElementById('hud-text').innerText = "VALMIUSTILASSA";
+            document.getElementById('main-nav-btn').style.display = 'block';
         }
     </script>
 </body>
