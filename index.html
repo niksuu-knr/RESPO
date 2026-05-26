@@ -2,632 +2,716 @@
 <html lang="fi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Turva & Katsastus Pro v3.0</title>
+    <title>Turva-System v8.00 (Metro POS) - Windows 8 Edition</title>
     <style>
+        /* WINDOWS 8 METRO UI / MODERN UI TYYLI */
         :root {
-            --primary-color: #1a365d;
-            --secondary-color: #2e7d32;
-            --accent-color: #d69e2e;
-            --bg-color: #f7fafc;
-            --card-bg: #ffffff;
-            --text-color: #2d3748;
-            --focus-border: #e53e3e;
+            --win-bg: #001f4d; /* Tyypillinen Windows 8 asennus/taustaväri */
+            --win-teal: #00aba9;
+            --win-blue: #2d89ef;
+            --win-darkblue: #1e3a8a;
+            --win-red: #ee1111;
+            --win-green: #00a300;
+            --panel-bg: #ffffff;
+            --text-dark: #333333;
         }
 
         body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
+            background-color: var(--win-bg);
+            color: #ffffff;
+            font-family: 'Segoe UI', 'Open Sans', Helvetica, Arial, sans-serif;
+            font-size: 15px;
             margin: 0;
-            padding: 20px;
+            padding: 24px;
         }
 
-        .container {
-            max-width: 1400px;
+        .metro-container {
+            max-width: 1300px;
             margin: 0 auto;
         }
 
-        /* Kirjautumissivu */
-        #loginScreen {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 80vh;
-        }
-
-        .login-box {
-            background: white;
-            padding: 40px;
-            border-radius: 8px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            max-width: 400px;
-            width: 100%;
-            text-align: center;
-        }
-
-        #mainSystem {
-            display: none; /* Piilotettu ennen kirjautumista */
-        }
-
+        /* YLÄPALKKI WINDOWS 8 TYYLIIN */
         header {
-            background-color: var(--primary-color);
-            color: white;
-            padding: 15px 20px;
-            border-radius: 8px;
-            margin-bottom: 10px;
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-end;
+            margin-bottom: 25px;
         }
 
-        .tab-navigation {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 300; /* Windows 8 tunnusomainen ohut fontti */
+            margin: 0;
+            color: #ffffff;
         }
 
-        .tab-btn {
-            background: #e2e8f0;
-            color: #4a5568;
-            border: none;
-            padding: 12px 20px;
-            font-size: 0.95em;
-            font-weight: bold;
-            cursor: pointer;
-            border-radius: 6px;
-            flex: 1;
+        .user-status {
+            text-align: right;
+            font-size: 0.95rem;
+            opacity: 0.85;
         }
 
-        .tab-btn.active {
-            background: var(--primary-color);
-            color: white;
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        .shortcut-bar {
-            background: #edf2f7;
-            padding: 12px;
-            border-radius: 6px;
+        /* MODERN KOMENTOPALKKI */
+        .app-bar {
+            background-color: #0d0d0d;
+            padding: 10px 20px;
             margin-bottom: 20px;
-            font-size: 0.88em;
             display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            border-left: 5px solid var(--accent-color);
-        }
-
-        .shortcut {
-            background: white;
-            padding: 2px 6px;
-            border-radius: 4px;
-            border: 1px solid #cbd5e0;
-            font-weight: bold;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
             gap: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
         }
 
-        .full-width {
-            grid-column: 1 / -1;
+        .app-bar-item {
+            color: #ffffff;
+        }
+        .app-bar-item span {
+            color: var(--win-teal);
+            margin-right: 4px;
         }
 
-        .panel {
-            background: var(--card-bg);
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            border: 1px solid #e2e8f0;
+        /* TYÖSKENTELYALUE */
+        .workspace {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 25px;
         }
 
-        h2 {
-            margin-top: 0;
-            border-bottom: 2px solid #edf2f7;
-            padding-bottom: 10px;
-            color: var(--primary-color);
+        .metro-panel {
+            background-color: var(--panel-bg);
+            color: var(--text-dark);
+            padding: 24px;
+            border: none; /* Ei pyöristyksiä, ei varjoja (Flat design) */
         }
 
+        .panel-header {
+            font-size: 1.4rem;
+            font-weight: 300;
+            color: var(--win-bg);
+            margin-bottom: 20px;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 8px;
+        }
+
+        /* LOMAKKEET */
         .form-group {
             margin-bottom: 15px;
+            display: flex;
+            align-items: center;
         }
 
         label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            font-size: 0.9em;
+            width: 180px;
+            font-weight: 400;
+            font-size: 0.95rem;
         }
 
         input, select {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid #cbd5e0;
-            border-radius: 6px;
+            flex: 1;
+            padding: 8px 12px;
+            border: 2px solid #bababa;
+            background-color: #ffffff;
+            color: #000000;
+            font-family: inherit;
+            font-size: 1rem;
             box-sizing: border-box;
-            font-size: 1em;
         }
 
-        input:focus, select:focus, button:focus {
+        /* Aktiivisen kentän Windows 8 -korostus (Terävä sininen kehys) */
+        input:focus, select:focus {
             outline: none;
-            border-color: var(--focus-border);
-            background-color: #fffde7;
+            border-color: var(--win-blue);
+            background-color: #ffffff;
         }
 
-        button {
-            background-color: var(--primary-color);
-            color: white;
+        /* VIRTUAALILUKIJA */
+        .scanner-bar {
+            background-color: var(--win-darkblue);
             padding: 12px 20px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 1em;
-            font-weight: bold;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .scanner-bar input {
+            width: 300px;
+            flex: none;
+            background-color: rgba(255,255,255,0.1);
+            border: 1px solid #ffffff;
+            color: #ffffff;
+        }
+        .scanner-bar input:focus {
+            background-color: #ffffff;
+            color: #000000;
         }
 
+        /* TAULUKKO */
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
+            margin-top: 10px;
         }
 
-        th, td {
-            padding: 12px;
+        th {
             text-align: left;
-            border-bottom: 1px solid #e2e8f0;
+            background-color: #f0f0f0;
+            padding: 10px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            border-bottom: 2px solid #cdcdcd;
         }
 
-        th { background-color: #f7fafc; }
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 0.95rem;
+        }
+
+        /* Nuolella valitun rivin Windows Metro -korostus */
+        .selected-row {
+            background-color: var(--win-blue) !important;
+            color: #ffffff !important;
+        }
 
         .total-box {
-            font-size: 1.5em;
-            font-weight: bold;
+            margin-top: 25px;
             text-align: right;
-            margin-top: 20px;
-            padding: 15px;
-            background: #f0fff4;
-            color: #22543d;
-            border-radius: 6px;
-            border: 1px solid #c6f6d5;
+            font-size: 1rem;
+            color: #666666;
+            line-height: 1.6;
+        }
+        .grand-total {
+            font-size: 1.8rem;
+            font-weight: 300;
+            color: var(--win-green);
         }
 
-        /* Maksuliittymän tyylit modalissa */
-        .modal {
+        /* WINDOWS 8 METRO DIALOGIT (POPUP) */
+        .metro-window {
             display: none;
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6);
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 100;
             justify-content: center;
             align-items: center;
-            z-index: 100;
         }
 
-        .modal-content {
-            background: white;
+        .metro-window-content {
+            background-color: var(--win-darkblue);
+            color: #ffffff;
             padding: 30px;
-            border-radius: 8px;
-            max-width: 500px;
-            width: 100%;
+            width: 550px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
         }
 
-        .payment-method-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
+        .metro-window-title {
+            font-size: 1.8rem;
+            font-weight: 300;
+            margin-bottom: 20px;
+            color: #ffffff;
+        }
+
+        .tile-group {
+            display: flex;
             gap: 10px;
             margin-bottom: 20px;
         }
 
-        .pay-btn {
-            background: #e2e8f0;
-            color: black;
+        /* Metro Tiili (Tile) osoittamaan maksutapaa */
+        .metro-tile {
+            background-color: var(--win-blue);
+            width: 120px;
+            height: 90px;
             padding: 10px;
-            font-size: 0.9em;
+            box-sizing: border-box;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: flex;
+            align-items: flex-end;
+            cursor: pointer;
+            opacity: 0.6;
         }
-        .pay-btn.selected {
-            background: var(--secondary-color);
-            color: white;
+        .metro-tile.active {
+            opacity: 1;
+            border: 3px solid #ffffff;
+            background-color: var(--win-teal);
         }
 
-        .badge {
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.85em;
-            font-weight: bold;
-            color: white;
+        /* KIRJAUTUMISRUUTU OVERLAY */
+        #loginOverlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--win-bg);
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
-        .bg-katsastus { background-color: #3182ce; }
-        .bg-vakuutus { background-color: #38a169; }
     </style>
 </head>
 <body>
 
-<div class="container">
-
-    <!-- ================= KIRJAUTUMISSIVU ================= -->
-    <div id="loginScreen">
-        <div class="login-box">
-            <h2>Turva & Katsastus - Kirjaudu</h2>
-            <p>Valitse virkailijatunnus alta aloittaaksesi vuoron.</p>
-            <div class="form-group">
-                <select id="tyontekijaValinta">
-                    <option value="Matti Meikäläinen (ID: 102)">Matti Meikäläinen (Kassa 1)</option>
-                    <option value="Anna Korhonen (ID: 105)">Anna Korhonen (Kassa 2)</option>
-                    <option value="Teemu Tarkastaja (ID: 201)">Teemu Tarkastaja (Hallipääte)</option>
-                </select>
-            </div>
-            <button onclick="kirjauduSisaan()" style="width: 100%;">KÄYNNISTÄ KASSA (Enter)</button>
+<!-- ================= 1. WINDOWS 8 LUKITUS / KIRJAUTUMISRUUTU ================= -->
+<div id="loginOverlay">
+    <div style="text-align: center; width: 350px;">
+        <h1 style="font-size: 3.5rem; margin-bottom: 10px;">Turva-System</h1>
+        <p style="font-weight: 300; font-size: 1.2rem; opacity: 0.8; margin-bottom: 40px;">Kassajärjestelmä v8.00</p>
+        
+        <div class="form-group" style="flex-direction: column; align-items: stretch;">
+            <label for="userSelect" style="color: #ffffff; margin-bottom: 8px; width: 100%; text-align: left;">Valitse käyttäjätili:</label>
+            <select id="userSelect" autofocus style="background-color: rgba(255,255,255,0.1); color: white; border: 2px solid white;">
+                <option value="Kassa 01 / Matti" style="color: black;">Matti Meikäläinen (Myynti)</option>
+                <option value="Kassa 02 / Anna" style="color: black;">Anna Korhonen (Vakuutukset)</option>
+                <option value="Pääkäyttäjä" style="color: black;">Järjestelmänvalvoja</option>
+            </select>
         </div>
-    </div>
-
-    <!-- ================= PÄÄJÄRJESTELMÄ ================= -->
-    <div id="mainSystem">
-        <header>
-            <h1>Turva & Katsastus Oy Pro</h1>
-            <div>
-                <span id="pvm"></span> | 
-                Virkailija: <strong id="nykyinenKayttaja">-</strong> 
-                <button onclick="kirjauduUlos()" style="background-color:#e53e3e; padding:5px 10px; font-size:0.8em; margin-left:15px;">Kirjaudu ulos (F12)</button>
-            </div>
-        </header>
-
-        <div class="tab-navigation">
-            <button class="tab-btn active" id="tabKassaBtn" onclick="vaihdaValilehti('kassa')">1. KASSAPÄÄTE (F6)</button>
-            <button class="tab-btn" id="tabRaportitBtn" onclick="vaihdaValilehti('raportit')">2. VUORORAPORTTI / TAPAHTUMAT (F7)</button>
-        </div>
-
-        <!-- VÄLILEHTI 1: KASSA -->
-        <div id="kassaTab" class="tab-content active">
-            <div class="shortcut-bar">
-                <div><span class="shortcut">F2</span> Uusi asiakas</div>
-                <div><span class="shortcut">F4</span> Kohdista tuotehakuun</div>
-                <div><span class="shortcut">F8</span> Avaa maksupääte</div>
-                <div><span class="shortcut">Lukija</span> Piipautus viivakoodilla hakee tuotteen heti koriin.</div>
-            </div>
-
-            <!-- Läpinäkymätön "virtuaalinen lukija" testausta varten -->
-            <div class="panel" style="background: #fffaf0; margin-bottom: 15px; border: 1px dashed var(--accent-color);">
-                <label style="color:#b7791f;"><strong>Viivakoodinlukija (Simulaatio):</strong> Klikkaa tähän ja lue koodi (esim. kirjoita <code>1111</code> tai <code>2222</code> ja paina Enter)</label>
-                <input type="text" id="viivakoodiSyotto" placeholder="Lue viivakoodi lukijalla tähän...">
-            </div>
-
-            <div class="grid">
-                <div class="panel">
-                    <h2>Kassan syöttökentät</h2>
-                    <div class="form-group">
-                        <label for="rekisteriId">Rekisterinumero</label>
-                        <input type="text" id="rekisteriId" tabindex="1" placeholder="ABC-123" style="text-transform: uppercase;">
-                    </div>
-                    <div class="form-group">
-                        <label for="asiakasId">Asiakas / HETU</label>
-                        <input type="text" id="asiakasId" tabindex="2" placeholder="010190-A123">
-                    </div>
-                    <div class="form-group">
-                        <label for="tuoteTyyppi">Tuote/Palveluhaku (F4)</label>
-                        <select id="tuoteTyyppi" tabindex="3">
-                            <option value="Määräaikaiskatsastus" data-hinta="55.00" data-luokka="Katsastus" data-koodi="1111">Määräaikaiskatsastus (Koodi: 1111) - 55,00 €</option>
-                            <option value="Päästömittaus" data-hinta="25.00" data-luokka="Katsastus" data-koodi="2222">Päästömittaus (Koodi: 2222) - 25,00 €</option>
-                            <option value="Liikennevakuutus" data-hinta="120.00" data-luokka="Vakuutus" data-koodi="3333">Liikennevakuutus (Koodi: 3333) - 120,00 €</option>
-                            <option value="Kaskovakuutus" data-hinta="350.00" data-luokka="Vakuutus" data-koodi="4444">Kaskovakuutus (Koodi: 4444) - 350,00 €</option>
-                        </select>
-                    </div>
-                    <button id="lisaaBtn" onclick="lisaaTuote()" tabindex="4" style="width:100%;">LISÄÄ KORIIN (Enter)</button>
-                </div>
-
-                <div class="panel">
-                    <h2>Ostoskori</h2>
-                    <p><strong>Ajoneuvo:</strong> <span id="koosteAuto">-</span> | <strong>Asiakas:</strong> <span id="koosteAsiakas">-</span></p>
-                    <table>
-                        <thead>
-                            <tr><th>Tuote</th><th>Tyyppi</th><th style="text-align: right;">Hinta</th></tr>
-                        </thead>
-                        <tbody id="ostoskoriRivit"></tbody>
-                    </table>
-                    <div class="total-box">Yhteensä: <span id="yhteensaSumma">0.00</span> €</div>
-                    <button id="maksaBtn" onclick="avaaMaksupaate()" style="background-color: var(--secondary-color); margin-top: 15px; width: 100%;">MAKSA TAPAHTUMA (F8)</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- VÄLILEHTI 2: RAPORTIT -->
-        <div id="raportitTab" class="tab-content">
-            <div class="panel">
-                <h2>Vuoroloki / Kassatapahtumat</h2>
-                <table>
-                    <thead>
-                        <tr><th>Aika</th><th>Virkailija</th><th>Kohde</th><th>Summa</th><th>Maksutapa</th></tr>
-                    </thead>
-                    <tbody id="raporttiRivit"></tbody>
-                </table>
-            </div>
-        </div>
+        <br>
+        <p style="font-size: 0.9rem; opacity: 0.6;">Paina [ENTER] kirjautuaksesi sisään</p>
     </div>
 </div>
 
-<!-- ================= INTEGRUOTU MAKSUPÄÄTEMODAL ================= -->
-<div id="maksuModal" class="modal">
-    <div class="modal-content">
-        <h2>Maksupääte / Kassalipas</h2>
-        <div style="font-size: 1.3em; margin-bottom: 15px;">Maksettava summa: <strong id="modalMaksettava">0.00</strong> €</div>
+<!-- ================= 2. PÄÄKÄYTTÖLIITTYMÄ ================= -->
+<div class="metro-container">
+    <header>
+        <div>
+            <p style="font-size: 0.9rem; color: var(--win-teal); margin: 0; text-transform: uppercase; font-weight: 600;">Pöytäsovellus</p>
+            <h1>Turva & Katsastus Oy</h1>
+        </div>
+        <div class="user-status">
+            Käyttäjä: <strong id="winUser">-</strong><br>
+            <span id="winPvm">26.05.2012</span>
+        </div>
+    </header>
+
+    <!-- WINDOWS 8 ALAPALKKI / APPMENU - PIKANÄPPÄIMET -->
+    <div class="app-bar">
+        <div class="app-bar-item"><span>[F1]</span> Tyhjennä</div>
+        <div class="app-bar-item"><span>[F3]</span> Rekisteri</div>
+        <div class="app-bar-item"><span>[F5]</span> Alennus-%</div>
+        <div class="app-bar-item"><span>[F6]</span> Muuta hinta</div>
+        <div class="app-bar-item"><span>[F7]</span> Poista rivi</div>
+        <div class="app-bar-item"><span>[F8]</span> Maksa</div>
+        <div class="app-bar-item"><span>[F11]</span> Hyvitys</div>
+        <div class="app-bar-item"><span>[F12]</span> Lukitse</div>
+    </div>
+
+    <!-- ERILLINEN VIIVAKOODINLUKIJAN REIPAS SYÖTTÖ -->
+    <div class="scanner-bar">
+        <div style="font-size: 0.9rem; font-weight: 300;">Viivakoodinlukija (Syötä pikakoodi 11, 22, 33 tai 44):</div>
+        <input type="text" id="barcodeInput" placeholder="Lue viivakoodi tästä...">
+    </div>
+
+    <div class="workspace">
         
-        <div class="payment-method-grid">
-            <button class="pay-btn selected" id="payKateinen" onclick="valitseMaksutapa('Käteinen')">KÄTEINEN</button>
-            <button class="pay-btn" id="payKortti" onclick="valitseMaksutapa('Kortti')">KORTTI</button>
-            <button class="pay-btn" id="payLasku" onclick="valitseMaksutapa('Lasku/Osamaksu')">OSAMAKSU</button>
+        <!-- MODUULI 1: VAKUUTUKSET & KOHTEET -->
+        <div class="metro-panel">
+            <div class="panel-header">Vakuutussopimukset & Myynti</div>
+            
+            <div class="form-group">
+                <label for="regInput">Rekisteritunnus:</label>
+                <input type="text" id="regInput" placeholder="ABC-123">
+            </div>
+            <div class="form-group">
+                <label for="hetuInput">Asiakas / HETU:</label>
+                <input type="text" id="hetuInput" placeholder="010180-123X">
+            </div>
+
+            <div class="form-group" style="margin-top: 25px;">
+                <label for="itemSelect">Valitse tuote:</label>
+                <select id="itemSelect">
+                    <option value="Määräaikaiskatsastus" data-hinta="55.00" data-koodi="11">Määräaikaiskatsastus — 55,00 €</option>
+                    <option value="Päästömittaus" data-hinta="25.00" data-koodi="22">Päästömittaus — 25,00 €</option>
+                    <option value="Liikennevakuutus perus" data-hinta="140.00" data-koodi="33">Liikennevakuutus perus — 140,00 €</option>
+                    <option value="Kaskovakuutus laaja" data-hinta="380.00" data-koodi="44">Kaskovakuutus laaja — 380,00 €</option>
+                </select>
+            </div>
+            
+            <p style="font-size: 0.85rem; color: #777; margin-top: 30px;">
+                Navigointi: Liiku kentissä [ENTER]- tai [TAB]-näppäimellä. Tuote siirtyy kuittiin Enterillä tuotevalinnasta.
+            </p>
         </div>
 
-        <!-- KÄTEISMAKSUN LASKURI -->
-        <div id="kateinenAlue" class="form-group">
-            <label for="saatuKateinen">Asiakkaalta saatu käteissumma (€)</label>
-            <input type="number" id="saatuKateinen" step="0.01" placeholder="0.00" oninput="laskeVaihtoraha()">
-            <div style="margin-top: 10px; font-size: 1.2em; color: #c53030;">
-                Takaisin / Vaihtoraha: <strong id="vaihtorahaKentta">0.00</strong> €
+        <!-- MODUULI 2: OSTOSKORI & RIVIMUUTOKSET -->
+        <div class="metro-panel">
+            <div class="panel-header">Kassatapahtuman ostoskori</div>
+            <p style="font-size: 0.85rem; color: #666; margin-top: -10px; margin-bottom: 15px;">
+                Valitse rivi nuolinäppäimillä [↑ / ↓] tehdäksesi korjauksia.
+            </p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 15%;">Tila</th>
+                        <th style="width: 45%;">Tuotekuvaus</th>
+                        <th style="width: 20%;">Kohde</th>
+                        <th style="width: 20%; text-align: right;">Hinta (€)</th>
+                    </tr>
+                </thead>
+                <tbody id="cartRows">
+                    <!-- Rivit generoidaan JavaScriptillä -->
+                </tbody>
+            </table>
+
+            <div class="total-box">
+                Veroton välisumma: <span id="taxFreeSum">0.00</span> €<br>
+                Arvonlisävero ALV 24%: <span id="taxSum">0.00</span> €<br>
+                <div class="grand-total">Yhteensä: <span id="totalSum">0.00</span> €</div>
             </div>
         </div>
 
-        <!-- KORTTIMAKSUN SIMULAATIO -->
-        <div id="korttiAlue" class="form-group" style="display:none; background:#ebf8ff; padding:15px; border-radius:6px; border:1px solid #90cdf4;">
-            <div id="korttiTilaTeksti" style="font-weight:bold; color:#2b6cb0;">Odotetaan korttia / lähimaksua...</div>
+    </div>
+</div>
+
+<!-- ================= WINDOWS 8 PANO / KORJAUSPOPUP ================= -->
+<div id="actionWindow" class="metro-window">
+    <div class="metro-window-content">
+        <div class="metro-window-title" id="actionWindowTitle">Ylikirjoitus</div>
+        <div class="form-group">
+            <label id="actionLabel" style="color: white; width: 200px;">Syötä arvo:</label>
+            <input type="number" id="actionInput" step="0.01" style="border: none;">
+        </div>
+        <br><br>
+        <p style="font-size: 0.85rem; opacity: 0.7; margin: 0;">[ENTER] Vahvista muutokset | [ESC] Peruuta</p>
+    </div>
+</div>
+
+<!-- ================= WINDOWS 8 MAKSUPÄÄTEMODAL ================= -->
+<div id="paymentWindow" class="metro-window">
+    <div class="metro-window-content" style="width: 600px;">
+        <div class="metro-window-title">Maksupääteohjaus</div>
+        <p>Suoritettava veloitus: <strong style="font-size: 1.5rem; color: var(--win-teal);"><span id="modalMaksettava">0.00</span> €</strong></p>
+        
+        <p style="font-size: 0.9rem; opacity: 0.8;">Valitse maksutapa numeronäppäimillä [1, 2, 3]:</p>
+        
+        <!-- Tiiliryhmä (Tiles) -->
+        <div class="tile-group">
+            <div class="metro-tile active" id="tile1">1<br><br>KÄTEINEN</div>
+            <div class="metro-tile" id="tile2">2<br><br>KORTTI</div>
+            <div class="metro-tile" id="tile3">3<br><br>OSAMAKSU</div>
+        </div>
+        
+        <!-- Käteisalue -->
+        <div id="cashArea" style="margin-top: 20px;">
+            <div class="form-group">
+                <label style="color: white;">Asiakkaalta saatu (€):</label>
+                <input type="number" id="cashReceived" step="0.01" style="border: none;">
+            </div>
+            <p style="font-size: 1.2rem;">Takaisin vaihtorahaa: <strong style="color: var(--win-teal);"><span id="changeDisplay">0.00</span> €</strong></p>
         </div>
 
-        <!-- OSAMAKSUN / LASKUN VALINTA -->
-        <div id="laskuAlue" class="form-group" style="display:none; background:#f0fff4; padding:15px; border-radius:6px; border:1px solid #9ae6b4;">
-            <label for="osamaksuErät">Valitse osamaksuerät:</label>
-            <select id="osamaksuErät" onchange="laskeOsamaksuEra()">
-                <option value="3">3 kuukautta</option>
-                <option value="6">6 kuukautta</option>
-                <option value="12">12 kuukautta</option>
-            </select>
-            <div style="margin-top:10px;" id="osamaksuInfo">Eräsuuruus: -</div>
+        <!-- Korttialue -->
+        <div id="creditArea" style="display: none; background-color: rgba(255,255,255,0.1); padding: 15px; margin-top: 20px;">
+            Varmistetaan sirumaksua... Pankkiyhteys muodostettu (Laite ID: POS-82).
         </div>
 
-        <button id="vahvistaMaksuBtn" onclick="suoritaMaksu()" style="background-color: var(--secondary-color); width: 100%; margin-top:15px;">VAHVISTA MAKSU (Enter)</button>
-        <button onclick="suljeMaksupaate()" style="background-color: #718096; width: 100%; margin-top:5px;">PERUUTA (Esc)</button>
+        <!-- Osamaksualue -->
+        <div id="invoiceArea" style="display: none; margin-top: 20px;">
+            <div class="form-group">
+                <label style="color: white;">Rahoitusaika (kk):</label>
+                <select id="invoiceMonths" style="border: none;">
+                    <option value="3">3 kuukautta</option>
+                    <option value="6">6 kuukautta</option>
+                    <option value="12">12 kuukautta</option>
+                </select>
+            </div>
+            <p id="invoiceInfo" style="font-size: 1.1rem;">Eräsuuruus: -</p>
+        </div>
+
+        <br><br>
+        <p style="font-size: 0.85rem; opacity: 0.7; margin: 0;">[ENTER] Hyväksy ja tulosta kuitti | [ESC] Palaa myyntiin</p>
     </div>
 </div>
 
 <script>
-    document.getElementById('pvm').innerText = new Date().toLocaleDateString('fi-FI');
-
     let ostoskori = [];
-    let kassanHistoria = [];
-    let kokonaissumma = 0;
-    let nykyinenMaksutapa = "Käteinen";
-    let nykyinenKayttaja = "";
+    let loppusumma = 0;
+    let valittuRiviIndeksi = 0;
+    let nykyinenMaksutapa = "KÄTEINEN";
+    let aktiivinenToiminto = "";
 
-    const rekisteriInput = document.getElementById('rekisteriId');
-    const asiakasInput = document.getElementById('asiakasId');
-    const tuoteSelect = document.getElementById('tuoteTyyppi');
-    const viivakoodiInput = document.getElementById('viivakoodiSyotto');
-    const modal = document.getElementById('maksuModal');
+    // Elementit
+    const loginOverlay = document.getElementById('loginOverlay');
+    const userSelect = document.getElementById('userSelect');
+    const dosUser = document.getElementById('winUser');
+    const regInput = document.getElementById('regInput');
+    const hetuInput = document.getElementById('hetuInput');
+    const itemSelect = document.getElementById('itemSelect');
+    const barcodeInput = document.getElementById('barcodeInput');
+    const cartRows = document.getElementById('cartRows');
+    
+    const actionWindow = document.getElementById('actionWindow');
+    const actionWindowTitle = document.getElementById('actionWindowTitle');
+    const actionLabel = document.getElementById('actionLabel');
+    const actionInput = document.getElementById('actionInput');
+    
+    const paymentWindow = document.getElementById('paymentWindow');
+    const cashReceived = document.getElementById('cashReceived');
+    const changeDisplay = document.getElementById('changeDisplay');
+    const invoiceMonths = document.getElementById('invoiceMonths');
 
-    // --- 1. KIRJAUTUMISJÄRJESTELMÄ ---
-    function kirjauduSisaan() {
-        nykyinenKayttaja = document.getElementById('tyontekijaValinta').value;
-        document.getElementById('nykyinenKayttaja').innerText = nykyinenKayttaja;
-        document.getElementById('loginScreen').style.display = 'none';
-        document.getElementById('mainSystem').style.display = 'block';
-        rekisteriInput.focus();
-    }
+    // Asetetaan nykyinen pvm (Windows 8 julkaistiin loppuvuodesta 2012)
+    document.getElementById('winPvm').innerText = new Date().toLocaleDateString('fi-FI');
 
-    function kirjauduUlos() {
-        nykyinenKayttaja = "";
-        document.getElementById('loginScreen').style.display = 'flex';
-        document.getElementById('mainSystem').style.display = 'none';
-        ostoskori = [];
-        paivitaOstoskori();
-    }
+    // KIRJAUTUMINEN
+    userSelect.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            dosUser.innerText = userSelect.value;
+            loginOverlay.style.display = 'none';
+            regInput.focus();
+        }
+    });
 
-    // --- 2. VIIVAKOODINLUKIJATUKI ---
-    // Viivakoodilukijat toimivat syöttämällä merkit nopeasti ja lähettämällä lopuksi "Enter".
-    viivakoodiInput.addEventListener('keydown', function(e) {
+    // VIIVAKOODINLUKIJA
+    barcodeInput.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') {
             e.preventDefault();
-            const koodi = viivakoodiInput.value.trim();
-            
-            // Etsitään tuote, jonka koodi vastaa luettua koodia
+            const koodi = barcodeInput.value.trim();
             let loytyi = false;
-            for (let i = 0; i < tuoteSelect.options.length; i++) {
-                if (tuoteSelect.options[i].getAttribute('data-koodi') === koodi) {
-                    tuoteSelect.selectedIndex = i;
-                    lisaaTuote(); // Lisää suoraan ostoskoriin
+            for(let i=0; i<itemSelect.options.length; i++) {
+                if(itemSelect.options[i].getAttribute('data-koodi') === koodi) {
+                    itemSelect.selectedIndex = i;
+                    lisaaTuoteRivi();
                     loytyi = true;
                     break;
                 }
             }
-            if(!loytyi && koodi !== "") {
-                alert("Tuntematon viivakoodi: " + koodi);
-            }
-            viivakoodiInput.value = ""; // Tyhjennetään lukija seuraavaa varten
-            viivakoodiInput.focus();
+            if(!loytyi && koodi !== "") alert("Virhe: Viivakoodia ei löydy järjestelmästä.");
+            barcodeInput.value = "";
+            barcodeInput.focus();
         }
     });
 
-    // --- 3. KASSATOIMINNOT ---
-    function vaihdaValilehti(tabi) {
-        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    // TUOTTEEN LISÄYS KORIIN
+    function lisaaTuoteRivi() {
+        const rekkari = regInput.value.toUpperCase() || "SUORAMYYNTI";
+        const opt = itemSelect.options[itemSelect.selectedIndex];
+        const nimi = opt.value;
+        const hinta = parseFloat(opt.getAttribute('data-hinta'));
 
-        if (tabi === 'kassa') {
-            document.getElementById('kassaTab').classList.add('active');
-            document.getElementById('tabKassaBtn').classList.add('active');
-            rekisteriInput.focus();
-        } else if (tabi === 'raportit') {
-            document.getElementById('raportitTab').classList.add('active');
-            document.getElementById('tabRaportitBtn').classList.add('active');
-            paivitaRaporttiTaulukko();
+        ostoskori.push({ tila: "MYYNTI", nimi: nimi, rekkari: rekkari, hinta: hinta });
+        valittuRiviIndeksi = ostoskori.length - 1;
+        paivitaKassa();
+    }
+
+    // KASSALASKENTA JA ALV 24%
+    function paivitaKassa() {
+        cartRows.innerHTML = '';
+        loppusumma = 0;
+
+        ostoskori.forEach((t, index) => {
+            let korostusLuokka = (index === valittuRiviIndeksi) ? "class='selected-row'" : "";
+            let tilaTeksti = (t.tila === "HYVITYS") ? "HYV" : "MYYNTI";
+            
+            cartRows.innerHTML += `<tr ${korostusLuokka}>
+                <td><strong>${tilaTeksti}</strong></td>
+                <td>${t.nimi}</td>
+                <td>${t.rekkari}</td>
+                <td style="text-align: right;">${t.hinta.toFixed(2)} €</td>
+            </tr>`;
+            loppusumma += t.hinta;
+        });
+
+        // Suomen ALV-kanta vuonna 2013-2024 oli 24%
+        let veroton = loppusumma / 1.24;
+        let alv = loppusumma - veroton;
+
+        document.getElementById('taxFreeSum').innerText = veroton.toFixed(2);
+        document.getElementById('taxSum').innerText = alv.toFixed(2);
+        document.getElementById('totalSum').innerText = loppusumma.toFixed(2);
+    }
+
+    // POPUP-IKKUNOIDEN KÄSITTELY
+    function avaaKorjausIkkuna(tyyppi) {
+        if(ostoskori.length === 0) return;
+        aktiivinenToiminto = tyyppi;
+        actionWindow.style.display = 'flex';
+        actionInput.value = "";
+        
+        if (tyyppi === 'ALENNUS') {
+            actionWindowTitle.innerText = "Riviraportti - Alennusprosentti";
+            actionLabel.innerText = "Anna alennus (%):";
+        } else if (tyyppi === 'HINTA') {
+            actionWindowTitle.innerText = "Riviraportti - Manuaalinen hinnanmuutos";
+            actionLabel.innerText = "Uusi hinta (€):";
+        }
+        setTimeout(() => actionInput.focus(), 50);
+    }
+
+    function ajaKorjausRiviin() {
+        let arvo = parseFloat(actionInput.value) || 0;
+        let rivi = ostoskori[valittuRiviIndeksi];
+
+        if (aktiivinenToiminto === 'ALENNUS') {
+            if (arvo > 0 && arvo <= 100) {
+                rivi.hinta = rivi.hinta * (1 - (arvo / 100));
+                rivi.nimi += ` (-${arvo}%)`;
+            }
+        } else if (aktiivinenToiminto === 'HINTA') {
+            rivi.hinta = arvo;
+            rivi.nimi += " (Muutettu)";
+        }
+        
+        actionWindow.style.display = 'none';
+        paivitaKassa();
+        regInput.focus();
+    }
+
+    // HYVITYSTILAAN MUUTTAMINEN
+    function suoritaHyvitysKaikille() {
+        if(ostoskori.length === 0) return;
+        ostoskori.forEach(rivi => {
+            if(rivi.hinta > 0) {
+                rivi.hinta = -rivi.hinta;
+                rivi.tila = "HYVITYS";
+            }
+        });
+        paivitaKassa();
+        alert("Huomio: Kaikki korissa olevat rivit muutettu hyvityksiksi.");
+    }
+
+    // MAKSUPÄÄTE & LASKURIT
+    function avaaMaksutaso() {
+        if(ostoskori.length === 0) return;
+        document.getElementById('modalMaksettava').innerText = loppusumma.toFixed(2);
+        paymentWindow.style.display = 'flex';
+        vaihdaMaksutapa('KÄTEINEN');
+    }
+
+    function vaihdaMaksutapa(tapa) {
+        nykyinenMaksutapa = tapa;
+        
+        // Päivitetään Tiles-tiilien valinnat
+        document.getElementById('tile1').classList.remove('active');
+        document.getElementById('tile2').classList.remove('active');
+        document.getElementById('tile3').classList.remove('active');
+        
+        document.getElementById('cashArea').style.display = 'none';
+        document.getElementById('creditArea').style.display = 'none';
+        document.getElementById('invoiceArea').style.display = 'none';
+
+        if(tapa === 'KÄTEINEN') {
+            document.getElementById('tile1').classList.add('active');
+            document.getElementById('cashArea').style.display = 'block';
+            cashReceived.value = "";
+            changeDisplay.innerText = "0.00";
+            setTimeout(() => cashReceived.focus(), 50);
+        } else if(tapa === 'KORTTI') {
+            document.getElementById('tile2').classList.add('active');
+            document.getElementById('creditArea').style.display = 'block';
+        } else if(tapa === 'OSAMAKSU') {
+            document.getElementById('tile3').classList.add('active');
+            document.getElementById('invoiceArea').style.display = 'block';
+            laskeOsamaksuErä();
+            setTimeout(() => invoiceMonths.focus(), 50);
         }
     }
 
-    function lisaaTuote() {
-        const rekkari = rekisteriInput.value.trim().toUpperCase() || "EI REK.";
-        const asiakas = asiakasInput.value.trim() || "KÄTEISASIAKAS";
+    cashReceived.addEventListener('input', function() {
+        let saatu = parseFloat(cashReceived.value) || 0;
+        let erotus = saatu - loppusumma;
+        changeDisplay.innerText = erotus > 0 ? erotus.toFixed(2) : "0.00";
+    });
 
-        document.getElementById('koosteAuto').innerText = rekkari;
-        document.getElementById('koosteAsiakas').innerText = asiakas;
+    invoiceMonths.addEventListener('change', laskeOsamaksuErä);
 
-        const valittuOptio = tuoteSelect.options[tuoteSelect.selectedIndex];
-        const tuoteNimi = valittuOptio.value;
-        const hinta = parseFloat(valittuOptio.getAttribute('data-hinta'));
-        const luokka = valittuOptio.getAttribute('data-luokka');
-
-        ostoskori.push({ nimi: tuoteNimi, hinta: hinta, luokka: luokka, rekkari: rekkari, asiakas: asiakas });
-        paivitaOstoskori();
+    function laskeOsamaksuErä() {
+        let kk = parseInt(invoiceMonths.value);
+        let kkEra = loppusumma / kk;
+        document.getElementById('invoiceInfo').innerHTML = `Kuukausierä: <strong>${kkEra.toFixed(2)} € / kk</strong> (${kk} kuukauden sopimus)`;
     }
 
-    function paivitaOstoskori() {
-        const tbody = document.getElementById('ostoskoriRivit');
-        tbody.innerHTML = '';
-        kokonaissumma = 0;
+    // GLOBAALIT NÄPPÄINKOMENNOT (WINDOWS 8 LOMAKEKAAPPARI)
+    window.addEventListener('keydown', function(e) {
+        if(['F1','F3','F5','F6','F7','F8','F11','F12'].includes(e.key)) e.preventDefault();
 
-        ostoskori.forEach(tuote => {
-            tbody.innerHTML += `<tr><td>${tuote.nimi}</td><td><span class="badge ${tuote.luokka === 'Katsastus' ? 'bg-katsastus' : 'bg-vakuutus'}">${tuote.luokka}</span></td><td style="text-align: right;">${tuote.hinta.toFixed(2)} €</td></tr>`;
-            kokonaissumma += tuote.hinta;
-        });
-        document.getElementById('yhteensaSumma').innerText = kokonaissumma.toFixed(2);
-    }
+        if (loginOverlay.style.display !== 'none') return;
 
-    // --- 4. MAKSUTAVAT & LASKURIT ---
-    function avaaMaksupaate() {
-        if (ostoskori.length === 0) {
-            alert('Ostoskori on tyhjä!');
+        // Korjausikkunan ollessa auki
+        if (actionWindow.style.display === 'flex') {
+            if (e.key === 'Escape') {
+                actionWindow.style.display = 'none';
+                regInput.focus();
+            }
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                ajaKorjausRiviin();
+            }
             return;
         }
-        document.getElementById('modalMaksettava').innerText = kokonaissumma.toFixed(2);
-        modal.style.display = 'flex';
-        valitseMaksutapa('Käteinen');
-    }
 
-    function valitseMaksutapa(tapa) {
-        nykyinenMaksutapa = tapa;
-        document.querySelectorAll('.pay-btn').forEach(b => b.classList.remove('selected'));
-        
-        document.getElementById('kateinenAlue').style.display = 'none';
-        document.getElementById('korttiAlue').style.display = 'none';
-        document.getElementById('laskuAlue').style.display = 'none';
+        // Maksupäätteen ollessa auki
+        if (paymentWindow.style.display === 'flex') {
+            if (e.key === 'Escape') {
+                paymentWindow.style.display = 'none';
+                regInput.focus();
+            }
+            if (e.key === '1') vaihdaMaksutapa('KÄTEINEN');
+            if (e.key === '2') vaihdaMaksutapa('KORTTI');
+            if (e.key === '3') vaihdaMaksutapa('OSAMAKSU');
 
-        if (tapa === 'Käteinen') {
-            document.getElementById('payKateinen').classList.add('selected');
-            document.getElementById('kateinenAlue').style.display = 'block';
-            document.getElementById('saatuKateinen').value = "";
-            document.getElementById('vaihtorahaKentta').innerText = "0.00";
-            setTimeout(() => document.getElementById('saatuKateinen').focus(), 100);
-        } else if (tapa === 'Kortti') {
-            document.getElementById('payKortti').classList.add('selected');
-            document.getElementById('korttiAlue').style.display = 'block';
-            simuloiKorttipaate();
-        } else if (tapa === 'Lasku/Osamaksu') {
-            document.getElementById('payLasku').classList.add('selected');
-            document.getElementById('laskuAlue').style.display = 'block';
-            laskeOsamaksuEra();
+            if (e.key === 'Enter') {
+                if (document.activeElement === cashReceived && (parseFloat(cashReceived.value) || 0) < loppusumma && loppusumma > 0) {
+                    alert("Virhe: Asiakkaan antama rahamäärä ei riitä loppusummaan.");
+                    return;
+                }
+                alert("Tapahtuma valmis. Kuitti tallennettu tietokantaan.");
+                paymentWindow.style.display = 'none';
+                ostoskori = [];
+                paivitaKassa();
+                regInput.value = ""; hetuInput.value = "";
+                regInput.focus();
+            }
+            return;
         }
-    }
 
-    function laskeVaihtoraha() {
-        const saatu = parseFloat(document.getElementById('saatuKateinen').value) || 0;
-        const vaihtoraha = saatu - kokonaissumma;
-        document.getElementById('vaihtorahaKentta').innerText = vaihtoraha > 0 ? vaihtoraha.toFixed(2) : "0.00";
-    }
+        // Liikkuminen ostoskorin riveillä ylös/alas
+        if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (valittuRiviIndeksi > 0) { valittuRiviIndeksi--; paivitaKassa(); }
+        }
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            if (valittuRiviIndeksi < ostoskori.length - 1) { valittuRiviIndeksi++; paivitaKassa(); }
+        }
 
-    function simuloiKorttipaate() {
-        const tila = document.getElementById('korttiTilaTeksti');
-        tila.innerText = "LUE KORTTI / SYÖTÄ PIN-KOODI...";
-        tila.style.color = "#2b6cb0";
-        
-        setTimeout(() => {
-            tila.innerText = "YHDISTETÄÄN PANKKIIN...";
-            setTimeout(() => {
-                tila.innerText = "MAKSU HYVÄKSYTTY! Voit painaa Enter vahvistaaksesi.";
-                tila.style.color = "#2f855a";
-            }, 1000);
-        }, 1200);
-    }
-
-    function laskeOsamaksuEra() {
-        const kk = parseInt(document.getElementById('osamaksuErät').value);
-        const era = kokonaissumma / kk;
-        document.getElementById('osamaksuInfo').innerHTML = `Kuukausierä: <strong>${era.toFixed(2)} € / kk</strong> (${kk} kuukauden ajan)`;
-    }
-
-    function suoritaMaksu() {
-        if (nykyinenMaksutapa === 'Käteinen') {
-            const saatu = parseFloat(document.getElementById('saatuKateinen').value) || 0;
-            if (saatu < kokonaissumma) {
-                alert("Asiakkaan antama summa ei riitä!");
-                return;
+        // Funktionäppäinkäskyt
+        if (e.key === 'F1') {
+            ostoskori = []; paivitaKassa(); regInput.value = ""; hetuInput.value = ""; regInput.focus();
+        }
+        if (e.key === 'F3') { regInput.focus(); }
+        if (e.key === 'F5') { avaaKorjausIkkuna('ALENNUS'); }
+        if (e.key === 'F6') { avaaKorjausIkkuna('HINTA'); }
+        if (e.key === 'F7') {
+            if(ostoskori.length > 0) {
+                ostoskori.splice(valittuRiviIndeksi, 1);
+                if(valittuRiviIndeksi > 0) valittuRiviIndeksi--;
+                paivitaKassa();
             }
         }
-
-        // Tallennetaan raporttitietoihin
-        kassanHistoria.push({
-            aika: new Date().toLocaleTimeString('fi-FI'),
-            virkailija: nykyinenKayttaja,
-            kohde: ostoskori[0].rekkari + " (" + ostoskori.length + " tuotetta)",
-            summa: kokonaissumma,
-            maksutapa: nykyinenMaksutapa
-        });
-
-        alert("Tapahtuma valmis! Kuitti tulostettu.");
-        suljeMaksupaate();
-        tyhjennaKassa();
-    }
-
-    function suljeMaksupaate() {
-        modal.style.display = 'none';
-        rekisteriInput.focus();
-    }
-
-    function tyhjennaKassa() {
-        ostoskori = [];
-        kokonaissumma = 0;
-        rekisteriInput.value = '';
-        asiakasInput.value = '';
-        document.getElementById('koosteAuto').innerText = '-';
-        document.getElementById('koosteAsiakas').innerText = '-';
-        paivitaOstoskori();
-    }
-
-    function paivitaRaporttiTaulukko() {
-        const tbody = document.getElementById('raporttiRivit');
-        tbody.innerHTML = '';
-        kassanHistoria.forEach(h => {
-            tbody.innerHTML += `<tr><td>${h.aika}</td><td>${h.virkailija}</td><td>${h.kohde}</td><td>${h.summa.toFixed(2)} €</td><td><strong>${h.maksutapa}</strong></td></tr>`;
-        });
-    }
-
-    // --- NÄPPÄINKOMENNOT ---
-    window.addEventListener('keydown', function(e) {
-        // Jos ollaan kirjautumissivulla
-        if (document.getElementById('loginScreen').style.display !== 'none') {
-            if (e.key === 'Enter') { kirjauduSisaan(); }
-            return;
+        if (e.key === 'F8') { avaaMaksutaso(); }
+        if (e.key === 'F11') { suoritaHyvitysKaikille(); }
+        if (e.key === 'F12') {
+            loginOverlay.style.display = 'flex';
+            userSelect.focus();
         }
 
-        // Globaalit pikanäppäimet
-        if (e.key === 'F6') { e.preventDefault(); vaihdaValilehti('kassa'); }
-        if (e.key === 'F7') { e.preventDefault(); vaihdaValilehti('raportit'); }
-        if (e.key === 'F12') { e.preventDefault(); kirjauduUlos(); }
-
-        // Kassan ollessa aktiivinen
-        if (document.getElementById('kassaTab').classList.contains('active')) {
-            if (e.key === 'F2') { e.preventDefault(); tyhjennaKassa(); }
-            if (e.key === 'F4') { e.preventDefault(); tuoteSelect.focus(); }
-            if (e.key === 'F8') { e.preventDefault(); avaaMaksupaate(); }
-            
-            if (modal.style.display === 'flex') {
-                if (e.key === 'Escape') { suljeMaksupaate(); }
-                // Vaihtoehdot maksutavoille modalissa pikanäppäiminä
-                if (e.key === '1') valitseMaksutapa('Käteinen');
-                if (e.key === '2') valitseMaksutapa('Kortti');
-                if (e.key === '3') valitseMaksutapa('Lasku/Osamaksu');
+        // Lomakenavigointi Enterillä
+        if (e.key === 'Enter') {
+            if (document.activeElement === regInput) {
+                e.preventDefault();
+                hetuInput.focus();
+            } else if (document.activeElement === hetuInput) {
+                e.preventDefault();
+                itemSelect.focus();
+            } else if (document.activeElement === itemSelect) {
+                e.preventDefault();
+                lisaaTuoteRivi();
             }
         }
     });
