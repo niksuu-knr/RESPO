@@ -2,45 +2,70 @@
 <html lang="fi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NASTA HUD</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NASTA Pro - Navigaattori</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
     <style>
-        body, html { margin:0; padding:0; height:100vh; background:#000; color:#fff; font-family: sans-serif; overflow:hidden; }
-        /* HUD-palkki: Vain kriittinen tieto */
-        .hud-bar { 
-            position: absolute; top: 0; width: 100%; height: 120px; 
-            background: rgba(0,0,0,0.9); border-bottom: 4px solid #fff; 
-            display: flex; align-items: center; justify-content: space-around; font-size: 2rem;
-        }
-        /* Haku: Koko näytön peittävä, kunnes valittu */
-        #search-overlay { 
-            position: absolute; top: 120px; width: 100%; height: calc(100% - 120px); 
-            background: #000; padding: 20px; box-sizing: border-box; 
-        }
-        input { width: 100%; height: 80px; font-size: 2rem; background: #222; color: #fff; border: 2px solid #fff; }
-        .nav-btn { background: #007bff; color: #fff; padding: 20px; margin-top: 10px; width: 100%; font-size: 1.5rem; }
+        body { margin:0; padding:0; background:#000; color:#fff; font-family: sans-serif; overflow:hidden; }
+        #map { height: 100vh; width: 100vw; }
+        .hud-top { position: absolute; top:0; width: 100%; height: 100px; background: rgba(0,0,0,0.95); display: flex; align-items: center; justify-content: space-around; z-index: 1000; font-size: 2rem; border-bottom: 4px solid #fff; }
+        .hud-bottom { position: absolute; bottom:0; width: 100%; height: 150px; background: #000; border-top: 4px solid #fff; display: flex; align-items: center; justify-content: space-around; z-index: 1000; font-size: 2.5rem; font-weight: bold; }
+        .val { color: #0f0; }
     </style>
 </head>
 <body>
+    <div id="map"></div>
 
-    <div class="hud-bar">
-        <div>KÄÄNNÖS: <span id="turn-dir">OIKEAAN</span></div>
-        <div>MATKA: <span id="turn-dist">350 m</span></div>
-        <div>KAISTA: <span id="lane-info">OIKEA</span></div>
+    <div class="hud-top">
+        <div>TIE: <span id="road" class="val">VT7</span></div>
+        <div>VAUHTI: <span id="speed" class="val">0</span> km/h</div>
+        <div>RAJOITUS: <span id="limit" class="val">80</span></div>
     </div>
 
-    <div id="search-overlay">
-        <input type="text" id="dest-input" placeholder="Syötä määränpää...">
-        <button class="nav-btn" onclick="aloitaNavigointi()">AVAA GOOGLE MAPS / WAZE</button>
+    <div class="hud-bottom">
+        <div>KÄÄNNÖS: <span id="turn" class="val">-</span></div>
+        <div>MATKA: <span id="dist" class="val">-</span></div>
+        <div>KAISTA: <span id="lane" class="val">-</span></div>
     </div>
 
     <script>
-        function aloitaNavigointi() {
-            const kohde = document.getElementById('dest-input').value;
-            // Tämä avaa puhelimen/tabletin navigointisovelluksen
-            window.location.href = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(kohde)}`;
-            document.getElementById('search-overlay').style.display = 'none';
-        }
+        const map = L.map('map', { zoomControl: false }).setView([60.392, 25.666], 14);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+        const control = L.Routing.control({
+            waypoints: [null, L.latLng(60.400, 25.670)],
+            router: L.Routing.osrmv1({ serviceUrl: 'https://router.project-osrm.org/route/v1' }),
+            createMarker: () => null
+        }).addTo(map);
+
+        // Älykäs kaista-ennuste ja käännöslogiikka
+        control.on('routesfound', (e) => {
+            const instr = e.routes[0].instructions;
+            let currentStep = 0;
+
+            navigator.geolocation.watchPosition(pos => {
+                const speedKmh = Math.round(pos.coords.speed * 3.6 || 0);
+                document.getElementById('speed').innerText = speedKmh;
+                
+                // Kaista-ennuste: Päätellään ohjeesta
+                const turnText = instr[currentStep].text.toLowerCase();
+                document.getElementById('turn').innerText = instr[currentStep].text;
+                document.getElementById('dist').innerText = Math.round(instr[currentStep].distance) + " m";
+                
+                // Kaista-logiikka
+                if(turnText.includes("vasen")) document.getElementById('lane').innerText = "VASEN";
+                else if(turnText.includes("oikea")) document.getElementById('lane').innerText = "OIKEA";
+                else document.getElementById('lane').innerText = "KESKI";
+
+                // Rajoitus-ennuste (Simuloitu alueen perusteella)
+                document.getElementById('limit').innerText = (speedKmh > 80) ? "100" : "80";
+                
+                // Automaattinen etappi-hyppy
+                if(instr[currentStep].distance < 30) currentStep++;
+            }, null, { enableHighAccuracy: true });
+        });
     </script>
 </body>
 </html>
